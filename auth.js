@@ -34,7 +34,7 @@
     var api=window.skAuth&&window.skAuth[name];
     if(!api){alertBox(f,'The database is not connected yet, so nothing was sent or saved.');return}
     alertBox(f,'One moment...',true);
-    api.apply(null,args).then(function(){alertBox(f,okMsg,true)},function(err){alertBox(f,(err&&err.message)||'Something went wrong. Please try again.')});
+    api.apply(null,args).then(function(r){alertBox(f,typeof r==='string'?r:okMsg,true)},function(err){alertBox(f,(err&&err.message)||'Something went wrong. Please try again.')});
   }
   [].forEach.call(document.querySelectorAll('[data-view-to]'),function(a){a.addEventListener('click',function(e){e.preventDefault();var v=a.dataset.viewTo;history.replaceState(null,'','#'+v);show(v)})});
   [].forEach.call(document.querySelectorAll('[data-eye]'),function(b){b.addEventListener('click',function(){var i=b.parentNode.querySelector('input'),s=i.type==='password';i.type=s?'text':'password';b.setAttribute('aria-label',s?'Hide password':'Show password')})});
@@ -42,17 +42,15 @@
   var forgot=document.querySelector('[data-forgot]');
   if(forgot)forgot.addEventListener('click',function(e){
     e.preventDefault();var f=forms.login;clear(f);var em=document.getElementById('li-email').value.trim();
-    if(!em){fieldErr(f,'li-email','Please enter your email first.');return}
-    if(!ok(em)){fieldErr(f,'li-email','Please enter a valid email address.');return}
+    if(!em){fieldErr(f,'li-email','Please enter your email or username first.');return}
     call('reset',[em],f,'If that email has an account, a reset link is on its way.');
   });
   forms.login.addEventListener('submit',function(e){
     e.preventDefault();var f=forms.login;clear(f);
     var em=document.getElementById('li-email').value.trim(),pw=document.getElementById('li-pw').value;
-    if(!em&&!pw){alertBox(f,'Please fill in the required fields.');fieldErr(f,'li-email','Email is required.');fieldErr(f,'li-pw','Password is required.');return}
+    if(!em&&!pw){alertBox(f,'Please fill in the required fields.');fieldErr(f,'li-email','This is required.');fieldErr(f,'li-pw','Password is required.');return}
     var bad=false;
-    if(!em){fieldErr(f,'li-email','Please enter your email.');bad=true}
-    else if(!ok(em)){fieldErr(f,'li-email','Please enter a valid email address.');bad=true}
+    if(!em){fieldErr(f,'li-email','Please enter your email, username or phone.');bad=true}
     if(!pw){fieldErr(f,'li-pw','Please enter your password.');bad=true}
     if(bad)return;
     call('login',[em,pw,f.elements.remember.checked],f,'Welcome back.');

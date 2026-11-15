@@ -8,8 +8,8 @@
 .ac-grid .card{display:grid;gap:.9rem;align-content:start}
 .ac-grid h2{font-size:1.1rem;margin:0}
 .ac-grid label{display:grid;gap:.3rem;font:600 .82rem var(--f-body);color:var(--muted)}
-.ac-grid input[type=text],.ac-grid input[type=email]{width:100%;padding:.7rem .9rem;border-radius:12px;border:0;background:rgba(var(--tint),.1);color:var(--fg);font:500 .92rem var(--f-body);outline:0}
-.ac-grid input:focus{background:rgba(var(--tint),.16)}.ac-grid input:disabled{opacity:.6}
+.ac-grid input[type=text],.ac-grid input[type=email],.ac-grid input[type=tel],.ac-grid input[type=password]{width:100%;padding:.7rem .9rem;border-radius:12px;border:0;background:rgba(var(--tint),.1);color:var(--fg);font:500 .92rem var(--f-body);outline:0}
+.ac-grid form{display:grid;gap:.9rem}.ac-grid input:focus{background:rgba(var(--tint),.16)}.ac-grid input:disabled{opacity:.6}
 .ac-row{display:flex;gap:.6rem;flex-wrap:wrap}
 .ac-note{margin:0;color:var(--muted);font-size:.9rem}
 .ac-file{cursor:pointer}

@@ -248,3 +248,11 @@ body.adm .ad-narrow input[type]{padding:.5rem .8rem!important;font-size:.84rem;b
 body.adm .ad-narrow .ad-form{gap:.6rem}
 body.adm .ad-narrow .ad-black{padding:.65rem .8rem!important;font-size:.86rem;border-radius:10px}
 body.adm .ad-narrow .ad-forgot{font-size:.78rem}
+
+/* users tab */
+.u-bar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.u-bar input{flex:1;min-width:200px}
+.u-table select{padding:.4rem .6rem;border-radius:8px;border:0;background:rgba(255,255,255,.1);color:#fff;font:500 .84rem var(--f-body)}
+.u-table select option{background:#111;color:#fff}.u-table select:disabled{opacity:.5}
+.u-act{white-space:nowrap}.ad-link.u-danger{color:#ff7a7a}
+.chip.danger{color:#ff7a7a;border-color:rgba(255,122,122,.7)}
+.u-det td{background:rgba(255,255,255,.04)}.u-det dl{display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;margin:0 0 .7rem;font-size:.86rem}.u-det dt{color:rgba(255,255,255,.55)}.u-det dd{margin:0;overflow-wrap:anywhere}

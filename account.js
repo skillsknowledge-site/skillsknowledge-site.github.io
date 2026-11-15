@@ -19,7 +19,7 @@
   /* coming back from Google on any page: save the session from the address */
   if(/access_token=/.test(location.hash)){
     var hp=new URLSearchParams(location.hash.slice(1));
-    if(hp.get('access_token'))wr(KEY,{access:hp.get('access_token'),refresh:hp.get('refresh_token'),exp:Date.now()+(+hp.get('expires_in')||3600)*1000,provider:'google'});
+    if(hp.get('access_token')){wr(KEY,{access:hp.get('access_token'),refresh:hp.get('refresh_token'),exp:Date.now()+(+hp.get('expires_in')||3600)*1000,provider:'google'});if(hp.get('type')==='recovery'){try{sessionStorage.setItem('sk_recovery','1')}catch(e){}}}
     try{history.replaceState(null,'',location.pathname)}catch(e){}
   }
   /* ---- session ---- */
@@ -38,7 +38,7 @@
     var m=u.user_metadata||{};pr=pr||{};
     return {id:u.id,email:u.email||'',username:pr.username||'',
       name:pr.display_name||m.display_name||m.full_name||m.name||(u.email||'').split('@')[0]||'Member',
-      photo:m.custom_avatar||'',bio:pr.bio||'',website:pr.website||'',location:pr.location||'',
+      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',role:pr.role||'member',blocked:!!pr.blocked,website:pr.website||'',location:pr.location||'',
       provider:(u.app_metadata&&u.app_metadata.provider)||'google',created:u.created_at,last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
   }
   function getProfile(t,id){
@@ -69,12 +69,12 @@
     patch.updated_at=new Date().toISOString();
     return token().then(function(t){if(!t)throw new Error('Please log in again.');
       return api('/rest/v1/profiles?id=eq.'+encodeURIComponent((rd(UKEY)||{}).id),{method:'PATCH',token:t,prefer:'return=representation',body:patch})})
-      .then(function(){return loadUser()},function(e){if(e.status===409||e.code==='23505')throw new Error('That username is already taken.');throw e});
+      .then(function(){return loadUser()},function(e){if(e.status===409||e.code==='23505')throw new Error(/phone/i.test(e.message)?'That phone number is already used.':'That username is already taken.');throw e});
   }
   function signOut(global){
     return token().then(function(t){if(t)return api('/auth/v1/logout'+(global?'?scope=global':''),{method:'POST',token:t}).catch(function(){})}).then(function(){clear();go('index')});
   }
-  window.skUser={get:loadUser,signOut:signOut};
+  window.skUser={get:loadUser,signOut:signOut,token:token,api:api};
 
   /* ---- preferences, applied on every page ---- */
   function applyPrefs(p){var c=document.documentElement.classList;c.toggle('reduce-motion',!!(p&&p.reduceMotion));c.toggle('big-text',!!(p&&p.bigText))}
@@ -141,15 +141,37 @@
     setTimeout(function(){i.focus()},50);
   }
 
+  function overlay(inner){var d=document.createElement('div');d.className='un-back';d.innerHTML=inner;document.body.appendChild(d);return d}
+  function blockedNotice(){
+    if($('.un-back'))return;clear();
+    var d=overlay('<div class="un-box" role="alertdialog" aria-modal="true"><h2>Account blocked</h2><p>This account has been blocked, so you cannot use it right now. Please contact the site owner if you think this is a mistake.</p><div class="un-row"><span></span><button class="btn btn-solid btn-sm" type="button" id="bl-ok">OK</button></div></div>');
+    $('#bl-ok',d).addEventListener('click',function(){go('index')});
+  }
+  function passDialog(){
+    if($('.un-back'))return;
+    var d=overlay('<form class="un-box" novalidate role="dialog" aria-modal="true" aria-labelledby="pw-h"><h2 id="pw-h">Set a new password</h2><p>Choose a password with at least 8 characters.</p>'+
+      '<div class="un-in"><input id="pw-1" type="password" placeholder="New password" autocomplete="new-password"></div>'+
+      '<div class="un-in"><input id="pw-2" type="password" placeholder="Repeat new password" autocomplete="new-password"></div>'+
+      '<div class="un-st" id="pw-s" role="status"></div><div class="un-row"><button class="un-link" type="button" id="pw-x">Not now</button><button class="btn btn-solid btn-sm" type="submit">Save password</button></div></form>');
+    var st=$('#pw-s',d);function say(t,c){st.textContent=t;st.className='un-st'+(c?' '+c:'')}
+    $('#pw-x',d).addEventListener('click',function(){d.remove()});
+    d.firstChild.addEventListener('submit',function(e){e.preventDefault();var a=$('#pw-1',d).value,b=$('#pw-2',d).value;
+      if(a.length<8){say('Use at least 8 characters.','bad');return}if(a!==b){say('The two passwords do not match.','bad');return}
+      setPassword(a).then(function(){say('Password saved.','ok');setTimeout(function(){d.remove()},900)},function(er){say(er.message,'bad')})});
+    setTimeout(function(){$('#pw-1',d).focus()},50);
+  }
+  function setPassword(pw){return token().then(function(t){if(!t)throw new Error('Please log in again.');return api('/auth/v1/user',{method:'PUT',token:t,body:{password:pw}})})}
   function boot(){
     var onLogin=/\/login(\.html)?$/i.test(location.pathname),onAcct=!!$('#acct');
     if(!has){if(onAcct)goReplace('login');return}
     if(onLogin&&!/signup|error/.test(location.hash+location.search)){goReplace('account');return}
     if(cached){header(cached);if(onAcct)page(cached)}
     loadUser().then(function(u){
+      if(u&&u.blocked){blockedNotice();return}
       if(!u){if(onAcct)goReplace('login');var w=$('.acct');if(w)w.remove();var b=$('#login-btn');if(b)b.style.display='';return}
       applyPrefs(u.prefs&&Object.keys(u.prefs).length?u.prefs:rd(PKEY));header(u);
-      if(u.ready&&!u.username)usernameStep(u);
+      var rec=false;try{rec=sessionStorage.getItem('sk_recovery')==='1';sessionStorage.removeItem('sk_recovery')}catch(e){}
+      if(rec)passDialog();else if(u.ready&&!u.username)usernameStep(u);
       if(onAcct)page(u);
     });
   }
@@ -170,7 +192,8 @@
       '<label>Bio<textarea id="p-bio" maxlength="160" rows="2"'+(u.ready?'':' disabled')+'>'+esc(u.bio)+'</textarea><small>Up to 160 characters.</small></label>'+
       '<div class="ac-two"><label>Website<input id="p-web" type="text" maxlength="120" placeholder="https://" value="'+esc(u.website)+'" autocomplete="url"'+(u.ready?'':' disabled')+'></label>'+
       '<label>Location<input id="p-loc" type="text" maxlength="60" value="'+esc(u.location)+'" autocomplete="address-level2"'+(u.ready?'':' disabled')+'></label></div>'+
-      '<label>Email<input type="email" value="'+esc(u.email)+'" disabled></label>'+
+      '<div class="ac-two"><label>Email<input type="email" value="'+esc(u.email)+'" disabled></label>'+
+      '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+(u.ready?'':' disabled')+'><small>Optional. You can log in with it.</small></label></div>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Save profile</button></div></form></section>'+
     '<section class="card"><h2>Photo</h2><p class="ac-note">'+(u.photo?'Your uploaded photo is shown.':'No photo yet. Your first letter is shown.')+'</p>'+
       '<div class="ac-row"><label class="btn btn-solid btn-sm ac-file">Upload photo<input id="p-file" type="file" accept="image/*" hidden></label>'+
@@ -181,6 +204,10 @@
       '<label class="ac-sw"><input type="checkbox" id="s-news"'+(p.updates?' checked':'')+'><i></i><span><b>Email updates</b><small>Occasional news about new work. Off by default.</small></span></label></section>'+
     '<section class="card"><h2>Account</h2><dl class="ac-dl"><dt>Signed in with</dt><dd>'+esc(u.provider==='google'?'Google':u.provider)+'</dd><dt>Member since</dt><dd>'+esc(fmt(u.created))+'</dd><dt>Last sign-in</dt><dd>'+esc(fmt(u.last))+'</dd></dl>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="button" id="a-out">Log out</button><button class="btn btn-ghost btn-sm" type="button" id="a-all">Log out everywhere</button></div></section>'+
+    '<section class="card"><h2>Password</h2><p class="ac-note">'+(u.provider==='google'?'You sign in with Google. Set a password to also log in with your email'+(u.username?', @'+esc(u.username):'')+' and password.':'Change the password you use to log in.')+'</p>'+
+      '<form id="f-pw" novalidate><label>New password<input id="n-pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label>'+
+      '<label>Repeat new password<input id="n-pw2" type="password" autocomplete="new-password"></label>'+
+      '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">'+(u.provider==='google'?'Set password':'Change password')+'</button></div></form></section>'+
     '<section class="card"><h2>Your data</h2><p class="ac-note">Download everything stored about you, or delete your account for good.</p>'+
       '<div class="ac-row"><button class="btn btn-ghost btn-sm" type="button" id="a-dl">Download my data</button><button class="btn btn-ghost btn-sm ac-danger" type="button" id="a-del">Delete account</button></div>'+
       '<div class="ac-del" id="ac-del" hidden><p class="ac-note">This cannot be undone. Type <b>DELETE</b> to confirm.</p><div class="ac-row"><input id="d-in" type="text" autocomplete="off" aria-label="Type DELETE"><button class="btn btn-solid btn-sm ac-danger" type="button" id="d-go" disabled>Delete forever</button></div></div></section>'+
@@ -201,7 +228,7 @@
       if(u.ready){
         var nm=un.value.trim().toLowerCase();if(nm){var er=checkName(nm);if(er){msg(er,true);return}patch.username=nm}else if(u.username){msg('A username cannot be removed.',true);return}
         var w=$('#p-web').value.trim();if(w&&!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(w)){msg('Website must start with http:// or https://',true);return}
-        patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
+        var tel=$('#p-tel').value.replace(/[^0-9+]/g,'');if(tel&&!/^\+?[0-9]{7,15}$/.test(tel)){msg('Enter a valid phone number, for example +923001234567.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
       }
       saveProfile(patch).then(function(x){done(x,'Profile saved.')},function(er){msg(er.message,true)})});
     $('#p-file').addEventListener('change',function(){var f=this.files[0];if(!f)return;
@@ -215,10 +242,13 @@
     function prefs(){var v={reduceMotion:$('#s-motion').checked,bigText:$('#s-big').checked,updates:$('#s-news').checked};wr(PKEY,v);applyPrefs(v);
       saveMeta({prefs:v}).then(function(){msg('Preferences saved.')},function(er){msg(er.message,true)})}
     ['#s-motion','#s-big','#s-news'].forEach(function(s){$(s).addEventListener('change',prefs)});
+    $('#f-pw').addEventListener('submit',function(e){e.preventDefault();var a=$('#n-pw1').value,b=$('#n-pw2').value;
+      if(a.length<8){msg('Use at least 8 characters.',true);return}if(a!==b){msg('The two passwords do not match.',true);return}
+      setPassword(a).then(function(){$('#n-pw1').value='';$('#n-pw2').value='';msg('Password saved.')},function(er){msg(er.message,true)})});
     $('#a-out').addEventListener('click',function(){signOut(false)});
     $('#a-all').addEventListener('click',function(){signOut(true)});
     $('#a-dl').addEventListener('click',function(){
-      var d={account:{id:u.id,email:u.email,provider:u.provider,created:u.created,last_sign_in:u.last},profile:{username:u.username,display_name:u.name,bio:u.bio,website:u.website,location:u.location},preferences:p};
+      var d={account:{id:u.id,email:u.email,provider:u.provider,created:u.created,last_sign_in:u.last},profile:{username:u.username,phone:u.phone,role:u.role,display_name:u.name,bio:u.bio,website:u.website,location:u.location},preferences:p};
       var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='my-data.json';document.body.appendChild(a);a.click();a.remove()});
     $('#a-del').addEventListener('click',function(){var b=$('#ac-del');b.hidden=!b.hidden;if(!b.hidden)$('#d-in').focus()});
     $('#d-in').addEventListener('input',function(){$('#d-go').disabled=this.value.trim()!=='DELETE'});

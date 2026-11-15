@@ -267,12 +267,52 @@ function forgotView(){
 }
 
 /* ---------------- logged-in app ---------------- */
-var NAVI={"overview": "<path d=\"M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z\"/>", "content": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1\"/>", "pages": "<path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4\"/>", "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2\"/>", "publish": "<path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/>", "security": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"1\"/><path d=\"M8 11V8a4 4 0 018 0v3\"/>"};
-var TABS=[['overview','Overview'],['content','Content'],['pages','Pages and sections'],['settings','Settings'],['publish','Publish'],['security','Security']];
+var NAVI={"users": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.6\"/><path d=\"M16 14.2c3 .1 5 2 5 5.3\"/>", "overview": "<path d=\"M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z\"/>", "content": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1\"/>", "pages": "<path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4\"/>", "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2\"/>", "publish": "<path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/>", "security": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"1\"/><path d=\"M8 11V8a4 4 0 018 0v3\"/>"};
+
+/* ---------------- users (needs Supabase + supabase-admin.sql) ---------------- */
+var U={state:'idle',list:[],q:'',open:null,err:''};
+function uApi(fn,body){var S=window.skUser;if(!S)return Promise.reject({status:0,message:'nosupabase'});
+  return S.token().then(function(t){if(!t)throw {status:401,message:'noauth'};return S.api('/rest/v1/rpc/'+fn,{method:'POST',token:t,body:body||{}})})}
+function loadUsers(){
+  if(!(window.SK_CFG&&window.SK_CFG.url&&window.SK_CFG.anon)){U.state='nocfg';renderApp();return}
+  U.state='loading';renderApp();
+  uApi('admin_list_users').then(function(r){U.list=r||[];U.state='ready';renderApp()},function(e){
+    U.state=e.message==='noauth'?'noauth':(e.status===404?'nosql':(e.status===401||e.status===403||/not allowed/i.test(e.message)?'notadmin':'error'));U.err=e.message||'';renderApp()});
+}
+function uWhen(d){try{return d?new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'Never'}catch(e){return ''}}
+function uRows(){
+  var q=U.q.trim().toLowerCase();
+  var L=U.list.filter(function(x){return !q||[x.email,x.username,x.display_name,x.phone].join(' ').toLowerCase().indexOf(q)>-1});
+  if(!L.length)return '<tr><td colspan="6" class="ad-muted">No users match.</td></tr>';
+  return L.map(function(x){
+    var n=x.display_name||(x.email||'').split('@')[0]||'User',open=U.open===x.id;
+    return '<tr><td><b>'+esc(n)+(x.is_admin?' <em class="chip big">Admin</em>':'')+'</b><span>'+(x.username?'@'+esc(x.username):'No username yet')+'</span></td><td>'+esc(x.email)+'</td><td>'+esc(uWhen(x.created_at))+'</td>'+
+      '<td>'+(x.blocked?'<em class="chip danger">Blocked</em>':'<em class="chip ok">Active</em>')+'</td>'+
+      '<td><select class="u-role" data-id="'+esc(x.id)+'" aria-label="Access for '+esc(n)+'"'+(x.is_admin?' disabled':'')+'>'+['member','trusted','editor'].map(function(r){return '<option value="'+r+'"'+(x.role===r?' selected':'')+'>'+r.charAt(0).toUpperCase()+r.slice(1)+'</option>'}).join('')+'</select></td>'+
+      '<td class="u-act"><button class="ad-link" type="button" data-act="u-open" data-id="'+esc(x.id)+'">'+(open?'Hide':'Details')+'</button> <button class="ad-link'+(x.blocked?'':' u-danger')+'" type="button" data-act="u-block" data-id="'+esc(x.id)+'" data-flag="'+(x.blocked?'0':'1')+'">'+(x.blocked?'Unblock':'Block')+'</button></td></tr>'+
+      (open?'<tr class="u-det"><td colspan="6"><dl><dt>Phone</dt><dd>'+esc(x.phone||'Not given')+'</dd><dt>Location</dt><dd>'+esc(x.location||'Not given')+'</dd><dt>Website</dt><dd>'+esc(x.website||'Not given')+'</dd><dt>Bio</dt><dd>'+esc(x.bio||'Not given')+'</dd><dt>Signed in with</dt><dd>'+esc(x.provider||'')+'</dd><dt>Last sign-in</dt><dd>'+esc(uWhen(x.last_sign_in_at))+'</dd><dt>User ID</dt><dd>'+esc(x.id)+'</dd></dl>'+
+        '<button class="ad-link" type="button" data-act="u-admin" data-id="'+esc(x.id)+'" data-flag="'+(x.is_admin?'0':'1')+'">'+(x.is_admin?'Remove admin rights':'Make admin')+'</button></td></tr>':'');
+  }).join('');
+}
+function tabUsers(){
+  var h='<div class="ad-head"><h1>Users</h1><p class="ad-muted">People who signed up on your website. Block someone to stop them logging in, or change what they can access.</p></div>';
+  var msgs={nocfg:'Supabase is not connected. Fill in config.js first.',nosql:'The admin tools are not installed yet. Run supabase-admin.sql in the Supabase SQL Editor.',
+    notadmin:'This Google account is not an admin. Run supabase-admin.sql with your email, then log in again.',error:'Could not load users. '+esc(U.err),loading:'Loading users…',idle:'Loading users…'};
+  if(U.state==='noauth')return h+'<div class="ad-card"><h2>Log in to manage users</h2><p>Sign in on your website with the Google account you made the admin, then come back here.</p><div class="ad-btns" style="justify-content:flex-start"><a class="btn btn-solid btn-sm" href="login">Go to website login</a><button class="btn btn-solid btn-sm" type="button" data-act="u-refresh">I have logged in</button></div></div>';
+  if(U.state!=='ready')return h+'<div class="ad-card"><p class="'+(U.state==='loading'||U.state==='idle'?'ad-muted':'ad-msg warn')+'">'+msgs[U.state]+'</p>'+(U.state==='loading'||U.state==='idle'?'':'<div class="ad-btns" style="justify-content:flex-start"><button class="btn btn-solid btn-sm" type="button" data-act="u-refresh">Try again</button></div>')+'</div>';
+  var tot=U.list.length,bl=U.list.filter(function(x){return x.blocked}).length,tr=U.list.filter(function(x){return x.role!=='member'}).length,ad=U.list.filter(function(x){return x.is_admin}).length;
+  return h+'<div class="ad-kpis">'+[['Total users',tot],['Blocked',bl],['Extra access',tr],['Admins',ad]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
+    '<div class="ad-card"><div class="u-bar"><input id="u-q" type="text" placeholder="Search by name, username, email or phone" value="'+esc(U.q)+'" aria-label="Search users"><button class="btn btn-solid btn-sm" type="button" data-act="u-refresh">Refresh</button></div>'+
+    '<div class="ad-tablewrap"><table class="ad-table u-table"><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Status</th><th>Access</th><th></th></tr></thead><tbody id="u-body">'+uRows()+'</tbody></table></div>'+
+    '<p class="ad-muted" style="font-size:.8rem">Access: <b>Member</b> is a normal account. <b>Trusted</b> and <b>Editor</b> are extra levels you can use to unlock members-only parts of the site. Blocking takes effect at once for logging in.</p></div>';
+}
+function uAct(p,ok){return p.then(function(){flash(ok);return loadUsersQuiet()},function(e){flash(e.message||'Something went wrong.');})}
+function loadUsersQuiet(){return uApi('admin_list_users').then(function(r){U.list=r||[];U.state='ready';renderApp()})}
+var TABS=[['overview','Overview'],['content','Content'],['pages','Pages and sections'],['users','Users'],['settings','Settings'],['publish','Publish'],['security','Security']];
 function renderApp(){
   acts.innerHTML='<a class="btn btn-ghost btn-sm" href="index.html">Preview site</a><button class="btn btn-solid btn-sm" type="button" data-act="publish" title="Choose where to save the file that makes your changes live">Publish'+(dirty()?' •':'')+'</button><button class="btn btn-ghost btn-sm" type="button" data-act="logout">Log out</button>';
   var nav='<aside class="ad-nav" aria-label="Admin sections"><div class="ad-brand"><b>SK</b><span>Control</span></div>'+TABS.map(function(t){return '<button type="button" data-tab="'+t[0]+'"'+(ui.tab===t[0]?' aria-current="true"':'')+'><svg viewBox="0 0 24 24" aria-hidden="true">'+NAVI[t[0]]+'</svg><span>'+t[1]+'</span>'+(t[0]==='publish'&&dirty()?'<em>•</em>':'')+'</button>'}).join('')+'</aside>';
-  var h=nav+'<div class="ad-main">'+msgHtml()+({overview:tabOverview,content:tabContent,pages:tabPages,settings:tabSettings,publish:tabPublish,security:tabSecurity})[ui.tab]()+'</div>';
+  var h=nav+'<div class="ad-main">'+msgHtml()+({overview:tabOverview,content:tabContent,pages:tabPages,users:tabUsers,settings:tabSettings,publish:tabPublish,security:tabSecurity})[ui.tab]()+'</div>';
   app.innerHTML='<div class="ad-shell">'+h+'</div>';
   if(ui.tab==='security'&&ui.chgOpen&&!ui.setup){var host=$('#chg-host');if(host)setupForm(host,true)}
   var mf=$('#mail-form');if(mf)mf.addEventListener('submit',function(e){e.preventDefault();var s=$('#m-s').value.trim(),t=$('#m-t').value.trim(),k=$('#m-k').value.trim(),er=$('#m-err');
@@ -400,7 +440,7 @@ function tabSecurity(){
 /* ---------------- events ---------------- */
 function onClick(e){
   var t=e.target.closest('[data-tab],[data-col],[data-act]');if(!t)return;
-  if(t.dataset.tab){ui.tab=t.dataset.tab;ui.edit=null;ui.setup=null;ui.next=null;ui.chgOpen=false;renderApp();return}
+  if(t.dataset.tab){if(t.dataset.tab==='users'&&U.state!=='ready'){ui.tab='users';ui.edit=null;ui.setup=null;ui.next=null;ui.chgOpen=false;loadUsers();return}ui.tab=t.dataset.tab;ui.edit=null;ui.setup=null;ui.next=null;ui.chgOpen=false;renderApp();return}
   if(t.dataset.col){ui.col=t.dataset.col;if(t.dataset.act==='goto-col')ui.tab='content';ui.edit=null;renderApp();return}
   var a=t.dataset.act,i=+t.dataset.i,c=COLS.filter(function(x){return x.id===ui.col})[0]||COLS[0];
   if(a==='logout'){endSession();draft=null;ui.setup=null;view();return}
@@ -417,10 +457,16 @@ function onClick(e){
   if(a==='dl-config'){download('admin-config.js',ui.setup.text);return}
   if(a==='copy-config'){var tx=ui.setup.text;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){t.textContent='Copied'},function(){var r=document.createRange();r.selectNodeContents($('#cfg-text'));var s=getSelection();s.removeAllRanges();s.addRange(r);t.textContent='Press Ctrl+C'});return}
   if(a==='new-recovery'){newRecovery().then(function(r){ui.next=Object.assign({},ui.next||CFG,{rk:r.rk});ui.setup={text:configFile(ui.next),recovery:r.key};renderApp()});return}
+  if(a==='u-refresh'){loadUsers();return}
+  if(a==='u-open'){U.open=U.open===t.dataset.id?null:t.dataset.id;renderApp();return}
+  if(a==='u-block'){var f=t.dataset.flag==='1';if(f&&!confirm('Block this person? They will not be able to log in.'))return;uAct(uApi('admin_set_blocked',{uid:t.dataset.id,flag:f}),f?'User blocked.':'User unblocked.');return}
+  if(a==='u-admin'){var g=t.dataset.flag==='1';if(!confirm(g?'Give this person full admin rights?':'Remove this person\'s admin rights?'))return;uAct(uApi('admin_set_admin',{uid:t.dataset.id,flag:g}),g?'Admin rights given.':'Admin rights removed.');return}
   if(a==='goto-col'){ui.tab='content';ui.col=t.dataset.col;ui.edit=null;renderApp();return}
   if(a==='setup-done'){ui.setup=null;ui.chgOpen=false;if(app.dataset.view==='setup'){location.reload()}else renderApp();return}
 }
 app.addEventListener('click',onClick);
+app.addEventListener('change',function(e){var s=e.target.closest('.u-role');if(s)uAct(uApi('admin_set_role',{uid:s.dataset.id,new_role:s.value}),'Access updated.')});
+app.addEventListener('input',function(e){if(e.target.id==='u-q'){U.q=e.target.value;var b=$('#u-body');if(b)b.innerHTML=uRows()}});
 acts.addEventListener('click',onClick);
 var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 app.addEventListener('submit',function(e){
