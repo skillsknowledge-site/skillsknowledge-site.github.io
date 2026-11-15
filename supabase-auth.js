@@ -44,7 +44,11 @@
       return new Promise(function(){});
     },
     login:function(id,pw){
-      return email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})}).then(function(j){saveSession(j);setTimeout(home,600)});
+      return email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})}).then(function(j){saveSession(j);setTimeout(home,600)},function(er){
+        /* blocked? show the termination screen instead of a vague error */
+        return api('/rest/v1/rpc/account_status',{identifier:id}).then(function(b){
+          if(b===true&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
+          throw er},function(){throw er})});
     },
     signup:function(name,em,pw){
       return api('/auth/v1/signup',{email:em,password:pw,data:{full_name:name}}).then(function(j){
@@ -57,5 +61,6 @@
         function(){return 'If that account exists, a reset link is on its way to its email.'});
     }
   };
+  if(err&&/banned|blocked|user_banned/i.test(err+location.search+location.hash)){window.addEventListener('DOMContentLoaded',function(){if(window.skTerminated)window.skTerminated(null)});err=''}
   if(err)window.addEventListener('DOMContentLoaded',function(){var f=document.querySelector('.aform:not([hidden]) .aalert');if(f){f.textContent=err+' You can log in with your email or username and password instead.';f.className='aalert';f.hidden=false}});
 })();

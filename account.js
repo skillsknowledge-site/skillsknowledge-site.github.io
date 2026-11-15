@@ -24,6 +24,11 @@
   }
   /* ---- session ---- */
   function sess(){return rd(KEY)}
+  /* a blocked person may get a vague error from Supabase, so also ask our own flag */
+  function checkBlocked(id){
+    if(!id)return Promise.resolve(false);
+    return api('/rest/v1/rpc/account_status',{method:'POST',body:{identifier:id}}).then(function(b){return b===true},function(){return false});
+  }
   function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(UKEY)}catch(e){}}
   function token(){
     var s=sess();if(!s)return Promise.resolve(null);
@@ -31,7 +36,7 @@
     if(!s.refresh){clear();return Promise.resolve(null)}
     return api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh}}).then(function(j){
       s.access=j.access_token;s.refresh=j.refresh_token||s.refresh;s.exp=Date.now()+(j.expires_in||3600)*1000;wr(KEY,s);return s.access},
-      function(e){if(/banned|blocked/i.test(e&&e.message||'')){banned=true;return null}clear();return null});
+      function(e){var c=rd(UKEY)||{};return (/banned|blocked/i.test(e&&e.message||'')?Promise.resolve(true):checkBlocked(c.email||c.username)).then(function(b){if(b){banned=true;return null}clear();return null})});
   }
   var banned=false,ready=true; /* false when the profiles table has not been created yet */
   function shape(u,pr){
@@ -52,7 +57,7 @@
       if(!t)return null;
       return api('/auth/v1/user',{token:t}).then(function(u){
         return getProfile(t,u.id).then(function(pr){var x=shape(u,pr);wr(UKEY,x);return x},function(){var x=shape(u,{});wr(UKEY,x);return x});
-      },function(e){if(/banned|blocked/i.test(e.message||'')){banned=true;return null}if(e.status===401||e.status===403){clear();return null}return rd(UKEY)});
+      },function(e){var c=rd(UKEY)||{};if(/banned|blocked/i.test(e.message||'')){banned=true;return null}if(e.status===401||e.status===403){return checkBlocked(c.email||c.username).then(function(b){if(b){banned=true;return null}clear();return null})}return rd(UKEY)});
     });
   }
   function saveMeta(patch){
@@ -74,6 +79,7 @@
   function signOut(global){
     return token().then(function(t){if(t)return api('/auth/v1/logout'+(global?'?scope=global':''),{method:'POST',token:t}).catch(function(){})}).then(function(){clear();go('index')});
   }
+  window.skTerminated=function(u){terminated(u||null)};
   window.skUser={get:loadUser,signOut:signOut,token:token,api:api};
 
   /* ---- preferences, applied on every page ---- */
