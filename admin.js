@@ -276,8 +276,10 @@ function uApi(fn,body){var S=window.skUser;if(!S)return Promise.reject({status:0
 function loadUsers(){
   if(!(window.SK_CFG&&window.SK_CFG.url&&window.SK_CFG.anon)){U.state='nocfg';renderApp();return}
   U.state='loading';renderApp();
-  uApi('admin_list_users').then(function(r){U.list=r||[];U.state='ready';renderApp()},function(e){
-    U.state=e.message==='noauth'?'noauth':(e.status===404?'nosql':(e.status===401||e.status===403||/not allowed/i.test(e.message)?'notadmin':'error'));U.err=e.message||'';renderApp()});
+  var done=false,timer=setTimeout(function(){if(done)return;done=true;U.state='error';U.err='The server did not answer. Make sure supabase-admin.sql was run, then refresh this page (Ctrl+Shift+R).';renderApp()},12000);
+  function fin(fn){if(done)return;done=true;clearTimeout(timer);try{fn()}catch(x){U.state='error';U.err=String(x&&x.message||x);try{renderApp()}catch(y){}}}
+  uApi('admin_list_users').then(function(r){fin(function(){U.list=r||[];U.state='ready';renderApp()})},function(e){
+    fin(function(){U.state=e.message==='noauth'?'noauth':(e.status===404?'nosql':(e.status===401||e.status===403||/not allowed/i.test(e.message)?'notadmin':'error'));U.err=(e.message||'')+(e.status?' ('+e.status+')':'');renderApp()})});
 }
 function uWhen(d){try{return d?new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'Never'}catch(e){return ''}}
 function uRows(){
