@@ -101,7 +101,7 @@
   '.un-box{width:min(400px,100%);padding:1.6rem 1.4rem;border-radius:16px;background:#0c1512;color:#fff;display:grid;gap:.8rem}'+
   '.un-box h2{margin:0;font-size:1.3rem}.un-box p{margin:0;color:var(--muted);font-size:.9rem}'+
   '.un-in{display:flex;align-items:center;gap:.3rem;padding:.2rem .9rem;border-radius:12px;background:rgba(255,255,255,.1)}.un-in span{color:var(--muted)}'+
-  '.un-in input{flex:1;min-width:0;border:0;background:none;color:#fff;font:500 1rem var(--f-body);padding:.65rem 0;outline:0}'+
+  '.un-in textarea{flex:1;min-width:0;border:0;background:none;color:#fff;font:500 .95rem var(--f-body);padding:.65rem 0;outline:0;resize:vertical}.un-in input{flex:1;min-width:0;border:0;background:none;color:#fff;font:500 1rem var(--f-body);padding:.65rem 0;outline:0}'+
   '.un-st{min-height:1.2em;font-size:.84rem;color:var(--muted)}.un-st.ok{color:#5be39a}.un-st.bad{color:#ff8f8f}'+
   '.un-row{display:flex;gap:.6rem;align-items:center;justify-content:space-between}.un-link{background:none;border:0;color:var(--muted);cursor:pointer;font:500 .84rem var(--f-body);padding:0}';
   document.head.appendChild(css);
@@ -152,14 +152,29 @@
     if($('.un-back.term'))return;
     var old=$('.un-back');if(old)old.remove();
     var acc=$('.acct');if(acc)acc.remove();var main=$('#acct');if(main)main.innerHTML='';
-    var who=(u&&(u.username?'@'+u.username:u.email))||'';
-    var mail=(window.SK&&SK.setting?SK.setting('feedbackEmail','feedback@sk.site'):'feedback@sk.site');
-    var d=overlay('<div class="un-box" role="alertdialog" aria-modal="true" aria-labelledby="tm-h"><h2 id="tm-h">Your account has been terminated</h2>'+
+    var who=(u&&(u.username?'@'+u.username:u.email))||'',known=(u&&(u.email||u.username))||'';
+    var d=overlay('<form class="un-box" novalidate role="alertdialog" aria-modal="true" aria-labelledby="tm-h"><h2 id="tm-h">Your account has been terminated</h2>'+
       '<p>'+(who?esc(who)+' has':'This account has')+' been blocked by the site owner, so you can no longer use your profile or settings.</p>'+
-      '<p>If you think this is a mistake, you can send an appeal. Otherwise log out.</p>'+
-      '<div class="un-row"><button class="un-link" type="button" id="tm-out">Log out</button><a class="btn btn-solid btn-sm" id="tm-ap" href="mailto:'+esc(mail)+'?subject='+encodeURIComponent('Account appeal')+'&body='+encodeURIComponent('Hello,\n\nMy account'+(who?' ('+who+')':'')+' was blocked and I would like to appeal.\n\nWhy it was a mistake:\n')+'">Appeal</a></div></div>');
+      '<div id="tm-main"><p>If you think this is a mistake, you can send an appeal. Otherwise log out.</p>'+
+      '<div class="un-row"><button class="un-link" type="button" id="tm-out">Log out</button><button class="btn btn-solid btn-sm" type="button" id="tm-ap">Appeal</button></div></div>'+
+      '<div id="tm-form" hidden>'+(known?'':'<div class="un-in"><input id="tm-id" type="text" placeholder="Your email or username" autocomplete="username" autocapitalize="off"></div>')+
+      '<div class="un-in"><textarea id="tm-msg" rows="4" maxlength="1000" placeholder="Explain why this is a mistake (at least 5 characters)"></textarea></div>'+
+      '<div class="un-st" id="tm-st" role="status"></div>'+
+      '<div class="un-row"><button class="un-link" type="button" id="tm-back">Back</button><button class="btn btn-solid btn-sm" type="submit" id="tm-send">Send appeal</button></div></div></form>');
     d.classList.add('term');
+    var st=$('#tm-st',d);function say(t,c){st.textContent=t;st.className='un-st'+(c?' '+c:'')}
     $('#tm-out',d).addEventListener('click',function(){clear();try{localStorage.removeItem(PKEY)}catch(e){}go('index')});
+    $('#tm-ap',d).addEventListener('click',function(){$('#tm-main',d).hidden=true;$('#tm-form',d).hidden=false;($('#tm-id',d)||$('#tm-msg',d)).focus()});
+    $('#tm-back',d).addEventListener('click',function(){$('#tm-form',d).hidden=true;$('#tm-main',d).hidden=false;say('')});
+    d.firstChild.addEventListener('submit',function(e){e.preventDefault();
+      var idEl=$('#tm-id',d),id=known||(idEl&&idEl.value.trim()),m=$('#tm-msg',d).value.trim();
+      if(!id){say('Enter your email or username.','bad');return}
+      if(m.length<5){say('Please write a few words about why this is a mistake.','bad');return}
+      $('#tm-send',d).disabled=true;say('Sending…');
+      api('/rest/v1/rpc/submit_appeal',{method:'POST',body:{identifier:id,message:m}}).then(function(r){
+        if(r==='ok'){say('Appeal sent. The site owner will review it.','ok');$('#tm-msg',d).disabled=true}
+        else{$('#tm-send',d).disabled=false;say(r==='wait'?'You already sent an appeal today. Please wait for a reply.':r==='short'?'Please write a little more.':'We could not find a blocked account with those details.','bad')}
+      },function(){$('#tm-send',d).disabled=false;say('Could not send. Please try again.','bad')})});
   }
   function passDialog(){
     if($('.un-back'))return;
