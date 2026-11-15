@@ -15,7 +15,7 @@
   window.skAuth={
     social:function(provider){
       if(provider!=='google')return Promise.reject(new Error('Only Google sign-in is switched on.'));
-      var back=location.origin+location.pathname;
+      var back=location.origin+location.pathname.replace(/[^\/]*$/,'');
       location.href=url+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(back);
       return new Promise(function(){});
     }

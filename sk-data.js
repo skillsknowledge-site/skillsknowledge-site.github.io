@@ -56,7 +56,7 @@ function counts(){
 }
 function word(n){return n<WORDS.length?WORDS[n]:String(n)}
 
-function file(){var f=location.pathname.split('/').pop();return f||'index.html'}
+function file(){var f=location.pathname.split('/').pop();if(!f)return 'index.html';return /\./.test(f)?f:f+'.html'}
 function pageOn(name){var p=(data().settings||{}).pages||{};return p[name]!==false}
 function pageOfHref(h){
   if(!h)return null;
@@ -117,4 +117,15 @@ window.SK={
   DRAFT_KEY:DRAFT_KEY,SESSION_KEY:SESSION_KEY,
   store:{get:get,put:put,del:del}
 };
+})();
+
+/* clean addresses: show /about instead of /about.html (only on a real website, not a local file) */
+(function(){
+  if(!/^https?:$/.test(location.protocol))return;
+  var p=location.pathname,n=p.replace(/(^|\/)index\.html$/,'$1').replace(/\.html$/,'');
+  if(n!==p){try{history.replaceState(null,'',n+location.search+location.hash)}catch(e){}}
+  var re=/^(?:\.\/)?(index|about|graphics|video|code|login|account)\.html(#.*)?$/;
+  function clean(){[].forEach.call(document.querySelectorAll('a[href]'),function(a){var m=re.exec(a.getAttribute('href')||'');if(m)a.setAttribute('href',(m[1]==='index'?'./':m[1])+(m[2]||''))})}
+  var t=0;function later(){clearTimeout(t);t=setTimeout(clean,60)}
+  document.addEventListener('DOMContentLoaded',function(){clean();try{new MutationObserver(later).observe(document.body,{childList:true,subtree:true})}catch(e){}});
 })();
