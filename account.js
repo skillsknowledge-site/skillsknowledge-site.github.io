@@ -182,7 +182,16 @@
     function ping(){if(document.hidden)return;token().then(function(t){if(t)api('/rest/v1/profiles?id=eq.'+encodeURIComponent(u.id),{method:'PATCH',token:t,body:{last_seen:new Date().toISOString()}}).catch(function(){})})}
     ping();if(!beating){beating=setInterval(ping,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)ping()})}
   }
+  /* Google sent us back with an error (for example a blocked account) */
+  var oerr='',ocode='';
+  (function(){var h=new URLSearchParams(location.hash.slice(1)),q=new URLSearchParams(location.search);
+    oerr=h.get('error_description')||q.get('error_description')||'';ocode=h.get('error_code')||q.get('error_code')||'';
+    if(oerr||ocode){try{history.replaceState(null,'',location.pathname)}catch(e){}}})();
   function boot(){
+    if(oerr||ocode){
+      if(/banned|blocked/i.test(oerr+' '+ocode)){terminated(null);return}
+      if(!/\/login(\.html)?$/i.test(location.pathname)){location.replace((web?'login':'login.html')+'?error_description='+encodeURIComponent(oerr||'Sign-in failed. Please try again.'));return}
+    }
     var onLogin=/\/login(\.html)?$/i.test(location.pathname),onAcct=!!$('#acct');
     if(!has){if(onAcct)goReplace('login');return}
     if(onLogin&&!/signup|error/.test(location.hash+location.search)){goReplace('account');return}
