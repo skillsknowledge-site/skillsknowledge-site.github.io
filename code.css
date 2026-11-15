@@ -1,0 +1,53 @@
+/* Coding page. Shares style.css and graphics.css; green and teal theme comes from script.js. */
+.t-studio.cod{--bd0:rgba(40,200,130,.3);--bd1:#1fbf78;--bd2:#2fe0c0;--bd3:#e2fff6}
+.cs .win{fill:rgba(var(--bg-rgb),.92);stroke:rgba(var(--tint),.35);stroke-width:1.5}
+.cs .bar{fill:rgba(var(--tint),.12)}
+.cs .dotw{fill:rgba(var(--tint),.5)}
+.cs .tab{font:600 9px var(--f-body);fill:rgba(var(--tint),.6)}
+.cs .tab.on{fill:rgb(var(--hi))}
+.cs .code{font:500 11.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:rgba(var(--tint),.85);white-space:pre}
+.cs .t{fill:rgb(var(--hi))}.cs .a{fill:rgb(var(--acc2))}.cs .s{fill:#fff}.cs .k{fill:rgb(var(--acc))}
+.cs .cur{fill:#fff}
+.cs .pv{fill:rgba(var(--card-rgb),.95);stroke:rgba(var(--tint),.35);stroke-width:1.5}
+.cs .pbar{fill:rgba(var(--tint),.25)}.cs .pbtn{fill:rgb(var(--acc))}.cs .pbtnt{fill:rgb(var(--ink-rgb))}
+.cs .ripple{fill:none;stroke:rgb(var(--hi));stroke-width:2;transform-box:fill-box;transform-origin:center}
+.cs .tw{fill:#fff;transform-box:fill-box;transform-origin:center}
+.cs .shine{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){
+  .cs .ln{opacity:0;animation:lnin 11s ease-out infinite;animation-delay:calc(var(--i)*.55s)}
+  .cs .cur{animation:blink 1s steps(1) infinite}
+  .cs .ripple{animation:rip 2.4s ease-out infinite}
+  .cs .pbtn{transform-box:fill-box;transform-origin:center;animation:fpulse 2.4s ease-in-out infinite}
+  .cs .tw{animation:twinkle 3s ease-in-out infinite;animation-delay:var(--d)}
+}
+@keyframes lnin{0%{opacity:0;transform:translateX(-8px)}6%,86%{opacity:1;transform:none}96%,100%{opacity:0}}
+@keyframes blink{50%{opacity:0}}
+@keyframes rip{0%{opacity:.8;transform:scale(.8)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes fpulse{50%{transform:scale(1.08)}}
+
+/* Coding hero: a terminal types HTML, then CSS, then JavaScript, then backspaces and repeats (12 s) */
+.term{width:min(80%,330px);border-radius:12px;border:1px solid var(--line-hi);background:rgba(var(--bg-rgb),.94);overflow:hidden;text-align:left;margin-top:34px}
+.term .tb{display:flex;align-items:center;gap:6px;padding:.55rem .8rem;background:rgba(var(--tint),.1);font:600 .7rem var(--f-body);color:var(--muted)}
+.term .tb i{width:9px;height:9px;border-radius:50%;background:rgba(var(--tint),.45)}
+.term .tb span{margin-left:.4rem}
+.term .tbody{padding:1rem .9rem 1.1rem;display:grid;gap:.55rem;font:500 .92rem/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.term .tl{display:flex;align-items:center;height:1.3em}
+.term .tx{display:block;overflow:hidden;white-space:nowrap;width:calc(var(--n)*1ch)}
+.term .h{color:rgb(var(--hi))}.term .c{color:rgb(var(--acc2))}.term .j{color:#fff}
+.term .cr{display:block;opacity:0}
+.term .cr i{display:block;width:.6ch;height:1.15em;margin-left:1px;background:#fff}
+@media (prefers-reduced-motion:no-preference){
+  .term .tx{width:0}
+  .term .l1 .tx{animation:ty1 12s steps(var(--n),end) infinite}
+  .term .l2 .tx{animation:ty2 12s steps(var(--n),end) infinite}
+  .term .l3 .tx{animation:ty3 12s steps(var(--n),end) infinite}
+  .term .c1{animation:cv1 12s linear infinite}.term .c2{animation:cv2 12s linear infinite}.term .c3{animation:cv3 12s linear infinite}
+  .term .cr i{animation:blink 1s steps(1) infinite}
+}
+@keyframes ty1{0%,2%{width:0}18%,90%{width:calc(var(--n)*1ch)}98%,100%{width:0}}
+@keyframes ty2{0%,22%{width:0}38%,90%{width:calc(var(--n)*1ch)}98%,100%{width:0}}
+@keyframes ty3{0%,42%{width:0}56%,90%{width:calc(var(--n)*1ch)}98%,100%{width:0}}
+@keyframes cv1{0%{opacity:0}2%,20%{opacity:1}20.1%,100%{opacity:0}}
+@keyframes cv2{0%,21.9%{opacity:0}22%,40%{opacity:1}40.1%,100%{opacity:0}}
+@keyframes cv3{0%,41.9%{opacity:0}42%,98%{opacity:1}98.1%,100%{opacity:0}}
+@keyframes blink{50%{opacity:0}}

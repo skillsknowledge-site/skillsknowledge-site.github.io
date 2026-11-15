@@ -1,0 +1,13 @@
+/* About page */
+.a-hero{min-height:0;padding-block:clamp(56px,9vw,110px)}
+.a-sec{padding-block:clamp(48px,7vw,88px)}
+.a-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.a-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.a-card{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;padding:1.4rem}
+.a-card h3{font-size:1.15rem}
+.a-card p{color:var(--muted);font-size:.93rem;margin-bottom:.6rem}
+.a-card .btn{margin-top:auto}
+.about-copy h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.08}
+@media (max-width:1000px){.a-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.a-grid.three{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.a-grid{grid-template-columns:minmax(0,1fr)}}

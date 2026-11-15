@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SK Portfolio</title>
+<meta name="description" content="Portfolio of SK, a frontend developer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bgfx" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
+<canvas class="snow" id="snow" aria-hidden="true"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="sp" viewBox="0 0 24 24"><path d="M12 0C12.6 7.2 16.8 11.4 24 12 16.8 12.6 12.6 16.8 12 24 11.4 16.8 7.2 12.6 0 12 7.2 11.4 11.4 7.2 12 0Z"/></symbol></svg>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="SK, home">
+      <svg viewBox="1.1 1.5 131.8 97.0" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg>
+    </a>
+    <nav id="nav" aria-label="Main">
+      <ul>
+        <li><a href="#top">Home</a></li>
+        <li><a href="#services">Skills</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#journal">Journal</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-sm btn-rainbow" href="login.html" id="login-btn"><canvas class="rb" aria-hidden="true"></canvas>Login<svg class="st" style="--x:10%;--y:22%;--d:0s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:84%;--y:56%;--d:1.2s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:58%;--y:12%;--d:2.2s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:32%;--y:68%;--d:.6s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg></a>
+    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="pill"><span class="dot"></span><span data-sk="pill">Booking projects from January 2027</span></p>
+        <h1>I build sites that load fast and feel made by <span class="gt">a person</span>.</h1>
+        <p class="lead" data-sk="lead">Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.</p>
+        <div class="cta-row">
+          <a class="btn btn-solid btn-shine" href="#work">See my work <span aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost btn-magic" href="#contact">Hire me<svg class="sp" style="--x:-50px;--y:-15px;--s:16px;--d:0s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:-20px;--y:-27px;--s:10px;--d:0.03s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:20px;--y:-27px;--s:13px;--d:0.05s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:52px;--y:-12px;--s:11px;--d:0.02s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:54px;--y:10px;--s:14px;--d:0.04s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:29px;--y:25px;--s:18px;--d:0s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:-15px;--y:28px;--s:10px;--d:0.06s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:-50px;--y:15px;--s:9px;--d:0.03s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:-55px;--y:-8px;--s:8px;--d:0.07s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="sp" style="--x:-29px;--y:-25px;--s:8px;--d:0.05s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg></a>
+        </div>
+      </div>
+
+      <div class="bento" aria-label="Highlights">
+        <div class="tile t-shape">
+          <div class="stat"><b class="gt" data-skillcount data-count="5" data-suffix="+">5+</b><span>skills</span></div>
+          <div class="mark" role="img" aria-label="Skills badge: video editing, graphics design, coding and ads orbiting three turning gears">
+            <svg viewBox="0 0 300 300" aria-hidden="true" focusable="false">
+              <circle class="halo" cx="150" cy="150" r="62"/>
+              <g class="orbit o1"><circle class="ring dash" cx="150" cy="150" r="74"/><circle class="bead" cx="150" cy="76" r="5"/><circle class="bead" cx="214.1" cy="187" r="5"/><circle class="bead" cx="85.9" cy="187" r="5"/></g>
+              <g class="orbit o3"><circle class="arc" cx="150" cy="150" r="96"/></g>
+              <g class="orbit o2"><circle class="ring" cx="150" cy="150" r="118"/><g transform="translate(150 32)"><g class="up"><circle r="25"/><g class="ic" transform="translate(-12 -12)"><rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="M10.2 9.3v5.4l4.6-2.7z"/></g></g></g><g transform="translate(262.2 113.5)"><g class="up"><circle r="25"/><g class="ic" transform="translate(-12 -12)"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/><path d="M13.5 6.5h.01M17.5 10.5h.01M8.5 7.5h.01M6.5 12.5h.01"/></g></g></g><g transform="translate(219.4 245.5)"><g class="up"><circle r="25"/><g class="ic" transform="translate(-12 -12)"><path d="M8.6 7L3.6 12l5 5M15.4 7l5 5-5 5M13.4 5l-2.8 14"/></g></g></g><g transform="translate(80.6 245.5)"><g class="up"><circle r="25"/><g class="ic" transform="translate(-12 -12)"><path d="M3.5 9.6h3.4L15.4 5v14l-8.5-4.6H3.5z"/><path d="M18.2 9.3c1.4 1.5 1.4 4.1 0 5.6M6.7 14.5l1.2 4.7h2.5"/></g></g></g><g transform="translate(37.8 113.5)"><g class="up"><circle r="25"/></g></g></g>
+              <g class="gears" transform="translate(150 150) scale(1.15) translate(-3.8 -4.2)"><g transform="translate(-10.00 -8.00)"><g class="gr1"><path d="M25.5 8.88 L31.09 13.76 L27.46 20.04 L20.44 17.64 L15.41 22.17 L17.06 29.41 L10.44 32.36 L6.17 26.29 L-0.57 26.99 L-3.48 33.82 L-10.57 32.31 L-10.46 24.89 L-16.32 21.51 L-22.7 25.31 L-27.55 19.93 L-23.09 13.99 L-25.85 7.8 L-33.24 7.14 L-34.0 -0.07 L-26.91 -2.26 L-25.5 -8.88 L-31.09 -13.76 L-27.46 -20.04 L-20.44 -17.64 L-15.41 -22.17 L-17.06 -29.41 L-10.44 -32.36 L-6.17 -26.29 L0.57 -26.99 L3.48 -33.82 L10.57 -32.31 L10.46 -24.89 L16.32 -21.51 L22.7 -25.31 L27.55 -19.93 L23.09 -13.99 L25.85 -7.8 L33.24 -7.14 L34.0 0.07 L26.91 2.26ZM12 0A12 12 0 1 0 -12 0A12 12 0 1 0 12 0Z"/><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="36s" repeatCount="indefinite"/></g></g><g transform="translate(31.57 16.00)"><g class="gr2"><path d="M-14.92 1.57 L-20.0 0.05 L-19.3 -5.23 L-14.0 -5.38 L-11.66 -9.44 L-14.18 -14.11 L-9.95 -17.35 L-6.1 -13.7 L-1.57 -14.92 L-0.05 -20.0 L5.23 -19.3 L5.38 -14.0 L9.44 -11.66 L14.11 -14.18 L17.35 -9.95 L13.7 -6.1 L14.92 -1.57 L20.0 -0.05 L19.3 5.23 L14.0 5.38 L11.66 9.44 L14.18 14.11 L9.95 17.35 L6.1 13.7 L1.57 14.92 L0.05 20.0 L-5.23 19.3 L-5.38 14.0 L-9.44 11.66 L-14.11 14.18 L-17.35 9.95 L-13.7 6.1ZM7 0A7 7 0 1 0 -7 0A7 7 0 1 0 7 0Z"/><animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="28.8s" repeatCount="indefinite"/></g></g><g transform="translate(15.80 38.53)"><g class="gr3"><path d="M-4.74 -6.44 L-5.73 -10.54 L-1.7 -11.88 L-0.05 -8.0 L3.21 -7.33 L6.26 -10.24 L9.44 -7.41 L6.9 -4.04 L7.95 -0.88 L12.0 0.31 L11.14 4.47 L6.95 3.96 L4.74 6.44 L5.73 10.54 L1.7 11.88 L0.05 8.0 L-3.21 7.33 L-6.26 10.24 L-9.44 7.41 L-6.9 4.04 L-7.95 0.88 L-12.0 -0.31 L-11.14 -4.47 L-6.95 -3.96ZM4 0A4 4 0 1 0 -4 0A4 4 0 1 0 4 0Z"/><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="21.6s" repeatCount="indefinite"/></g></g></g>
+            </svg>
+          </div>
+        </div>
+        <div class="tile t-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-sk="badge">1 Year of Experience with 100% Authentic Work</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats" id="stats">
+    <div class="wrap">
+      <h2 class="stats-title" data-sk="statsTitle">My Abilities of Work</h2>
+      <div class="stats-grid">
+        <div class="num"><b data-skillcount data-count="5" data-suffix="+">5+</b><span>Skills</span></div>
+        <div class="num"><b data-sk="statYearsValue">1</b><span data-sk="statYearsLabel">Year Experience</span></div>
+        <div class="num"><b data-sk="statGradeValue">A</b><span data-sk="statGradeLabel">Grade</span></div>
+      </div>
+      <hr class="stats-rule">
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>What I can build for you</h2>
+        <p>Each job starts with a short call and ends with files you can read, edit and own.</p>
+      </div>
+      <div class="svc-layout">
+        <div class="svc-list" id="svc-list"></div>
+        <article class="card rise feature" id="feature" data-on="idle">
+          <div class="stage" aria-hidden="true">
+            <div class="fx fx-idle"><div class="idle-logo"><svg class="sk" viewBox="1.1 1.5 131.8 97.0" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg><b>SkillsKnowledge</b></div></div>
+            <div class="fx fx-generic"><div class="idle-logo"><svg class="sk" viewBox="1.1 1.5 131.8 97.0" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg><b></b></div></div>
+            <div class="fx fx-video"><svg viewBox="0 0 200 160"><rect class="f-line" x="22" y="20" width="156" height="92" rx="10"/><g class="holes"><rect x="30" y="26" width="6" height="6" rx="1.5"/><rect x="30" y="100" width="6" height="6" rx="1.5"/><rect x="164" y="26" width="6" height="6" rx="1.5"/><rect x="164" y="100" width="6" height="6" rx="1.5"/></g><path class="f-fill play" d="M88 48v36l32-18z"/><rect class="track" x="22" y="130" width="156" height="6" rx="3"/><rect class="prog" x="22" y="130" width="156" height="6" rx="3"/><rect class="head" x="19" y="122" width="6" height="22" rx="3"/></svg></div>
+            <div class="fx fx-graphics"><svg viewBox="0 0 200 160"><circle class="gc c1" cx="86" cy="70" r="40"/><circle class="gc c2" cx="116" cy="70" r="40"/><circle class="gc c3" cx="101" cy="96" r="40"/><path class="bez" pathLength="1" d="M20 138 C60 100 90 150 130 124 S170 110 184 128"/><rect class="anc" x="16" y="134" width="8" height="8"/><rect class="anc" x="180" y="124" width="8" height="8"/></svg></div>
+            <div class="fx fx-coding"><svg viewBox="0 0 200 160"><rect class="f-line" x="18" y="18" width="164" height="124" rx="10"/><circle class="dt" cx="32" cy="32" r="3.5"/><circle class="dt" cx="44" cy="32" r="3.5"/><circle class="dt" cx="56" cy="32" r="3.5"/><rect class="ln l1" x="34" y="54" width="70" height="7" rx="3.5"/><rect class="ln l2" x="48" y="72" width="96" height="7" rx="3.5"/><rect class="ln l3" x="48" y="90" width="54" height="7" rx="3.5"/><rect class="ln l4" x="34" y="108" width="82" height="7" rx="3.5"/><rect class="cur" x="120" y="106" width="7" height="12" rx="1.5"/></svg></div>
+            <div class="fx fx-ads"><svg viewBox="0 0 200 160"><path class="f-fill horn" d="M46 62h22l50-30v96L68 98H46a8 8 0 01-8-8V70a8 8 0 018-8z"/><path class="f-line" d="M70 98l8 30h14l-6-26"/><path class="wv w1" d="M134 62c8 10 8 26 0 36"/><path class="wv w2" d="M148 48c14 18 14 46 0 64"/><path class="wv w3" d="M162 34c20 26 20 66 0 92"/></svg></div>
+          </div>
+          <div class="feature-body">
+            <div class="ft ft-idle"><h3>SkillsKnowledge</h3><p><span data-skillword="cap">Four</span> skills under one name. Move over a skill on the left to see what it covers.</p></div>
+            <div class="ft ft-generic"><h3></h3><p></p></div>
+            <div class="ft ft-video"><h3>Video editing</h3><p>Tight cuts, steady pacing, captions and colour work for reels, ads and longer videos.</p></div>
+            <div class="ft ft-graphics"><h3>Graphics design</h3><p>Logos, posters, social posts and thumbnails, delivered with files you can edit later.</p></div>
+            <div class="ft ft-coding"><h3>Coding</h3><p>Fast, tidy websites and web apps written in HTML, CSS, JavaScript and React.</p></div>
+            <div class="ft ft-ads"><h3>Ads and promotion</h3><p>Banner and social ad creatives built around one clear message and one clear action.</p></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <section id="skills" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Tools I reach for</h2>
+      </div>
+      <div class="skills-grid" id="skills-grid"></div>
+    </div>
+  </section>
+
+  <section id="wyg" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Fast to load, tidy to hand over</h2>
+      </div>
+      <div class="twin">
+        <article class="card spot rise big">
+          <h3>Fast by default</h3>
+          <p>Fonts, images and scripts get a budget before design starts, then I test the finished build on a throttled connection.</p>
+          <ul class="meters" id="meters"></ul>
+          <p class="caption">Sample audit of a finished build</p>
+        </article>
+        <article class="card rise big waves">
+          <canvas id="cv-wave" aria-hidden="true"></canvas>
+          <div class="in">
+            <h3>Design handed over cleanly</h3>
+            <p>Spacing, colour and type live in one set of tokens, so a rebrand is an afternoon and not a rewrite.</p>
+            <a class="btn btn-ghost btn-sm" href="#contact">Get started <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="work" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Selected projects</h2>
+        <p>A mix of client builds and my own tools, from small utilities to full dashboards.</p>
+      </div>
+      <div class="proj-grid" id="proj-grid"></div>
+    </div>
+  </section>
+
+  <section id="process" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>How a project runs</h2>
+      </div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+
+  <section id="journal" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Users Common Questions</h2>
+      </div>
+      <div class="posts" id="posts"></div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact" style="padding-top:0">
+    <div class="wrap">
+      <div class="contact-card">
+        <div>
+          <h2>Give us Feedback!</h2>
+        </div>
+        <div class="contact-side">
+          <label class="fld"><span>Your email</span><input id="fb-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
+          <p class="fmsg" id="fb-msg" role="alert"></p>
+          <div class="brow"><button class="btn btn-solid" id="fb-send" type="button">Send feedback</button><button class="btn btn-ghost" id="cbox" type="button" aria-haspopup="dialog">Comment</button></div>
+          <p>Tell us what worked, what did not and what you would change. Comments can be up to 200 characters. We read every message.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" style="padding-top:0">
+    <div class="wrap about-grid">
+      <figure class="classic rise" aria-label="SkillsKnowledge">
+        <div class="cl-frame"><span class="cl-est">Est. 2021</span><b class="cl-mono">SkillsKnowledge</b><span class="cl-name">Web developer and editor</span><span class="cl-rule" aria-hidden="true"></span>
+        <dl class="facts">
+          <dt>Role</dt><dd>Frontend developer</dd>
+          <dt>Focus</dt><dd>Speed, access, detail</dd>
+          <dt>Since</dt><dd>2021</dd>
+          <dt>Reply</dt><dd>Within one working day</dd>
+        </dl></div>
+      </figure>
+      <div class="about-copy">
+        <h2>Hi, I'm SK. I care about the parts nobody screenshots.</h2>
+        <p>I started building websites in 2021 and kept finding that the unglamorous things decide whether a site feels good: page weight, keyboard focus, clean markup, a layout that holds up on a cheap phone.</p>
+        <p>I work on my own, answer messages within a day, and send working builds early so you can steer while changes are still cheap.</p>
+        <div class="cta-row">
+          <a class="btn btn-solid" href="about.html">More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="yr">2026</span> SK</span>
+    <div class="follow">
+      <span>Find me</span>
+      <!-- Swap these for your own profile URLs. -->
+      <a href="https://www.facebook.com" target="_blank" rel="noopener" aria-label="Facebook page" title="Facebook page"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+      <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M5 2h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3zM6.7 4.7a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5zM5.2 9.5v9.3h3V9.5zM10.2 9.5v9.3h3.2v-4.5c0-1.2.2-2.3 1.7-2.3s1.5 1.3 1.5 2.4v4.4h3v-5c0-2.5-.6-4.5-3.6-4.5-1.5 0-2.5.7-2.9 1.5V9.5z"/></svg></a>
+      <a href="https://x.com" target="_blank" rel="noopener" aria-label="X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+      <a href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.25" fill="currentColor" stroke="none"/></svg></a>
+    </div>
+  </div>
+</footer>
+
+<script src="site-data.js" defer></script>
+<script src="sk-defaults.js" defer></script>
+<script src="sk-data.js" defer></script>
+<script src="script.js" defer></script>
+</body>
+</html>

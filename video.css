@@ -1,0 +1,52 @@
+/* Video editing page. Shares style.css and graphics.css (cards, tabs, bars, shining border); blue and red theme comes from script.js. */
+.t-studio.vid{--bd0:rgba(60,110,255,.3);--bd1:#2b5fff;--bd2:#5ea4ff;--bd3:#e4f0ff}
+.vs .mon{fill:rgba(var(--card-rgb),.9);stroke:rgba(var(--tint),.35);stroke-width:1.5}
+.vs .scr{fill:url(#vg)}
+.vs .vg1{stop-color:rgb(var(--acc));stop-opacity:.55}.vs .vg2{stop-color:rgb(var(--acc2));stop-opacity:.55}
+.vs .pb{fill:#fff}.vs .pt{fill:rgb(var(--ink-rgb))}
+.vs .trk{fill:rgba(var(--tint),.1)}
+.vs .c1{fill:rgb(var(--acc))}.vs .c2{fill:rgb(var(--acc2))}.vs .c3{fill:rgb(var(--hi))}
+.vs .wf{fill:rgb(var(--hi));transform-box:fill-box;transform-origin:center}
+.vs .ph{stroke:#fff;stroke-width:2}.vs .phh{fill:#fff}
+.vs .tw{fill:#fff;transform-box:fill-box;transform-origin:center}
+.vs .shine{transform-box:fill-box;transform-origin:center}
+.vs .clip{transform-box:fill-box;transform-origin:left}
+@media (prefers-reduced-motion:no-preference){
+  .vs .shine{animation:sweep 3.6s ease-in-out infinite}
+  .vs .tw{animation:twinkle 3s ease-in-out infinite;animation-delay:var(--d)}
+  .vs .wf{animation:wave 1.4s ease-in-out infinite;animation-delay:var(--d)}
+  .vs .ph,.vs .phh{animation:scrub 9s linear infinite}
+  .vs .pb{transform-box:fill-box;transform-origin:center;animation:fpulse 2.4s ease-in-out infinite}
+  .vs .clip{animation:clipin 9s ease-in-out infinite}
+}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes scrub{from{transform:translateX(0)}to{transform:translateX(330px)}}
+@keyframes clipin{0%,6%{transform:scaleX(.4);opacity:.5}20%,92%{transform:scaleX(1);opacity:1}100%{transform:scaleX(.4);opacity:.5}}
+@keyframes fpulse{50%{transform:scale(1.12)}}
+
+/* Video hero: a classic film camera. Reels turn, film runs through the gate, the light beam flickers */
+.cam{overflow:visible}
+.cam .brk path{fill:none;stroke:rgba(var(--hi),.7);stroke-width:2.5;stroke-linecap:round}
+.cam .rc{fill:rgb(var(--card-rgb));stroke:rgb(var(--hi));stroke-width:3}
+.cam .rh{fill:rgba(var(--bg-rgb),.95);stroke:rgb(var(--acc));stroke-width:1.5}
+.cam .rd{fill:rgb(var(--hi))}
+.cam .reel{transform-box:fill-box;transform-origin:center}
+.cam .body{fill:rgb(var(--card-rgb));stroke:rgb(var(--hi));stroke-width:3}
+.cam .lens{fill:rgb(var(--acc));stroke:rgb(var(--hi));stroke-width:3;stroke-linejoin:round}
+.cam .vf{fill:rgba(var(--bg-rgb),.95);stroke:rgba(var(--hi),.7);stroke-width:1.5}
+.cam .rec{fill:#fff}
+.cam .rect-t{font:700 10px var(--f-body);fill:rgb(var(--hi));letter-spacing:.14em}
+.cam .film{fill:none;stroke:#fff;stroke-width:7;stroke-dasharray:3 4;opacity:.85}
+.cam .film2{fill:none;stroke:rgb(var(--acc2));stroke-width:5;stroke-dasharray:3 4}
+.cam .beam path{fill:none;stroke:rgb(var(--hi));stroke-width:3;stroke-linecap:round}
+.cam .stand{fill:none;stroke:rgb(var(--hi));stroke-width:3;stroke-linecap:round}
+@media (prefers-reduced-motion:no-preference){
+  .cam .r1{animation:reel 5s linear infinite}.cam .r2{animation:reel 5s linear infinite}
+  .cam .film,.cam .film2{animation:filmrun .5s linear infinite}
+  .cam .rec{animation:blink 1.2s steps(1) infinite}
+  .cam .beam path{animation:flick .9s steps(1) infinite}.cam .beam path:nth-child(2){animation-delay:-.3s}.cam .beam path:nth-child(3){animation-delay:-.6s}
+}
+@keyframes reel{to{transform:rotate(360deg)}}
+@keyframes filmrun{to{stroke-dashoffset:-7}}
+@keyframes flick{0%{opacity:1}30%{opacity:.25}55%{opacity:.9}80%{opacity:.4}}
+@keyframes blink{50%{opacity:0}}
