@@ -39,3 +39,12 @@ Log in > Security:
 2. "Email for reset codes": paste your free EmailJS Service ID, Template ID and Public key (template must send to your Gmail and contain {{code}}). Download the new admin-config.js and upload it.
 To reset: Login screen > Forgot password? > enter the recovery key first, then the 6-digit code emailed to you, then choose a new login.
 Both steps are required. This is a front-end only check; a real server would be stronger.
+
+GOOGLE SIGN-IN WITH SUPABASE (login.html)
+1. supabase.com > new project. Project Settings > API: copy "Project URL" and "anon public" key into config.js.
+2. Google Cloud Console > APIs & Services > Credentials > Create OAuth client ID (Web application).
+   Authorized redirect URI: https://YOUR-PROJECT.supabase.co/auth/v1/callback
+3. Supabase > Authentication > Providers > Google: switch on, paste the Google client ID and secret, Save.
+4. Supabase > Authentication > URL Configuration: Site URL = https://umairhafeezz97-cell.github.io/
+   and add https://umairhafeezz97-cell.github.io/login.html to Redirect URLs.
+5. Upload the files. "Continue with Google" on the login page now signs in with Google.

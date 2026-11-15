@@ -238,3 +238,13 @@ body.adm .ad-msg.err,body.adm .ad-msg.err[role]{background:none!important;border
 .ad-kpi .ad-ico{display:grid;place-items:center;width:44px;height:44px;flex:none;font-size:0;letter-spacing:0;line-height:0;margin:0}
 .ad-kpi .ad-ico svg{display:block;width:22px;height:22px;flex:none;margin:0}
 .ad-nav button svg{display:block;width:18px;height:18px;min-width:18px;flex:none}
+
+/* ===== admin v9: smaller login block ===== */
+body.adm[data-v=login] .ad-narrow,body.adm[data-v=setup] .ad-narrow{max-width:320px;padding:1.2rem 1.1rem;margin-top:8vh;border-radius:14px}
+body.adm .ad-narrow h1{font-size:1.15rem;letter-spacing:.14em}
+body.adm .ad-narrow>p{font-size:.78rem;margin-bottom:.4rem}
+body.adm .ad-narrow label.f{font-size:.74rem;gap:.2rem}
+body.adm .ad-narrow input[type]{padding:.5rem .8rem!important;font-size:.84rem;border-radius:11px!important}
+body.adm .ad-narrow .ad-form{gap:.6rem}
+body.adm .ad-narrow .ad-black{padding:.65rem .8rem!important;font-size:.86rem;border-radius:10px}
+body.adm .ad-narrow .ad-forgot{font-size:.78rem}
