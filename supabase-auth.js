@@ -13,7 +13,7 @@
   }
   function nice(m){
     if(/invalid login/i.test(m))return 'Wrong details or password.';
-    if(/banned|blocked/i.test(m))return 'This account has been blocked.';
+    if(/banned|blocked/i.test(m))return 'This account has been terminated. Contact the site owner to appeal.';
     if(/not confirmed/i.test(m))return 'Please confirm your email first. Check your inbox.';
     if(/already registered|already been registered/i.test(m))return 'An account with this email already exists.';
     if(/rate limit|too many|security purposes/i.test(m))return 'Too many tries. Please wait a minute and try again.';
