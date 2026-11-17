@@ -13,7 +13,7 @@
   }
   function nice(m){
     if(/invalid login/i.test(m))return 'Wrong details or password.';
-    if(/banned|blocked/i.test(m))return 'This account has been blocked.';
+    if(/banned|blocked/i.test(m))return 'This account has been terminated. Contact the site owner to appeal.';
     if(/not confirmed/i.test(m))return 'Please confirm your email first. Check your inbox.';
     if(/already registered|already been registered/i.test(m))return 'An account with this email already exists.';
     if(/rate limit|too many|security purposes/i.test(m))return 'Too many tries. Please wait a minute and try again.';
@@ -39,22 +39,23 @@
   }
   window.skAuth={
     social:function(provider){
-      if(provider!=='google')return Promise.reject(new Error('Only Google sign-in is switched on.'));
-      location.href=url+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(base());
+      if(provider!=='google'&&provider!=='azure')return Promise.reject(new Error('That sign-in is not switched on.'));
+      location.href=url+'/auth/v1/authorize?provider='+provider+(provider==='azure'?'&scopes=email':'')+'&redirect_to='+encodeURIComponent(base());
       return new Promise(function(){});
     },
     login:function(id,pw){
-      id=String(id||'').trim();
-      var isPhone=!/@/.test(id)&&/^\+?[0-9 ()-]{10,20}$/.test(id);
-      var request=isPhone?api('/auth/v1/token?grant_type=password',{phone:id.replace(/[ ()-]/g,''),password:pw}):email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})});
-      return request.then(function(j){saveSession(j);setTimeout(home,600)});
+      return email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})}).then(function(j){saveSession(j);setTimeout(home,600)},function(er){
+        /* blocked? show the termination screen instead of a vague error */
+        return api('/rest/v1/rpc/account_status',{identifier:id}).then(function(b){
+          if(b===true&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
+          throw er},function(){throw er})});
     },
-    signup:function(name,em,username,phone,pw){
-      var payload={password:pw,data:{full_name:name,username:username,phone:phone||null}};
-      if(em)payload.email=em;else payload.phone=phone;
-      return api('/auth/v1/signup',payload).then(function(j){
+    signup:function(name,em,pw,un,ph){
+      var chk=un?api('/rest/v1/rpc/username_available',{name:un}).catch(function(){return true}):Promise.resolve(true);
+      return chk.then(function(free){if(free===false)throw new Error('That username is already taken.');
+      return api('/auth/v1/signup',{email:em,password:pw,data:{full_name:name,username:un||'',phone:(ph||'').replace(/[^0-9+]/g,'')}})}).then(function(j){return j}).then(function(j){
         if(j&&j.access_token){saveSession(j);setTimeout(home,600);return 'Account created.'}
-        return em?'Almost done. Check your email and click the link to confirm.':'Almost done. Check your phone for the confirmation code.';
+        return 'Almost done. Check your email and click the link to confirm.';
       });
     },
     reset:function(id){
@@ -62,5 +63,6 @@
         function(){return 'If that account exists, a reset link is on its way to its email.'});
     }
   };
+  if(err&&/banned|blocked|user_banned/i.test(err+location.search+location.hash)){window.addEventListener('DOMContentLoaded',function(){if(window.skTerminated)window.skTerminated(null)});err=''}
   if(err)window.addEventListener('DOMContentLoaded',function(){var f=document.querySelector('.aform:not([hidden]) .aalert');if(f){f.textContent=err+' You can log in with your email or username and password instead.';f.className='aalert';f.hidden=false}});
 })();

@@ -1,21 +1,19 @@
+/* Appeal page: sends the appeal to Supabase (submit_appeal). The X goes back to the login page. */
 (function(){
-  var f=document.getElementById('appeal-form');if(!f)return;
-  var error=document.getElementById('appeal-error'),button=f.querySelector('button[type=submit]');
-  function fail(message){error.textContent=message;error.hidden=false;button.disabled=false;button.textContent='Submit'}
-  f.addEventListener('submit',function(e){
-    e.preventDefault();if(!f.reportValidity())return;
-    var C=window.SK_CFG||{},identifier=f.elements.identifier.value.trim(),message=f.elements.appeal.value.trim();
-    error.hidden=true;
-    if(!C.url||!C.anon){fail('Appeal submission is unavailable right now. Please try again later.');return}
-    button.disabled=true;button.textContent='Submitting…';
-    fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/submit_appeal',{method:'POST',headers:{apikey:C.anon,'Content-Type':'application/json'},body:JSON.stringify({identifier:identifier,message:message})})
-      .then(function(r){if(!r.ok)throw new Error('Appeal submission failed. Please try again.');return r.json()})
-      .then(function(result){
-        if(result==='ok'){document.getElementById('appeal-form-view').hidden=true;document.getElementById('appeal-success').hidden=false;return}
-        if(result==='wait'){fail('An appeal for this account is already open. Please wait before sending another.');return}
-        if(result==='short'){fail('Please add a little more detail to your message.');return}
-        if(result==='notblocked'){fail('This account is not currently marked as blocked, so it does not need an appeal.');return}
-        fail('We could not submit your appeal. Please try again.');
-      },function(err){fail(err&&err.message||'We could not submit your appeal. Please try again.')});
+  var $=function(s){return document.querySelector(s)};
+  var f=$('#ap-form');if(!f)return;
+  function say(t,bad){var e=$('#ap-st');e.textContent=t;e.className='ap-st'+(bad?' bad':'')}
+  f.addEventListener('submit',function(e){e.preventDefault();
+    var C=window.SK_CFG||{},id=$('#ap-id').value.trim(),m=$('#ap-msg').value.trim();
+    if(!id){say('Enter the email, username or phone of the blocked account.',1);return}
+    if(m.length<5){say('Please explain what happened.',1);return}
+    if(!(C.url&&C.anon)){say('Sending is not set up yet.',1);return}
+    var b=$('#ap-go');b.disabled=true;say('Sending…');
+    fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/submit_appeal',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+C.anon,'Content-Type':'application/json'},body:JSON.stringify({identifier:id,message:m})})
+      .then(function(r){return r.json().catch(function(){return null})})
+      .then(function(r){b.disabled=false;
+        if(r==='ok'){f.hidden=true;$('#ap-done').hidden=false;window.scrollTo(0,0)}
+        else say(r==='wait'?'You already sent an appeal. Please wait for a reply.':r==='short'?'Please write a little more.':'We could not find a blocked account with those details.',1)},
+        function(){b.disabled=false;say('Could not send. Please try again.',1)});
   });
 })();

@@ -150,7 +150,10 @@ window.SK_DEFAULTS={
 'about:a-habits':[
     {title:'Light by default',text:'Small files, few scripts and nothing on the page that does not earn its place.'},
     {title:'Easy to use',text:'Keyboard focus, readable text and layouts that hold up on a cheap phone.'},
-    {title:'Shown early',text:'Working builds arrive early, so changes are still cheap and you stay in control.'}
+    {title:'Shown early',text:'Working builds arrive early, so changes are still cheap and you stay in control.'},
+    {title:'Fast replies',text:'Messages are answered within one working day, so projects never sit waiting.'},
+    {title:'Files you own',text:'You get editable source files and clean code, with nothing locked away.'},
+    {title:'Fair, clear pricing',text:'You see the package and the price before anything starts, with no surprises.'}
   ],
 'about:a-steps':[
     {n:'01',title:'2021',text:'Built my first websites and learned how much the small details matter.'},
@@ -158,6 +161,6 @@ window.SK_DEFAULTS={
     {n:'03',title:'Then',text:'Learned video editing for reels, ads and longer videos.'},
     {n:'04',title:'Now',text:'Taking on small projects and sending working builds early.'}
   ],
-'_texts':{pill:'Thoughtful work, built with care',lead:'Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.',badge:'1 Year of Experience with 100% Authentic Work',statsTitle:'My Abilities of Work',statYearsValue:'1',statYearsLabel:'Year Experience',statGradeValue:'A',statGradeLabel:'Grade'},
+'_texts':{lead:'Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.',badge:'1 Year of Experience with 100% Authentic Work',statsTitle:'My Abilities of Work',statYearsValue:'1',statYearsLabel:'Year Experience',statGradeValue:'A',statGradeLabel:'Grade'},
 '_icons':{"home": ["layout", "stack", "bolt", "video", "palette", "code", "ads", "dot"], "graphics": ["logo", "poster", "social", "thumb", "ads", "ui"], "video": ["reel", "cut", "ads", "caption", "sun", "wave"], "code": ["page", "grid", "phone", "click", "bug", "bolt"]}
 };

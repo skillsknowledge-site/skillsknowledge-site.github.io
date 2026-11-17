@@ -57,21 +57,22 @@
   });
   forms.signup.addEventListener('submit',function(e){
     e.preventDefault();var f=forms.signup;clear(f);
-    var n=document.getElementById('su-name').value.trim(),un=document.getElementById('su-username').value.trim().toLowerCase(),em=document.getElementById('su-email').value.trim(),ph=document.getElementById('su-phone').value.trim(),pw=document.getElementById('su-pw').value,p2=document.getElementById('su-pw2').value,t=document.getElementById('su-terms').checked;
-    if(!n&&!un&&!em&&!ph&&!pw&&!p2){alertBox(f,'Please fill in the required fields.');fieldErr(f,'su-name','Name is required.');fieldErr(f,'su-username','Username is required.');fieldErr(f,'su-email','Enter an email or phone number.');fieldErr(f,'su-pw','Password is required.');fieldErr(f,'su-pw2','Confirm your password.');return}
+    var un=document.getElementById('su-user').value.trim(),ph=document.getElementById('su-phone').value.trim(),n=document.getElementById('su-name').value.trim(),em=document.getElementById('su-email').value.trim(),pw=document.getElementById('su-pw').value,p2=document.getElementById('su-pw2').value,t=document.getElementById('su-terms').checked;
+    if(!n&&!un&&!em&&!pw&&!p2){fieldErr(f,'su-user','Username is required.');alertBox(f,'Please fill in the required fields.');fieldErr(f,'su-name','Name is required.');fieldErr(f,'su-email','Email is required.');fieldErr(f,'su-pw','Password is required.');fieldErr(f,'su-pw2','Confirm your password.');return}
     var bad=false;
     if(!n){fieldErr(f,'su-name','Please enter your name.');bad=true}
-    if(!/^[a-z0-9_.]{3,20}$/.test(un)){fieldErr(f,'su-username','Use 3–20 letters, numbers, dots or underscores.');bad=true}
-    if(!em&&!ph){fieldErr(f,'su-email','Enter an email address or phone number.');bad=true}
-    else if(em&&!ok(em)){fieldErr(f,'su-email','Please enter a valid email address.');bad=true}
-    if(ph&&!/^\+?[0-9 ()-]{7,20}$/.test(ph)){fieldErr(f,'su-phone','Please enter a valid phone number.');bad=true}
+    if(!un){fieldErr(f,'su-user','Please choose a username.');bad=true}
+    else if(!/^[a-z0-9_.]{3,20}$/i.test(un)){fieldErr(f,'su-user','3-20 letters, numbers, . or _ only.');bad=true}
+    if(ph&&!/^\+?[0-9 ()-]{7,18}$/.test(ph)){fieldErr(f,'su-phone','Enter a valid phone number.');bad=true}
+    if(!em){fieldErr(f,'su-email','Please enter your email.');bad=true}
+    else if(!ok(em)){fieldErr(f,'su-email','Please enter a valid email address.');bad=true}
     if(!pw){fieldErr(f,'su-pw','Please enter a password.');bad=true}
     else if(pw.length<8){fieldErr(f,'su-pw','Password must be at least 8 characters.');bad=true}
     if(!p2){fieldErr(f,'su-pw2','Confirm your password.');bad=true}
     else if(pw&&p2!==pw){fieldErr(f,'su-pw2','Does not match.');bad=true}
     if(!t){fieldErr(f,'su-terms','Please accept the terms to continue.');bad=true}
     if(bad)return;
-    call('signup',[n,em,un,ph,pw],f,'Account created.');
+    call('signup',[n,em,pw,un,ph],f,'Account created.');
   });
 
   /* when the browser (or the user) fills a field, drop that field's error straight away */

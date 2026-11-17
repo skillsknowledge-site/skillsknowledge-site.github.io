@@ -13,8 +13,7 @@
 <link rel="stylesheet" href="style.css">
 
 <link rel="stylesheet" href="about.css">
-<link rel="stylesheet" href="redesign.css">
-<link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="theme2.css">
 </head>
 <body>
 <div class="bgfx" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
@@ -40,36 +39,42 @@
 </header>
 
 <main id="top">
-  <section class="about-banner">
-    <div class="wrap">
-      <div class="about-banner-copy">
-        <span class="about-kicker"><span class="ha-dot"></span> SkillsKnowledge · About</span>
-        <h1>Be part of something worth building.</h1>
-        <p>I’m SK: a developer and creative who brings websites, graphics and video together with care for the small details. I work directly with you, share progress early, and hand over work you can use and understand.</p>
-        <a class="btn btn-solid" href="index.html#contact">Work with me <span aria-hidden="true">→</span></a>
+  <section class="ab-hero">
+    <div class="wrap ab-hero-in">
+      <div class="ab-bar" aria-hidden="true"></div>
+      <div class="ab-hero-copy">
+        <h1>Be part of something <span class="ab-hl">worth building</span></h1>
+        <p>Hi, I'm SK. I started building websites in 2021 and found that the unglamorous things decide whether a site feels good: page weight, keyboard focus, clean markup, a layout that holds up on a cheap phone.</p>
+        <p>I work on my own, answer messages within a day, and send working builds early so you can steer while changes are still cheap. Beyond code I edit video and design graphics, so a project can stay with one person from the first idea to the finished files.</p>
+        <div class="ab-btns"><a class="btn btn-solid" href="index.html#work">See my work</a><a class="btn btn-ghost" href="#a-skills">My skills</a><a class="btn btn-ghost" href="index.html#contact">Get in touch</a></div>
       </div>
+      <dl class="ab-facts"><div><dt>Role</dt><dd>Frontend developer</dd></div><div><dt>Focus</dt><dd>Speed, access, detail</dd></div><div><dt>Since</dt><dd>2021</dd></div><div><dt>Reply</dt><dd>Within one working day</dd></div></dl>
     </div>
   </section>
 
-  <section class="a-sec">
+  <section class="ab-sec">
     <div class="wrap">
-      <div class="sec-head"><h2>Work with me</h2><p>One person for the practical and creative parts of your project. Choose a skill to explore the services and sample work.</p></div>
+      <div class="ab-title"><span class="ab-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg></span><h2>Work With Me</h2><p>The habits that stay the same on every project.</p></div>
+      <div class="ab-feats" id="a-habits"></div>
+    </div>
+  </section>
+
+  <section class="ab-sec ab-soft">
+    <div class="wrap">
+      <div class="ab-title"><span class="ab-badge b2" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></span><h2><span data-skillword="cap">Four</span> skills, one person</h2><p>Open a skill to see tools, services and sample work.</p></div>
       <div class="a-grid" id="a-skills"></div>
     </div>
   </section>
 
-  <section class="a-sec" style="padding-top:0">
+  <section class="ab-sec">
     <div class="wrap">
-      <div class="sec-head"><h2>How I work</h2><p>A clear process, useful updates and thoughtful details from the first idea to delivery.</p></div>
-      <div class="a-grid three" id="a-habits"></div>
+      <div class="ab-title"><span class="ab-badge b3" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h2>How I got here</h2><p>A short timeline, from the first site to today.</p></div>
+      <div class="steps" id="a-steps"></div>
     </div>
   </section>
 
-  <section class="a-sec" style="padding-top:0">
-    <div class="wrap">
-      <div class="sec-head"><h2>How I got here</h2></div>
-      <div class="steps" id="a-steps"></div>
-    </div>
+  <section class="ab-sec">
+    <div class="wrap"><div class="ab-cta"><div><h2>Ready to start a project?</h2><p>Pick a package, or send a message first. Either way you get a reply within a day.</p></div><div class="ab-btns"><a class="btn btn-solid" href="video.html">Video packages</a><a class="btn btn-solid" href="code.html">Code packages</a></div></div></div>
   </section>
 </main>
 
@@ -92,6 +97,8 @@
 <script src="sk-data.js" defer></script>
 <script src="script.js" defer></script>
 <script src="config.js" defer></script>
+<script src="track.js" defer></script>
+<script src="a11y.js" defer></script>
 <script src="account.js" defer></script>
 <script src="about.js" defer></script>
 </body>

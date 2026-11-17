@@ -11,8 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@500;600&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="redesign.css">
-<link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="theme2.css">
 </head>
 <body>
 <div class="bgfx" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
@@ -43,7 +42,6 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="pill"><span class="dot"></span><span data-sk="pill">Thoughtful work, built with care</span></p>
         <h1>I build sites that load fast and feel made by <span class="gt">a person</span>.</h1>
         <p class="lead" data-sk="lead">Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.</p>
         <div class="cta-row">
@@ -85,7 +83,7 @@
   <section id="services">
     <div class="wrap">
       <div class="sec-head">
-        <h2>My skills and services</h2>
+        <h2>What I can build for you</h2>
         <p>Each job starts with a short call and ends with files you can read, edit and own.</p>
       </div>
       <div class="svc-layout">
@@ -179,13 +177,11 @@
     <div class="wrap">
       <div class="contact-card">
         <div>
-          <h2>Share your feedback</h2>
+          <h2>Give us Feedback!</h2>
         </div>
         <div class="contact-side">
-          <label class="fld"><span>Your email</span><input id="fb-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
-          <p class="fmsg" id="fb-msg" role="alert"></p>
-          <div class="brow"><button class="btn btn-solid" id="fb-send" type="button">Send feedback</button><button class="btn btn-ghost" id="cbox" type="button" aria-haspopup="dialog">Comment</button></div>
-          <p>Tell me what worked, what did not, or what you would change. Add an optional comment of up to 200 characters before sending.</p>
+          <div class="brow"><button class="btn btn-solid" id="fbx-comment" type="button" aria-haspopup="dialog">Write a comment</button><button class="btn btn-ghost" id="fbx-complaint" type="button" aria-haspopup="dialog">File a complaint</button></div>
+          <p>Comments need a star rating and can be up to 200 characters. Complaints can be up to 1,000 characters. We read every message.</p>
         </div>
       </div>
     </div>
@@ -193,12 +189,15 @@
 
   <section id="about" style="padding-top:0">
     <div class="wrap about-grid">
-      <div class="home-about-visual rise" aria-label="SkillsKnowledge profile card">
-        <div class="ha-top"><span class="ha-dot"></span> A little about my work</div>
-        <div class="ha-mark">SK</div>
-        <p>One creative partner for clear websites, thoughtful graphics and polished video.</p>
-        <div class="ha-tags"><span>Web</span><span>Design</span><span>Video</span></div>
-      </div>
+      <figure class="classic rise" aria-label="SkillsKnowledge">
+        <div class="cl-frame"><span class="cl-est">Est. 2021</span><b class="cl-mono">SkillsKnowledge</b><span class="cl-name">Web developer and editor</span><span class="cl-rule" aria-hidden="true"></span>
+        <dl class="facts">
+          <dt>Role</dt><dd>Frontend developer</dd>
+          <dt>Focus</dt><dd>Speed, access, detail</dd>
+          <dt>Since</dt><dd>2021</dd>
+          <dt>Reply</dt><dd>Within one working day</dd>
+        </dl></div>
+      </figure>
       <div class="about-copy">
         <h2>Hi, I'm SK. I care about the parts nobody screenshots.</h2>
         <p>I started building websites in 2021 and kept finding that the unglamorous things decide whether a site feels good: page weight, keyboard focus, clean markup, a layout that holds up on a cheap phone.</p>
@@ -229,7 +228,10 @@
 <script src="sk-defaults.js" defer></script>
 <script src="sk-data.js" defer></script>
 <script src="script.js" defer></script>
+<script src="feedback.js" defer></script>
 <script src="config.js" defer></script>
+<script src="track.js" defer></script>
+<script src="a11y.js" defer></script>
 <script src="account.js" defer></script>
 </body>
 </html>

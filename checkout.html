@@ -1,9 +1,85 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Checkout · SkillsKnowledge</title><meta name="robots" content="noindex"><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="redesign.css"><link rel="stylesheet" href="flow.css"><link rel="stylesheet" href="polish.css">
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checkout | SkillsKnowledge</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet" href="checkout.css">
+<link rel="stylesheet" href="theme2.css">
 </head>
-<body><header class="top"><div class="wrap bar"><a class="brand" href="index.html" aria-label="SkillsKnowledge home">SK</a><a class="btn btn-ghost btn-sm" href="index.html">Home</a></div></header>
-<main id="checkout" class="flow-shell"><div class="flow-heading"><p class="eyebrow">Order request</p><h1>Checkout</h1><p>Choose a service and payment method, then send an order request. Payment details are not processed on this demo site.</p></div>
-<div class="flow-grid"><form id="order-form" class="flow-card flow-fields"><section><h2>1. Choose a package</h2><div class="package-list" id="package-list"></div></section><section><h2>2. Your details</h2><div class="flow-fields"><label>Full name<input name="name" autocomplete="name" required placeholder="Your name"></label><div class="flow-grid two"><label>Email<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" placeholder="+92 300 1234567"></label></div><label>Project details (optional)<textarea name="details" placeholder="Tell me briefly what you need"></textarea></label></div></section><section><h2>3. Payment method</h2><div class="method-list"><label class="method-option"><input type="radio" name="method" value="Card / online provider" required><span><b>Card / online payment</b><small>Payment provider connection will be added later.</small></span></label><label class="method-option"><input type="radio" name="method" value="JazzCash"><span><b>JazzCash</b><small>Manual payment reference can be added after setup.</small></span></label><label class="method-option"><input type="radio" name="method" value="Easypaisa"><span><b>Easypaisa</b><small>Manual payment reference can be added after setup.</small></span></label><label class="method-option"><input type="radio" name="method" value="Bank transfer"><span><b>Bank transfer</b><small>Bank details will be provided when payments are connected.</small></span></label><label class="method-option"><input type="radio" name="method" value="Pay after approval"><span><b>Pay after approval</b><small>Confirm the brief first, then arrange payment.</small></span></label></div><p class="flow-note">Submitting creates a pending order request in this browser only. No charge is made and no payment is verified.</p><button class="flow-primary" type="submit">Submit order request</button></section></form>
-<aside class="flow-card"><h2>Order summary</h2><div class="summary-line"><span>Service</span><strong id="sum-service">Choose a package</strong></div><div class="summary-line"><span>Package</span><strong id="sum-package">—</strong></div><div class="summary-line"><span>Total</span><strong id="sum-total">PKR —</strong></div><p class="flow-note">Your order will be marked <b>Pending review</b>. You can connect a real payment provider later without changing this checkout structure.</p></aside></div>
-<section id="order-success" class="flow-success" hidden><div class="success-mark">✓</div><p class="eyebrow">Order request received</p><h1>Your request is in the queue</h1><p id="success-copy">The order is pending review. No payment was charged.</p><a class="btn btn-solid" href="account.html">View your account</a> <a class="btn btn-ghost" href="index.html">Back to website</a></section></main>
-<script src="checkout.js" defer></script></body></html>
+<body>
+<div class="bgfx" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
+<canvas class="snow" id="snow" aria-hidden="true"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="sp" viewBox="0 0 24 24"><path d="M12 0C12.6 7.2 16.8 11.4 24 12 16.8 12.6 12.6 16.8 12 24 11.4 16.8 7.2 12.6 0 12 7.2 11.4 11.4 7.2 12 0Z"/></symbol></svg>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="index.html" aria-label="SK, home">
+      <svg viewBox="1.1 1.5 131.8 97.0" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg>
+    </a>
+    <nav id="nav" aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#services">Skills</a></li>
+        <li><a href="index.html#work">Work</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-sm btn-rainbow" href="login.html" id="login-btn"><canvas class="rb" aria-hidden="true"></canvas>Login<svg class="st" style="--x:10%;--y:22%;--d:0s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:84%;--y:56%;--d:1.2s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:58%;--y:12%;--d:2.2s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg><svg class="st" style="--x:32%;--y:68%;--d:.6s" viewBox="0 0 24 24" aria-hidden="true"><use href="#sp"/></svg></a>
+    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+  </div>
+</header>
+
+<main id="top"><section class="co"><div class="wrap">
+  <div id="co-steps" class="co-steps" aria-hidden="true"><span class="on">1 Package</span><span>2 Details</span><span>3 Payment</span></div>
+  <div class="co-grid">
+    <form id="co-form" novalidate>
+      <h1>Checkout</h1>
+      <p class="co-sub">Choose a package, then pick how you want to pay. No card details are ever stored on this site.</p>
+      <fieldset class="co-card"><legend>1. Package</legend><div id="co-plans" class="co-plans"></div></fieldset>
+      <fieldset class="co-card"><legend>2. Your details</legend>
+        <div class="co-two"><label>Full name<input id="co-name" autocomplete="name" placeholder="Your name"></label>
+        <label>Email<input id="co-email" type="email" autocomplete="email" placeholder="you@example.com"></label></div>
+        <label>Phone <span class="opt">(optional)</span><input id="co-phone" type="tel" autocomplete="tel" placeholder="+92 300 1234567"></label>
+        <label>Project note <span class="opt">(optional)</span><textarea id="co-note" rows="3" maxlength="500" placeholder="Tell me about the project"></textarea></label>
+      </fieldset>
+      <fieldset class="co-card"><legend>3. Payment method</legend><div id="co-methods" class="co-methods"></div><div id="co-pay" class="co-pay"></div></fieldset>
+      <p class="co-err" id="co-err" role="alert" hidden></p>
+    </form>
+    <aside class="co-sum" id="co-sum" aria-label="Order summary">
+      <h2>Order summary</h2>
+      <div class="co-line"><span id="s-item">-</span><b id="s-amt">-</b></div>
+      <div class="co-line sm"><span>Plan</span><span id="s-plan">-</span></div>
+      <div class="co-line sm"><span>Payment</span><span id="s-method">Not chosen</span></div>
+      <div class="co-line tot"><span>Total</span><b id="s-tot">-</b></div>
+      <button class="btn btn-solid" type="submit" form="co-form" id="co-go">Place order</button>
+      <p class="co-fine">You will get a confirmation by email once the payment is checked.</p>
+    </aside>
+  </div>
+  <div id="co-done" class="co-done" hidden>
+    <svg class="co-tick" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg>
+    <h1>Order placed</h1><p id="co-done-t"></p><a class="btn btn-solid" href="index.html">Back to home</a>
+  </div>
+</div></section></main>
+
+<script src="site-data.js" defer></script>
+<script src="sk-defaults.js" defer></script>
+<script src="sk-data.js" defer></script>
+<script src="script.js" defer></script>
+<script src="config.js" defer></script>
+<script src="track.js" defer></script>
+<script src="a11y.js" defer></script>
+<script src="supabase-auth.js" defer></script>
+<script src="account.js" defer></script>
+<script src="checkout.js" defer></script>
+
+</body>
+</html>

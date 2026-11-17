@@ -62,3 +62,53 @@
   box-shadow:0 0 0 1000px rgb(var(--card-rgb)) inset;
   transition:background-color 99999s ease-in-out 0s;animation:autofillstart .01s}
 @keyframes autofillstart{from{opacity:1}to{opacity:1}}
+
+/* sign-up: fields in pairs so the form still fits the screen */
+#f-signup{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:.7rem;width:min(100%,520px);gap:clamp(.35rem,1.2vh,.7rem) .7rem}
+#f-signup>*{grid-column:1/-1}
+#f-signup>.af{grid-column:auto}
+#f-signup .social .btn{padding:.7rem 1rem}
+#f-signup .af input,#f-signup .pwrap input{padding:.55rem .75rem}
+#f-signup .af label{font-size:.78rem}
+.auth-back{width:min(100%,520px)}
+
+/* floating labels: the label sits inside the field and moves up when you click or type */
+.af label{position:absolute;left:.9rem;top:.98rem;z-index:1;margin:0;pointer-events:none;font:500 .92rem var(--f-body);color:var(--muted);transition:top .18s ease,font-size .18s ease,color .18s ease,letter-spacing .18s}
+.af:focus-within label,.af:has(input:not(:placeholder-shown)) label{top:.42rem;font-size:.68rem;font-weight:700;letter-spacing:.02em;color:rgb(var(--acc))}
+.af input,.pwrap input{padding:1.5rem .9rem .5rem;border-radius:10px;min-height:3.4rem}
+.pwrap input{padding-right:3rem}
+.af input::placeholder{color:transparent}
+.af.bad input{background:rgba(255,110,110,.16)}
+.af .ae{top:.3rem;right:.9rem}
+#f-signup .af input,#f-signup .pwrap input{padding:1.45rem .75rem .45rem;min-height:3.2rem}
+#f-signup .af label{font-size:.88rem;left:.75rem;top:.92rem}
+#f-signup .af:focus-within label,#f-signup .af:has(input:not(:placeholder-shown)) label{font-size:.66rem;top:.38rem}
+.appeal-link{justify-self:center;color:rgb(var(--acc));font:700 .86rem var(--f-body);text-decoration:none}
+.appeal-link:hover{text-decoration:underline}
+.arow{font-size:.86rem}
+
+/* normal-height fields */
+.af input,.pwrap input{padding:1.15rem .9rem .3rem;min-height:2.9rem;border-radius:10px}
+.pwrap input{padding-right:3rem}
+.af label{top:.78rem;font-size:.9rem}
+.af:focus-within label,.af:has(input:not(:placeholder-shown)) label{top:.28rem;font-size:.64rem}
+#f-signup .af input,#f-signup .pwrap input{padding:1.1rem .75rem .25rem;min-height:2.75rem}
+#f-signup .af label{top:.72rem;font-size:.86rem}
+#f-signup .af:focus-within label,#f-signup .af:has(input:not(:placeholder-shown)) label{top:.26rem;font-size:.62rem}
+.af .ae{top:.25rem}
+
+/* fatter fields, narrower form */
+.aform{width:min(100%,340px)}
+.auth-back{width:min(100%,340px)}
+.af input,.pwrap input{padding:1.45rem 1rem .5rem;min-height:3.6rem;border-radius:12px}
+.pwrap input{padding-right:3rem}
+.af label{top:1.05rem;font-size:.95rem;left:1rem}
+.af:focus-within label,.af:has(input:not(:placeholder-shown)) label{top:.45rem;font-size:.68rem}
+.af .ae{top:.4rem;right:1rem}
+#f-signup{width:min(100%,460px)}
+#f-signup .af input,#f-signup .pwrap input{padding:1.3rem .8rem .4rem;min-height:3.2rem}
+#f-signup .af label{top:.9rem;font-size:.88rem;left:.8rem}
+#f-signup .af:focus-within label,#f-signup .af:has(input:not(:placeholder-shown)) label{top:.36rem;font-size:.64rem}
+.auth-back{width:min(100%,340px)}
+.auth-card:has(#f-signup:not([hidden])) .auth-back{width:min(100%,460px)}
+.aform:not(#f-signup){justify-self:center}

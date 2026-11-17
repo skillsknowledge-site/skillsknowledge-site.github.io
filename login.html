@@ -12,8 +12,7 @@
 <link rel="stylesheet" href="style.css">
 
 <link rel="stylesheet" href="auth.css">
-<link rel="stylesheet" href="redesign.css">
-<link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="theme2.css">
 </head>
 <body data-pp>
 <div class="bgfx" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
@@ -25,7 +24,7 @@
     <a class="brand" href="index.html" aria-label="SK, home">
       <svg viewBox="1.1 1.5 131.8 97.0" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg>
     </a>
-    <a class="btn btn-ghost btn-sm" href="index.html">Home</a>
+    <a class="btn btn-solid btn-sm home-btn" href="index.html"><i></i><i></i><i></i><i></i>Home</a>
   </div>
 </header>
 <main class="auth">
@@ -43,24 +42,24 @@
       <div class="af"><label for="li-pw">Password</label><div class="pwrap"><input id="li-pw" name="password" type="password" autocomplete="current-password" placeholder=" "><button class="eye" type="button" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><p class="ae" data-for="li-pw"></p></div>
       <div class="arow"><label class="chk"><input type="checkbox" name="remember"><span>Remember me</span></label><a href="#" data-forgot>Forgot password?</a></div>
       <button class="btn btn-solid abtn" type="submit">Log in</button>
-      <p class="swap"><a href="appeal.html">Submit an appeal for a blocked account</a></p>
+      <a class="appeal-link" href="appeal.html">Submit an appeal for a blocked account</a>
       <p class="or"><span>or continue with</span></p>
-      <div class="social"><button class="btn btn-ghost" type="button" data-provider="google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>Google</button><button class="btn btn-ghost" type="button" data-provider="facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.96-1.88h1.51V4.92s-1.37-.23-2.68-.23c-2.74 0-4.53 1.66-4.53 4.67V12H7.08v3.47h3.05V24a12.1 12.1 0 0 0 3.75 0v-8.53z"/></svg>Facebook</button></div>
+      <div class="social"><button class="btn btn-ghost" type="button" data-provider="google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>Google</button><button class="btn btn-ghost" type="button" data-provider="azure"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#F25022" d="M2 2h9.5v9.5H2z"/><path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z"/><path fill="#00A4EF" d="M2 12.5h9.5V22H2z"/><path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z"/></svg>Microsoft</button></div>
       <p class="swap">Don't have an account? <a href="#signup" data-view-to="signup">Create new account</a></p>
     </form>
     <form class="aform" id="f-signup" data-view="signup" method="post" action="#" autocomplete="on" hidden novalidate>
       <h1>Create new account</h1><p class="sub">It takes less than a minute.</p>
       <p class="aalert" role="alert" hidden></p>
-      <div class="af"><label for="su-name">Full name</label><input id="su-name" name="name" type="text" autocomplete="name" placeholder="Your name"><p class="ae" data-for="su-name"></p></div>
-      <div class="af"><label for="su-username">Username</label><input id="su-username" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Choose a username"><p class="ae" data-for="su-username"></p></div>
-      <div class="af"><label for="su-email">Email</label><input id="su-email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com"><p class="ae" data-for="su-email"></p></div>
-      <div class="af"><label for="su-phone">Phone number <span class="sub-inline">(use email or phone)</span></label><input id="su-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+92 300 1234567"><p class="ae" data-for="su-phone"></p></div>
-      <div class="af"><label for="su-pw">Password</label><div class="pwrap"><input id="su-pw" name="new-password" type="password" autocomplete="new-password" placeholder="Enter your password"><button class="eye" type="button" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><p class="ae" data-for="su-pw"></p></div>
-      <div class="af"><label for="su-pw2">Confirm password</label><div class="pwrap"><input id="su-pw2" name="confirm-password" type="password" autocomplete="new-password" placeholder="Repeat your password"><button class="eye" type="button" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><p class="ae" data-for="su-pw2"></p></div>
+      <div class="af"><label for="su-name">Full name</label><input id="su-name" name="name" type="text" autocomplete="name" placeholder=" "><p class="ae" data-for="su-name"></p></div>
+      <div class="af"><label for="su-user">Username</label><input id="su-user" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" placeholder=" "><p class="ae" data-for="su-user"></p></div>
+      <div class="af"><label for="su-email">Email</label><input id="su-email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder=" "><p class="ae" data-for="su-email"></p></div>
+      <div class="af"><label for="su-phone">Phone (optional)</label><input id="su-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder=" "><p class="ae" data-for="su-phone"></p></div>
+      <div class="af"><label for="su-pw">Password</label><div class="pwrap"><input id="su-pw" name="new-password" type="password" autocomplete="new-password" placeholder=" "><button class="eye" type="button" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><p class="ae" data-for="su-pw"></p></div>
+      <div class="af"><label for="su-pw2">Confirm password</label><div class="pwrap"><input id="su-pw2" name="confirm-password" type="password" autocomplete="new-password" placeholder=" "><button class="eye" type="button" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><p class="ae" data-for="su-pw2"></p></div>
       <label class="chk"><input type="checkbox" name="terms" id="su-terms"><span>I agree to the Terms and Privacy Policy</span></label><p class="ae" data-for="su-terms"></p>
       <button class="btn btn-solid abtn" type="submit">Create account</button>
       <p class="or"><span>or sign up with</span></p>
-      <div class="social"><button class="btn btn-ghost" type="button" data-provider="google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>Google</button><button class="btn btn-ghost" type="button" data-provider="facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.96-1.88h1.51V4.92s-1.37-.23-2.68-.23c-2.74 0-4.53 1.66-4.53 4.67V12H7.08v3.47h3.05V24a12.1 12.1 0 0 0 3.75 0v-8.53z"/></svg>Facebook</button></div>
+      <div class="social"><button class="btn btn-ghost" type="button" data-provider="google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>Google</button><button class="btn btn-ghost" type="button" data-provider="azure"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#F25022" d="M2 2h9.5v9.5H2z"/><path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z"/><path fill="#00A4EF" d="M2 12.5h9.5V22H2z"/><path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z"/></svg>Microsoft</button></div>
       <p class="swap">Already have an account? <a href="#login" data-view-to="login">Log in</a></p>
     </form>
   </section>
@@ -71,6 +70,8 @@
 <script src="sk-data.js" defer></script>
 <script src="script.js" defer></script>
 <script src="config.js" defer></script>
+<script src="track.js" defer></script>
+<script src="a11y.js" defer></script>
 <script src="supabase-auth.js" defer></script>
 <script src="account.js" defer></script>
 <script src="auth.js" defer></script>

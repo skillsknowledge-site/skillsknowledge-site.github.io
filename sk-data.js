@@ -2,6 +2,14 @@
    - Visitors see PUBLISHED data (site-data.js) merged over the defaults (sk-defaults.js).
    - While the admin is logged in (this browser only), the pages show the admin's DRAFT instead, so changes can be previewed
      before they are published. */
+/* colour theme: light (default), dark, or follow the device. Saved in the browser and in the account preferences. */
+(function(){
+  var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null,mode='light';
+  function apply(m){mode=(m==='dark'||m==='system')?m:'light';var dark=mode==='dark'||(mode==='system'&&mq&&mq.matches);document.documentElement.setAttribute('data-theme',dark?'dark':'light')}
+  window.skTheme=apply;
+  try{var p=JSON.parse(localStorage.getItem('sk_prefs')||'null');apply(p&&p.theme)}catch(e){apply('light')}
+  if(mq&&mq.addEventListener)mq.addEventListener('change',function(){if(mode==='system')apply('system')});
+})();
 (function(){
 'use strict';
 var SESSION_KEY='sk-admin-session',DRAFT_KEY='sk-admin-draft';
@@ -124,8 +132,8 @@ window.SK={
   if(!/^https?:$/.test(location.protocol))return;
   var p=location.pathname,n=p.replace(/(^|\/)index\.html$/,'$1').replace(/\.html$/,'');
   if(n!==p){try{history.replaceState(null,'',n+location.search+location.hash)}catch(e){}}
-  var re=/^(?:\.\/)?(index|about|graphics|video|code|login|account)\.html(#.*)?$/;
-  function clean(){[].forEach.call(document.querySelectorAll('a[href]'),function(a){var m=re.exec(a.getAttribute('href')||'');if(m)a.setAttribute('href',(m[1]==='index'?'./':m[1])+(m[2]||''))})}
+  var re=/^(?:\.\/)?(index|about|graphics|video|code|login|account|checkout|appeal)\.html(\?[^#]*)?(#.*)?$/;
+  function clean(){[].forEach.call(document.querySelectorAll('a[href]'),function(a){var m=re.exec(a.getAttribute('href')||'');if(m)a.setAttribute('href',(m[1]==='index'?'./':m[1])+(m[2]||'')+(m[3]||''))})}
   var t=0;function later(){clearTimeout(t);t=setTimeout(clean,60)}
   document.addEventListener('DOMContentLoaded',function(){clean();try{new MutationObserver(later).observe(document.body,{childList:true,subtree:true})}catch(e){}});
 })();

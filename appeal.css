@@ -1,0 +1,24 @@
+/* Appeal page */
+.ap{min-height:calc(100dvh - 53px);padding:clamp(24px,5vw,64px) 16px 64px}
+.ap-wrap{position:relative;width:min(100%,560px);margin:0 auto;display:grid;gap:.6rem}
+.ap-eye{margin:0;font:800 .74rem var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--acc))}
+.ap h1{margin:0;font:800 clamp(2rem,5vw,3.2rem)/1.02 var(--f-display);padding-right:64px}
+.ap-sub{margin:0 0 .8rem;color:var(--muted)}
+.ap-x{position:absolute;top:0;right:0;width:46px;height:46px;border-radius:50%;background:#fff;display:grid;place-items:center;color:#1c2542;box-shadow:0 4px 16px rgba(40,60,130,.12);transition:background .2s}
+.ap-x:hover,.ap-x:focus-visible{background:#eef3fe;color:rgb(var(--acc))}
+.ap-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ap-card{display:grid;gap:1rem;padding:clamp(18px,3vw,32px);border-radius:20px;background:#fff;box-shadow:0 10px 40px rgba(40,60,130,.08)}
+.ap-f{display:grid;gap:.4rem;font:700 .84rem var(--f-body);color:#1c2542}
+.ap-f input,.ap-f textarea{width:100%;padding:.8rem .95rem;border-radius:10px;border:0;background:rgba(79,110,247,.08);color:#1c2542;font:500 .95rem var(--f-body);outline:none;resize:none}
+.ap-f textarea{min-height:240px}
+.ap-f input:focus,.ap-f textarea:focus{background:rgba(79,110,247,.15)}
+.ap-f ::placeholder{color:rgba(28,37,66,.4)}
+.ap-st{margin:0;min-height:1.2em;font:700 .86rem var(--f-body);color:var(--muted)}.ap-st.bad{color:#c0392b}
+.ap-card .btn{justify-self:end;min-width:140px}
+.ap-done{justify-items:center;text-align:center;padding:3.4rem 1.4rem;gap:1.2rem}.ap-done[hidden]{display:none}
+.ap-dt{margin:0;font:600 1.15rem var(--f-body);color:var(--s-ink)}
+.ap-tick{width:96px;height:96px;animation:apin .5s cubic-bezier(.2,1.4,.4,1) both}
+.ap-tick circle{fill:#2eb88a}
+.ap-tick path{fill:none;stroke:#fff;stroke-width:4.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:aptk .45s .35s ease forwards}
+@keyframes apin{from{transform:scale(.4);opacity:0}}@keyframes aptk{to{stroke-dashoffset:0}}
+.ap-card[hidden]{display:none}
