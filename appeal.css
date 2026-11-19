@@ -1,6 +1,6 @@
 /* Appeal page */
 .ap{min-height:calc(100dvh - 53px);padding:clamp(24px,5vw,64px) 16px 64px}
-.ap-wrap{position:relative;width:min(100%,560px);margin:0 auto;display:grid;gap:.6rem}
+.ap-wrap{position:relative;width:min(100%,760px);margin:0 auto;display:grid;gap:.6rem}
 .ap-eye{margin:0;font:800 .74rem var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--acc))}
 .ap h1{margin:0;font:800 clamp(2rem,5vw,3.2rem)/1.02 var(--f-display);padding-right:64px}
 .ap-sub{margin:0 0 .8rem;color:var(--muted)}
@@ -15,7 +15,7 @@
 .ap-f ::placeholder{color:rgba(28,37,66,.4)}
 .ap-st{margin:0;min-height:1.2em;font:700 .86rem var(--f-body);color:var(--muted)}.ap-st.bad{color:#c0392b}
 .ap-card .btn{justify-self:end;min-width:140px}
-.ap-done{justify-items:center;text-align:center;padding:3.4rem 1.4rem;gap:1.2rem}.ap-done[hidden]{display:none}
+.ap-done{width:min(100%,480px);justify-self:center;justify-items:center;text-align:center;padding:3.4rem 1.4rem;gap:1.2rem}.ap-done[hidden]{display:none}
 .ap-dt{margin:0;font:600 1.15rem var(--f-body);color:var(--s-ink)}
 .ap-tick{width:96px;height:96px;animation:apin .5s cubic-bezier(.2,1.4,.4,1) both}
 .ap-tick circle{fill:#2eb88a}

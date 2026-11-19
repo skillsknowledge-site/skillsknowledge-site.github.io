@@ -106,9 +106,9 @@ function ready(){
   banner();
 }
 function banner(){
-  if(!admin()||file()==='admin.html')return;
+  if(!admin()||document.body.classList.contains('adm'))return;
   var d=document.createElement('div');d.id='sk-admin-bar';
-  d.innerHTML='<b>Admin preview</b><span>'+(get(DRAFT_KEY)?'showing your draft':'no draft yet')+'</span><a href="admin.html">Open admin</a><button type="button">Exit</button>';
+  d.innerHTML='<b>Admin preview</b><span>'+(get(DRAFT_KEY)?'showing your draft':'no draft yet')+'</span><a href="ctl-k7q2x9m4.html">Open admin</a><button type="button">Exit</button>';
   var s=document.createElement('style');
   s.textContent='#sk-admin-bar{position:fixed;left:12px;bottom:12px;z-index:9999;display:flex;align-items:center;gap:.7rem;padding:.5rem .8rem;border-radius:8px;background:rgba(10,14,12,.92);color:#fff;font:500 .78rem system-ui,sans-serif;border:1px solid rgba(255,255,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.45)}#sk-admin-bar span{opacity:.7}#sk-admin-bar a,#sk-admin-bar button{color:#0a0e0c;background:#7fe3a0;border:0;border-radius:5px;padding:.25rem .6rem;font:600 .75rem system-ui,sans-serif;text-decoration:none;cursor:pointer}';
   document.head.appendChild(s);document.body.appendChild(d);

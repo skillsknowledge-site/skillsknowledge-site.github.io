@@ -91,11 +91,14 @@
   css.textContent='.reduce-motion .snow{display:none!important}.reduce-motion *,.reduce-motion *::before,.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}html.big-text{font-size:17px}'+
   '.acct{position:relative}.acct-btn{position:relative;display:block;width:38px;height:38px;border-radius:50%;border:0;background:rgba(var(--tint),.2);color:#fff;padding:0;cursor:pointer;overflow:hidden;font:700 .9rem var(--f-body)}'+
   '.acct-btn .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.acct-btn img,.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.acct-btn:hover{filter:brightness(1.15)}'+
-  '.acct-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:250px;padding:.5rem;border-radius:14px;background:rgba(10,14,14,.97);display:none;z-index:60}'+
-  '.acct.open .acct-menu{display:block}.acct-who{display:flex;gap:.7rem;align-items:center;padding:.6rem .6rem .8rem;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:.3rem}'+
-  '.acct-who div span{display:block;font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}.acct-who b{display:block;font-size:.92rem;color:#fff}'+
-  '.acct-menu a,.acct-menu button{display:block;width:100%;text-align:left;padding:.6rem .7rem;border-radius:8px;border:0;background:none;color:#fff;font:500 .88rem var(--f-body);text-decoration:none;cursor:pointer}'+
-  '.acct-menu a:hover,.acct-menu button:hover{background:rgba(255,255,255,.08)}'+
+  '.acct-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:250px;padding:.5rem;border-radius:14px;background:var(--s-surface,rgba(10,14,14,.97));box-shadow:0 14px 40px rgba(30,50,120,.2);display:none;z-index:60}'+
+  '.acct.open .acct-menu{display:block}.acct-who{display:flex;gap:.7rem;align-items:center;padding:.6rem .6rem .8rem;border-bottom:1px solid var(--line,rgba(255,255,255,.1));margin-bottom:.3rem}'+
+  '.acct-who div span{display:block;font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}.acct-who b{display:block;font-size:.92rem;color:var(--s-ink,#fff)}'+
+  '.acct-menu a,.acct-menu button{display:block;width:100%;text-align:left;padding:.6rem .7rem;border-radius:8px;border:0;background:none;color:var(--s-ink,#fff);font:600 .88rem var(--f-body);text-decoration:none;cursor:pointer}'+
+  '.acct-menu a:hover,.acct-menu button:hover{background:var(--s-soft,rgba(255,255,255,.08))}'+
+  '.acct-theme{display:flex;gap:4px;margin:.35rem .2rem .2rem;padding:4px;border-radius:99px;background:var(--s-soft,rgba(255,255,255,.08))}'+
+  '.acct-menu .acct-theme button{flex:1;text-align:center;padding:.45rem .6rem;border-radius:99px;font-weight:700}'+
+  '.acct-menu .acct-theme button:hover{background:none}.acct-menu .acct-theme button[aria-pressed=true]{background:rgb(var(--acc));color:#fff}'+
   '.av{position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border-radius:50%;overflow:hidden;background:rgba(var(--tint),.18);font:700 1rem var(--f-body);color:#fff}'+
   '.un-back{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.7)}'+
   '.un-box{width:min(400px,100%);padding:1.6rem 1.4rem;border-radius:16px;background:#0c1512;color:#fff;display:grid;gap:.8rem}'+
@@ -118,13 +121,20 @@
     var w=$('.acct');if(!w){w=document.createElement('div');w.className='acct';b.parentNode.insertBefore(w,b);b.style.display='none'}
     w.innerHTML='<button class="acct-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Your account">'+avatar(u)+'</button>'+
       '<div class="acct-menu" role="menu"><div class="acct-who"><span class="av">'+avInner(u)+'</span><div><b>'+esc(u.name)+'</b><span>'+(u.username?'@'+esc(u.username):esc(u.email))+'</span></div></div>'+
-      '<a href="account" role="menuitem">Profile and settings</a><button type="button" id="acct-out" role="menuitem">Log out</button></div>';
+      '<a href="account" role="menuitem">Profile and settings</a>'+
+      '<div class="acct-theme" role="group" aria-label="Colour theme"><button type="button" data-th="light" aria-pressed="'+(curTheme()==='light')+'">Light</button><button type="button" data-th="dark" aria-pressed="'+(curTheme()==='dark')+'">Dark</button></div>'+
+      '<button type="button" id="acct-out" role="menuitem">Log out</button></div>';
     var btn=$('.acct-btn',w);
     btn.addEventListener('click',function(e){e.stopPropagation();var o=w.classList.toggle('open');btn.setAttribute('aria-expanded',o)});
     document.addEventListener('click',function(e){if(!w.contains(e.target)){w.classList.remove('open');btn.setAttribute('aria-expanded','false')}});
     document.addEventListener('keydown',function(e){if(e.key==='Escape')w.classList.remove('open')});
     $('#acct-out',w).addEventListener('click',function(){signOut(false)});
+    [].forEach.call(w.querySelectorAll('[data-th]'),function(b){b.addEventListener('click',function(){
+      var v=Object.assign({},rd(PKEY)||{},{theme:b.dataset.th});wr(PKEY,v);applyPrefs(v);
+      [].forEach.call(w.querySelectorAll('[data-th]'),function(o){o.setAttribute('aria-pressed',o===b)});
+      saveMeta({prefs:v}).catch(function(){})})});
   }
+  function curTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
 
   /* ---- required step: choose a username nobody else has ---- */
   function usernameStep(u){
@@ -219,6 +229,8 @@
     }
     var onLogin=/\/login(\.html)?$/i.test(location.pathname),onAcct=!!$('#acct');
     if(!has){if(onAcct)goReplace('login');return}
+    var back=null;try{back=JSON.parse(localStorage.getItem('sk_after')||'null');localStorage.removeItem('sk_after')}catch(e){}
+    if(back&&/^[a-z0-9-]+\.html$/.test(back.p||'')&&Date.now()-back.t<600000){location.replace(back.p);return}
     if(onLogin&&!/signup|error/.test(location.hash+location.search)){goReplace('account');return}
     if(cached){header(cached);if(onAcct)page(cached)}
     loadUser().then(function(u){
@@ -226,7 +238,7 @@
       if(!u){if(onAcct)goReplace('login');var w=$('.acct');if(w)w.remove();var b=$('#login-btn');if(b)b.style.display='';return}
       applyPrefs(u.prefs&&Object.keys(u.prefs).length?u.prefs:rd(PKEY));header(u);beat(u);
       var rec=false;try{rec=sessionStorage.getItem('sk_recovery')==='1';sessionStorage.removeItem('sk_recovery')}catch(e){}
-      if(rec)passDialog();else if(u.ready&&!u.username)usernameStep(u);
+      if(rec)passDialog();else if(u.ready&&!u.username&&!document.body.classList.contains('adm'))usernameStep(u);
       if(onAcct)page(u);
     });
   }

@@ -24,13 +24,7 @@
 :root[data-theme=dark] .gt{background:linear-gradient(100deg,rgb(130,160,255),rgb(190,150,255));-webkit-background-clip:text;background-clip:text}
 :root[data-theme=dark] .auth-side{background:linear-gradient(160deg,rgba(80,110,255,.35),rgba(14,19,34,.95) 70%)}
 :root[data-theme=dark] .social .btn{background:#fff;color:#1f1f1f}
-:root[data-theme=dark] .acct-menu{background:var(--s-surface)}
-:root[data-theme=dark] body.adm[data-v=app] .ad-table td,:root[data-theme=dark] body.adm[data-v=app] .ad-table th{border-color:rgba(150,170,255,.16)!important}
-.acct-menu{background:var(--s-surface)!important;box-shadow:0 14px 40px rgba(30,50,120,.2)}
-.acct-menu a,.acct-menu button,.acct-who div b{color:var(--s-ink)!important}
-.acct-menu a:hover,.acct-menu button:hover{background:var(--s-soft)!important}
-.acct-who{border-bottom-color:var(--line)!important}
-body{background:var(--s-bg);color:var(--fg)}
+body{background:var(--s-bg);color:var(--fg);font-weight:500}
 body::before{background:var(--s-bg)}
 .bgfx .a{background:radial-gradient(900px 600px at 88% -4%,rgba(120,160,255,.38),transparent 62%),radial-gradient(800px 560px at -4% 40%,rgba(255,190,160,.28),transparent 62%)}
 .bgfx .b{background:radial-gradient(800px 560px at 100% 80%,rgba(255,170,200,.26),transparent 62%),radial-gradient(700px 500px at 6% 100%,rgba(130,170,255,.26),transparent 62%)}
@@ -95,56 +89,6 @@ footer{background:var(--s-nav);border-top:1px solid var(--line);color:var(--fg)}
 .un-back{background:rgba(20,28,56,.45)!important}
 .un-in textarea,.un-in input{color:var(--fg)!important}.un-in span{color:var(--muted)}.un-st{color:var(--muted)}
 
-/* admin dashboard (the login wallpaper screen stays as it was) */
-body.adm[data-v=app]{background:var(--s-bg)!important;color:var(--fg)}
-body.adm[data-v=app] .bgfx,body.adm[data-v=app] .snow{display:block}
-body.adm[data-v=app]::before{display:none}
-body.adm[data-v=app]{--bg:var(--s-bg);--card:var(--s-surface);--card-hi:var(--s-soft)}
-body.adm[data-v=app] .top{background:var(--s-nav)!important;border-bottom:0!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-body.adm[data-v=app] .ad-title,body.adm[data-v=app] .brand{color:var(--s-head)}
-body.adm[data-v=app] .ad-card,body.adm[data-v=app] .ad-row,body.adm[data-v=app] .ad-toggle,body.adm[data-v=app] .ad-kpi,body.adm[data-v=app] .ad-nav{background:var(--s-surface)!important;color:var(--fg)!important;border:1px solid rgba(60,80,150,.1)!important;border-radius:14px!important}
-body.adm[data-v=app] .ad-card>h1:first-child,body.adm[data-v=app] .ad-card>h2:first-child{background:none!important;color:var(--s-head)!important;margin:0 0 .2rem!important;padding:0!important}
-body.adm[data-v=app] .ad-kpis .ad-kpi:nth-child(4n+1){background:var(--p1)!important}
-body.adm[data-v=app] .ad-kpis .ad-kpi:nth-child(4n+2){background:var(--p2)!important}
-body.adm[data-v=app] .ad-kpis .ad-kpi:nth-child(4n+3){background:var(--p3)!important}
-body.adm[data-v=app] .ad-kpis .ad-kpi:nth-child(4n){background:var(--p4)!important}
-body.adm[data-v=app] h1,body.adm[data-v=app] h2,body.adm[data-v=app] h3,body.adm[data-v=app] b,body.adm[data-v=app] td,body.adm[data-v=app] th,body.adm[data-v=app] label{color:var(--s-ink)!important}
-body.adm[data-v=app] .ad-muted,body.adm[data-v=app] p,body.adm[data-v=app] .ad-kpi span,body.adm[data-v=app] td span{color:var(--muted)!important}
-body.adm[data-v=app] .ad-nav button{background:transparent!important;color:var(--s-nav-ink)!important;border:0!important;border-radius:999px!important;font-weight:600}
-body.adm[data-v=app] .ad-nav button:hover{background:var(--s-bg)!important}
-body.adm[data-v=app] .ad-nav button[aria-current]{background:rgb(79,110,247)!important;color:#fff!important}
-body.adm[data-v=app] .ad-nav button svg{stroke:currentColor}
-body.adm[data-v=app] .btn-solid,body.adm[data-v=app] .ad .btn-solid,body.adm[data-v=app] .top .btn-solid,body.adm[data-v=app] .ad-black,body.adm[data-v=app] .ad-btns button,body.adm[data-v=app] .ad-quick button,body.adm[data-v=app] .ad-ord button{background:rgb(79,110,247)!important;color:#fff!important;border:0!important;border-radius:999px!important}
-body.adm[data-v=app] .btn-solid:hover,body.adm[data-v=app] .ad-black:hover,body.adm[data-v=app] .ad-btns button:hover{filter:brightness(1.08);background:rgb(79,110,247)!important;color:#fff!important}
-body.adm[data-v=app] .btn-ghost{background:transparent!important;color:var(--s-ink)!important;border:1px solid rgba(60,80,150,.3)!important;border-radius:999px!important}
-body.adm[data-v=app] .ad-link{background:none!important;color:rgb(79,110,247)!important;border:0!important}
-body.adm[data-v=app] .ad-link.u-danger{color:#d6453d!important}
-body.adm[data-v=app] .ad input,body.adm[data-v=app] .ad textarea,body.adm[data-v=app] .ad select{background:rgba(79,110,247,.08)!important;color:var(--s-ink)!important;border:0!important;border-radius:8px!important}
-body.adm[data-v=app] ::placeholder{color:rgba(28,37,66,.42)}
-body.adm[data-v=app] .ad-table th{background:none!important;border-bottom:1px solid rgba(60,80,150,.15)!important}
-body.adm[data-v=app] .ad-table td{border-color:rgba(60,80,150,.1)!important}
-body.adm[data-v=app] .chip{background:var(--s-bg)!important;color:var(--s-nav-ink)!important;border:0!important}
-body.adm[data-v=app] .chip.ok{background:#dff5e8!important;color:#1f8a4c!important}
-body.adm[data-v=app] .chip.danger{background:#fde2e0!important;color:#c0392b!important}
-body.adm[data-v=app] .ad-nav button span{color:inherit!important}
-body.adm[data-v=app] .ad-msg{background:var(--s-surface)4e0!important;border:1px solid #f2c36b!important;color:#8a5a00!important}
-body.adm[data-v=app] .ad-msg.ok{background:#e4f6ec!important;border-color:#8fd3ac!important;color:#1f7a47!important}
-body.adm[data-v=app] .ad-msg.err{background:#fde8e6!important;border-color:#f0a8a3!important;color:#b83228!important}
-body.adm[data-v=app] .ad-msg.warn{background:var(--s-surface)4e0!important;color:#8a5a00!important}
-body.adm[data-v=app] .ad-kpi *:not(b):not(svg):not(path){color:var(--muted)!important}
-body.adm[data-v=app] .ad-ico{background:var(--s-surface)!important;border:0!important}
-body.adm[data-v=app] .ad-ico svg{stroke:rgb(79,110,247)!important}
-body.adm[data-v=app] .ad-bars li span{color:var(--fg)!important}
-body.adm[data-v=app] .ad-bars i{background:rgba(79,110,247,.12)!important}
-body.adm[data-v=app] .ad-bars u{background:linear-gradient(90deg,#9db4ff,rgb(79,110,247))!important}
-body.adm[data-v=app] .ad-donut .ring{background:conic-gradient(rgb(79,110,247) calc(var(--p)*1%),rgba(79,110,247,.14) 0)!important}
-body.adm[data-v=app] .ad-donut .ring::before{background:var(--s-surface)!important}
-body.adm[data-v=app] .ad-donut .d1{background:rgb(79,110,247)!important}
-body.adm[data-v=app] .ad-donut .d2{background:rgba(79,110,247,.2)!important;border-color:rgba(79,110,247,.4)!important}
-body.adm[data-v=app] .an-stat{background:var(--p2)}
-body.adm[data-v=app] .an-stat.an-b{background:var(--p1)}body.adm[data-v=app] .an-stat.an-c{background:var(--p3)}
-body.adm[data-v=app] .an-top select{color:var(--s-ink)!important;background:var(--s-surface)!important;border:1px solid rgba(60,80,150,.2)!important}
-body.adm[data-v=app] .an-up{color:#1f9d57!important}body.adm[data-v=app] .an-down{color:#d6453d!important}
 
 /* feedback window */
 dialog.fbx{width:min(94vw,640px);max-width:none;padding:0;border:0;border-radius:16px;background:rgb(var(--card-rgb));color:var(--fg);box-shadow:0 24px 70px rgba(30,50,120,.3);overflow:hidden}
@@ -157,7 +101,7 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 .fbx-f{display:grid;gap:.4rem;font:700 .8rem var(--f-body);color:var(--muted)}.fbx-f[hidden]{display:none}.fbx-f i{font-style:normal;font-weight:500;opacity:.8}
 .fbx-f input{width:100%;padding:.65rem .85rem;border-radius:8px;border:0;background:rgba(79,110,247,.09);color:var(--fg);font:500 .95rem var(--f-body);outline:none}
 .fbx-f input:focus{background:rgba(79,110,247,.16)}
-.fbx-stars{display:flex;gap:.2rem}.fbx-stars button{border:0;background:none;padding:.15rem;cursor:pointer;color:rgba(79,110,247,.3)}.fbx-stars button svg{width:30px;height:30px;fill:currentColor;display:block}.fbx-stars button.on{color:#f2a93b}
+.fbx-stars{display:flex;justify-content:center;gap:.2rem}.fbx-stars button{border:0;background:none;padding:.15rem;cursor:pointer;color:rgba(79,110,247,.3)}.fbx-stars button svg{width:30px;height:30px;fill:currentColor;display:block}.fbx-stars button.on{color:#f2a93b}
 .fbx-stars button:focus-visible{outline:2px solid rgb(79,110,247);border-radius:6px}
 .fbx-tools{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap}
 .fbx-tools button,.fbx-col{width:34px;height:34px;border:0;border-radius:8px;background:rgba(79,110,247,.09);color:var(--fg);font:600 1rem var(--f-body);display:grid;place-items:center;cursor:pointer;position:relative}
@@ -190,16 +134,3 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 .home-btn:hover,.home-btn:focus-visible{background:linear-gradient(135deg,#6f8bff,#4f6ef7)!important;filter:none!important;transform:none!important;box-shadow:0 0 0 3px rgba(111,139,255,.25),0 0 22px rgba(90,125,255,.75)}
 .home-btn:hover i,.home-btn:focus-visible i{opacity:1;transform:scale(1.35)}
 
-/* admin: every text visible on the light dashboard (the old file made text white) */
-body.adm[data-v=app] #app :not(svg):not(path):not(.btn-solid):not(.ad-btns button):not(.ad-black):not(.ad-link):not(.chip):not(.an-up):not(.an-down):not(.ad-msg):not(.ad-ico):not(option){color:var(--s-ink)!important}
-body.adm[data-v=app] #app :is(p,small,.ad-muted,dd,td span,.ad-kpi span):not(.ad-msg){color:var(--muted)!important}
-body.adm[data-v=app] #app .ad-kpi *:not(b){color:var(--muted)!important}
-body.adm[data-v=app] #app :is(h1,h2,h3,h4,b,strong,th){color:var(--s-head)!important}
-body.adm[data-v=app] #app .ad-link{color:rgb(79,110,247)!important}
-body.adm[data-v=app] #app .ad-link.u-danger{color:#d6453d!important}
-body.adm[data-v=app] #app .ad-btns button,body.adm[data-v=app] #app .btn-solid{color:#fff!important}
-/* default "Choose file" button: black pill */
-body.adm[data-v=app] input[type=file]{background:transparent!important;padding:0!important;font:600 .86rem var(--f-body);color:var(--muted)}
-body.adm[data-v=app] input[type=file]::file-selector-button{margin-right:.8rem;padding:.55rem 1.1rem;border:0;border-radius:999px;background:#0b0b0f;color:#fff;font:700 .84rem var(--f-body);cursor:pointer;transition:background .2s}
-body.adm[data-v=app] input[type=file]::file-selector-button:hover{background:#2a2f45}
-body.adm[data-v=app] #app .ad-nav button[aria-current],body.adm[data-v=app] #app .ad-nav button[aria-current] *{color:#fff!important}

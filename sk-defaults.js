@@ -161,6 +161,6 @@ window.SK_DEFAULTS={
     {n:'03',title:'Then',text:'Learned video editing for reels, ads and longer videos.'},
     {n:'04',title:'Now',text:'Taking on small projects and sending working builds early.'}
   ],
-'_texts':{lead:'Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.',badge:'1 Year of Experience with 100% Authentic Work',statsTitle:'My Abilities of Work',statYearsValue:'1',statYearsLabel:'Year Experience',statGradeValue:'A',statGradeLabel:'Grade'},
+'_texts':{pill:'Booking projects from January 2027',lead:'Frontend developer. I write HTML, CSS and JavaScript from the first sketch to the last pixel, and reach for React and Node when the job needs them.',badge:'1 Year of Experience with 100% Authentic Work',statsTitle:'My Abilities of Work',statYearsValue:'1',statYearsLabel:'Year Experience',statGradeValue:'A',statGradeLabel:'Grade'},
 '_icons':{"home": ["layout", "stack", "bolt", "video", "palette", "code", "ads", "dot"], "graphics": ["logo", "poster", "social", "thumb", "ads", "ui"], "video": ["reel", "cut", "ads", "caption", "sun", "wave"], "code": ["page", "grid", "phone", "click", "bug", "bolt"]}
 };
