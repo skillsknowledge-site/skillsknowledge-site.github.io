@@ -1,24 +1,21 @@
-SK ADMIN - how it works now
-===========================
+SK ADMIN
+========
 
-Open the admin panel at   your-site/ctl-k7q2x9m4.html   (keep this name private; it is not linked from the site).
-Nothing in the file is secret: Supabase decides who gets in.
+Open the admin panel at   your-site/ctl-k7q2x9m4.html   (keep this name private; nothing links to it).
+admin.html is now only a "404" page, so the old address shows nothing. Always use the ctl- address.
 
-ONE-TIME SETUP
-1. Supabase > SQL Editor > paste the whole text of supabase-owner.sql > Run. (Never upload that file to GitHub.)
-   It makes skillsknowledge.site@gmail.com the OWNER. Change the email inside the file first if you log in with another one.
-2. Delete admin.html and admin-config.js from your GitHub folder. They are no longer used.
-3. Open the admin address, press "Continue with Google" and sign in as the owner.
+LOGIN
+Same as before: email + username + password from admin-config.js (keep YOUR admin-config.js in the folder; never replace it).
+The Users, Orders, Feedback and Analysis tabs read data from Supabase, which only accepts your owner account.
+If they ask you to connect, type the owner email and password there (set the password once on your Profile page). No Google needed.
 
-THE OWNER
-- Stored on the server. No admin can remove you, block you, change your access, or see your details.
-- Other admins see only "SkillsKnowledge, Owner" with a black verified mark.
-- Only you can add or remove admins (Owner and admins tab) and hand ownership to someone else.
+ONE-TIME SQL (Supabase > SQL Editor; never upload these files to GitHub)
+1. supabase-owner.sql   - owner protection (run once, if not done yet)
+2. supabase-files.sql   - file attachments on comments and complaints (new)
+   The free Supabase plan allows 50 MB per file. For 100 MB per file, upgrade to Pro and raise Storage > file size limit.
+
+EMAIL CODE FOR NEW ACCOUNTS
+Supabase > Authentication > Email Templates > "Confirm signup": the message must contain {{ .Token }}.
 
 PUBLISHING SITE EDITS
-Edit in the panel, press Save, then Publish. It downloads site-data.js. Put it in the website folder in place of the
-old one and upload. Visitors only see changes after that upload.
-
-CREATE ACCOUNT EMAIL CODE
-Supabase > Authentication > Email Templates > "Confirm signup": make sure the message contains {{ .Token }}
-(for example: Your code is {{ .Token }}). Then sign-up emails carry the 6-digit code the new window asks for.
+Edit, press Save, then Publish. It downloads site-data.js. Put it in the website folder and upload.

@@ -44,7 +44,7 @@
     return {id:u.id,email:u.email||'',username:pr.username||'',
       name:pr.display_name||m.display_name||m.full_name||m.name||(u.email||'').split('@')[0]||'Member',
       photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked,website:pr.website||'',location:pr.location||'',
-      provider:(u.app_metadata&&u.app_metadata.provider)||'google',created:u.created_at,last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
+      provider:(u.app_metadata&&u.app_metadata.provider)||'google',pwAt:m.pw_changed_at||'',hasPw:!!m.pw_changed_at||((u.app_metadata&&u.app_metadata.provider)||'google')==='email',created:u.created_at,last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
   }
   function getProfile(t,id){
     return api('/rest/v1/profiles?id=eq.'+encodeURIComponent(id)+'&select=*',{token:t}).then(function(r){
@@ -209,7 +209,7 @@
       setPassword(a).then(function(){say('Password saved.','ok');setTimeout(function(){d.remove()},900)},function(er){say(er.message,'bad')})});
     setTimeout(function(){$('#pw-1',d).focus()},50);
   }
-  function setPassword(pw){return token().then(function(t){if(!t)throw new Error('Please log in again.');return api('/auth/v1/user',{method:'PUT',token:t,body:{password:pw}})})}
+  function setPassword(pw){return token().then(function(t){if(!t)throw new Error('Please log in again.');return api('/auth/v1/user',{method:'PUT',token:t,body:{password:pw,data:{pw_changed_at:new Date().toISOString()}}})})}
   /* "online" signal: tell Supabase we are here every minute while a page is open */
   var beating=0;
   function beat(u){
@@ -244,10 +244,11 @@
   }
 
   /* ---- profile and settings page ---- */
-  function lockedUntil(u){if(!u.unchanged)return null;var t=new Date(u.unchanged).getTime()+10*86400000;return t>Date.now()?new Date(t):null}
+  function lockedUntil(u){if(u.owner||!u.unchanged)return null;var t=new Date(u.unchanged).getTime()+10*86400000;return t>Date.now()?new Date(t):null}
   function fmt(d){try{return new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}catch(e){return ''}}
   function page(u){
     var root=$('#acct');if(!root)return;
+    if(u.owner===undefined&&u.ready){u.owner=false;token().then(function(t){return t&&api('/rest/v1/rpc/admin_whoami',{method:'POST',token:t,body:{}})}).then(function(me){if(me&&me.is_owner){u.owner=true;page(u)}}).catch(function(){})}
     var p=Object.assign({},rd(PKEY)||{},u.prefs||{}),msgText=$('#ac-msg')&&!$('#ac-msg').hidden?$('#ac-msg').textContent:'';
     root.innerHTML=
     '<div class="ac-head"><span class="av big">'+avInner(u)+'</span><div><h1>'+esc(u.name)+'</h1><p>'+(u.username?'@'+esc(u.username)+' · ':'')+esc(u.email)+'</p></div></div>'+
@@ -256,7 +257,7 @@
     '<div class="ac-grid">'+
     '<section class="card ac-wide"><h2>Profile</h2><form id="f-prof" novalidate><div class="ac-two">'+
       '<label>Display name<input id="p-name" type="text" maxlength="60" value="'+esc(u.name)+'" autocomplete="name"></label>'+
-      '<label>Username<input id="p-user" type="text" maxlength="20" value="'+esc(u.username)+'" autocomplete="off" autocapitalize="off" spellcheck="false"'+(u.ready&&!lockedUntil(u)?'':' disabled')+'><small id="p-ust">'+(lockedUntil(u)?'You can change your username again on '+esc(fmt(lockedUntil(u)))+'.':'You can change it once every 10 days.')+'</small></label></div>'+
+      '<label>Username<input id="p-user" type="text" maxlength="20" value="'+esc(u.username)+'" autocomplete="off" autocapitalize="off" spellcheck="false"'+(u.ready&&!lockedUntil(u)?'':' disabled')+'><small id="p-ust">'+(u.owner?'As the owner you can change it whenever you like.':lockedUntil(u)?'You can change your username again on '+esc(fmt(lockedUntil(u)))+'.':'You can change it once every 10 days.')+'</small></label></div>'+
       '<label>Bio<textarea id="p-bio" maxlength="160" rows="2"'+(u.ready?'':' disabled')+'>'+esc(u.bio)+'</textarea><small>Up to 160 characters.</small></label>'+
       '<div class="ac-two"><label>Website<input id="p-web" type="text" maxlength="120" placeholder="https://" value="'+esc(u.website)+'" autocomplete="url"'+(u.ready?'':' disabled')+'></label>'+
       '<label>Location<input id="p-loc" type="text" maxlength="60" value="'+esc(u.location)+'" autocomplete="address-level2"'+(u.ready?'':' disabled')+'></label></div>'+
@@ -273,10 +274,17 @@
       '<label class="ac-sw"><input type="checkbox" id="s-news"'+(p.updates?' checked':'')+'><i></i><span><b>Email updates</b><small>Occasional news about new work. Off by default.</small></span></label></section>'+
     '<section class="card"><h2>Account</h2><dl class="ac-dl"><dt>Signed in with</dt><dd>'+esc(u.provider==='google'?'Google':u.provider)+'</dd><dt>Member since</dt><dd>'+esc(fmt(u.created))+'</dd><dt>Last sign-in</dt><dd>'+esc(fmt(u.last))+'</dd></dl>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="button" id="a-out">Log out</button><button class="btn btn-ghost btn-sm" type="button" id="a-all">Log out everywhere</button></div></section>'+
-    '<section class="card"><h2>Password</h2><p class="ac-note">'+(u.provider==='google'?'You sign in with Google. Set a password to also log in with your email'+(u.username?', @'+esc(u.username):'')+' and password.':'Change the password you use to log in.')+'</p>'+
-      '<form id="f-pw" novalidate><label>New password<input id="n-pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label>'+
+    '<section class="card"><h2>Password</h2>'+
+      (u.hasPw?
+      '<div class="ac-pw-last"><p class="ac-note">Last changed: <b>'+esc(u.pwAt?fmt(u.pwAt):'not recorded')+'</b></p><button class="btn btn-solid btn-sm" type="button" id="pw-open">Change password</button></div>'+
+      '<form id="f-pw" novalidate hidden><label>New password<input id="n-pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label>'+
       '<label>Repeat new password<input id="n-pw2" type="password" autocomplete="new-password"></label>'+
-      '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">'+(u.provider==='google'?'Set password':'Change password')+'</button></div></form></section>'+
+      '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Save new password</button><button class="btn btn-ghost btn-sm" type="button" id="pw-cancel">Cancel</button></div></form>'
+      :
+      '<p class="ac-note">'+(u.provider==='google'?'You sign in with Google. Set a password to also log in with your email'+(u.username?', @'+esc(u.username):'')+' and password.':'Set a password to log in with your email.')+'</p>'+
+      '<form id="f-pw" novalidate><label>Password<input id="n-pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label>'+
+      '<label>Repeat password<input id="n-pw2" type="password" autocomplete="new-password"></label>'+
+      '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Set password</button></div></form>')+'</section>'+
     '<section class="card"><h2>Your data</h2><p class="ac-note">Download everything stored about you, or delete your account for good.</p>'+
       '<div class="ac-row"><button class="btn btn-ghost btn-sm" type="button" id="a-dl">Download my data</button><button class="btn btn-ghost btn-sm ac-danger" type="button" id="a-del">Delete account</button></div>'+
       '<div class="ac-del" id="ac-del" hidden><p class="ac-note">This cannot be undone. Type <b>DELETE</b> to confirm.</p><div class="ac-row"><input id="d-in" type="text" autocomplete="off" aria-label="Type DELETE"><button class="btn btn-solid btn-sm ac-danger" type="button" id="d-go" disabled>Delete forever</button></div></div></section>'+
@@ -311,9 +319,10 @@
     function prefs(){var th=document.querySelector('input[name=s-theme]:checked');var v={theme:th?th.value:'light',reduceMotion:$('#s-motion').checked,bigText:$('#s-big').checked,updates:$('#s-news').checked};wr(PKEY,v);applyPrefs(v);
       saveMeta({prefs:v}).then(function(){msg('Preferences saved.')},function(er){msg(er.message,true)})}
     ['#s-motion','#s-big','#s-news'].forEach(function(s){$(s).addEventListener('change',prefs)});[].forEach.call(document.querySelectorAll('input[name=s-theme]'),function(r){r.addEventListener('change',prefs)});
+    var po=$('#pw-open');if(po){po.addEventListener('click',function(){$('#f-pw').hidden=false;po.hidden=true;$('#n-pw1').focus()});$('#pw-cancel').addEventListener('click',function(){$('#f-pw').hidden=true;po.hidden=false})}
     $('#f-pw').addEventListener('submit',function(e){e.preventDefault();var a=$('#n-pw1').value,b=$('#n-pw2').value;
       if(a.length<8){msg('Use at least 8 characters.',true);return}if(a!==b){msg('The two passwords do not match.',true);return}
-      setPassword(a).then(function(){$('#n-pw1').value='';$('#n-pw2').value='';msg('Password saved.')},function(er){msg(er.message,true)})});
+      setPassword(a).then(function(){u.pwAt=new Date().toISOString();u.hasPw=true;page(u);msg('Password saved.')},function(er){msg(er.message,true)})});
     $('#a-out').addEventListener('click',function(){signOut(false)});
     $('#a-all').addEventListener('click',function(){signOut(true)});
     $('#a-dl').addEventListener('click',function(){

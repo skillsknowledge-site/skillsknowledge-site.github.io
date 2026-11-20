@@ -1,14 +1,15 @@
 /* SK admin panel.
-   Who may open it is decided by Supabase, not by this page: you sign in with Google (or email), and the server
-   answers "admin_whoami" only for accounts in the admins table. There is no password or key inside this file.
+   You open it with your admin email, username and password. Your browser checks them against a one-way hash stored in
+   admin-config.js (nothing is sent anywhere). The Users, Orders, Feedback and Analysis tabs need more: they only load
+   when you are also logged in on the website with the admin Google account, because Supabase checks that on the server.
    - The owner is stored on the server and cannot be removed, blocked or replaced by any other admin.
    - Site edits are saved as a DRAFT in this browser. Visitors see them after you publish: download site-data.js
      from the Publish tab and upload it to the website in place of the old one. */
 (function(){
 'use strict';
-var SK=window.SK,store=SK.store;
+var SK=window.SK,store=SK.store,CFG=window.SK_ADMIN;
 var app=document.getElementById('app'),acts=document.getElementById('top-actions');
-var SESSION_MS=60*60*1000,LAST_KEY='sk-admin-last-dl',HERE='ctl-k7q2x9m4.html';
+var ITER=600000,SESSION_MS=60*60*1000,LAST_KEY='sk-admin-last-dl';
 var D=window.SK_DEFAULTS||{};
 function esc(s){return SK.esc(s==null?'':s)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
@@ -32,13 +33,49 @@ function download(name,text,type){
   plainDownload(name,text,type);return Promise.resolve(true);
 }
 
+/* ---------------- crypto: PBKDF2-SHA256 over email + username + password ---------------- */
+var HAS_CRYPTO=!!(window.crypto&&crypto.subtle&&window.TextEncoder);
+function toB64(u8){var s='';for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s)}
+function fromB64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function derive(email,user,pw,salt,iter){
+  var material=[email.trim().toLowerCase(),user.trim().toLowerCase(),pw].join('\u0000');
+  return crypto.subtle.importKey('raw',new TextEncoder().encode(material),'PBKDF2',false,['deriveBits']).then(function(k){
+    return crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:salt,iterations:iter},k,256);
+  }).then(function(bits){return toB64(new Uint8Array(bits))});
+}
+function same(a,b){if(a.length!==b.length)return false;var r=0;for(var i=0;i<a.length;i++)r|=a.charCodeAt(i)^b.charCodeAt(i);return r===0}
+var RK_CH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function normKey(k){return String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function hashKey(k,salt,iter){return crypto.subtle.importKey('raw',new TextEncoder().encode('SK-RECOVERY\u0000'+normKey(k)),'PBKDF2',false,['deriveBits']).then(function(m){return crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:salt,iterations:iter},m,256)}).then(function(b){return toB64(new Uint8Array(b))})}
+function newRecovery(){
+  var r=crypto.getRandomValues(new Uint8Array(20)),s='',i;for(i=0;i<20;i++){s+=RK_CH[r[i]%RK_CH.length];if(i%4===3&&i<19)s+='-'}
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  return hashKey(s,salt,ITER).then(function(h){return {key:s,rk:{iter:ITER,salt:toB64(salt),hash:h}}});
+}
+function makeConfig(email,user,pw){
+  var salt=crypto.getRandomValues(new Uint8Array(16)),rec;
+  return newRecovery().then(function(r){rec=r;return derive(email,user,pw,salt,ITER)}).then(function(h){
+    var c={v:1,alg:'PBKDF2-SHA256',iter:ITER,salt:toB64(salt),hash:h,rk:rec.rk};
+    if(CFG&&CFG.mail)c.mail=CFG.mail;
+    c._recovery=rec.key;return c;
+  });
+}
+function configFile(c){
+  c=Object.assign({},c);delete c._recovery;
+  return '/* ADMIN LOGIN KEY. A one-way hash of your email + username + password, with a random salt.\n   Your password is not stored anywhere and cannot be read back from this. Keep this file in the website folder. */\nwindow.SK_ADMIN='+JSON.stringify(c)+';\n';
+}
+function strength(p){
+  var s=0;if(p.length>=12)s++;if(p.length>=16)s++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;
+  return Math.min(5,s);
+}
 
 /* ---------------- sign-in state ---------------- */
-var ME=null; /* {is_owner,name,email} once Supabase has confirmed that this account is an admin */
+var ME=null; /* from Supabase: {is_owner,name,email}; stays the limited default until the server has confirmed an admin */
+function loggedIn(){return SK.admin()}
 function startSession(){store.put(SK.SESSION_KEY,{exp:Date.now()+SESSION_MS})}
 function endSession(){store.del(SK.SESSION_KEY)}
 var lastTouch=0;
-function touch(){if(!ME)return;var n=Date.now();if(n-lastTouch<20000)return;lastTouch=n;startSession()}
+function touch(){if(!loggedIn())return;var n=Date.now();if(n-lastTouch<20000)return;lastTouch=n;startSession()}
 ['click','keydown'].forEach(function(e){document.addEventListener(e,touch,true)});
 
 /* ---------------- small widgets: confirm box, styled dropdowns, black verified mark ---------------- */
@@ -155,43 +192,127 @@ function rerender(){if(app.dataset.view==='app')renderApp()}
 /* ---------------- views ---------------- */
 function uApi(fn,body){var S=window.skUser;if(!S)return Promise.reject({status:0,message:'nosupabase'});
   return S.token().then(function(t){if(!t)throw {status:401,message:'noauth'};return S.api('/rest/v1/rpc/'+fn,{method:'POST',token:t,body:body||{}})})}
+function gate(){document.body.dataset.v='gate'}
 function view(){
-  acts.innerHTML='';ME=null;
-  var C=window.SK_CFG;
-  if(!(C&&C.url&&C.anon)){gateView('nocfg');return}
-  if(!window.skUser){gateView('error','The sign-in code did not load. Refresh the page.');return}
-  uApi('admin_whoami').then(function(me){
-    ME=me;startSession();if(!draft)loadDraft();
-    app.dataset.view='app';document.body.dataset.v='app';renderApp();
-  },function(e){
-    endSession();draft=null;var m=e&&e.message||'';
-    gateView(e&&e.message==='noauth'||e&&e.status===401?'login':e&&e.status===404?'nosql':e&&(e.status===403||/not allowed/i.test(m))?'denied':'error',m);
+  acts.innerHTML='';gate();
+  if(!HAS_CRYPTO){app.dataset.view='nocrypto';app.innerHTML='<div class="ad-card ad-narrow"><h1>Secure context needed</h1><p>The admin login needs your browser\'s crypto tools, which only work on https:// addresses, localhost or a file opened directly. Open this page from your https site or from the downloaded folder.</p></div>';return}
+  if(!CFG||!CFG.hash){setupView();return}
+  if(!loggedIn()){loginView();return}
+  if(!draft)loadDraft();
+  ME=ME||{is_owner:false,name:'Admin',email:null,limited:true};
+  app.dataset.view='app';document.body.dataset.v='app';renderApp();
+  uApi('admin_whoami').then(function(me){ME=me;renderApp()},function(){});
+}
+
+function setupView(){app.dataset.view='setup';setupForm(app,false)}
+function formHtml(isChange){
+  return '<div class="ad-card ad-narrow"><h1>'+(isChange?'Change admin login':'SETUP')+'</h1>'+
+   '<p>'+(isChange?'Enter the new details. You will get a new <b>admin-config.js</b> to replace the one in your website folder. Until you replace it, the old login keeps working.':'Choose the email, username and password for your admin account. Your browser turns them into a one-way key. <b>Nothing is sent anywhere and your password is never stored.</b>')+'</p>'+
+   '<form class="ad-form" id="setup-form" novalidate autocomplete="off">'+
+   '<label class="f">Email<input type="email" id="s-email" autocomplete="off" required></label>'+
+   '<label class="f">Username<input type="text" id="s-user" autocomplete="off" required></label>'+
+   '<label class="f">Password <small>at least 12 characters; a long sentence is best</small><input type="password" id="s-pw" autocomplete="new-password" required></label>'+
+   '<div class="ad-strength" aria-hidden="true"><i id="s-bar"></i></div>'+
+   '<label class="f">Repeat password<input type="password" id="s-pw2" autocomplete="new-password" required></label>'+
+   '<p class="ad-msg err" id="s-err" role="alert" hidden></p>'+
+   '<button class="ad-black" type="submit" id="s-go"><span>Create my admin key</span></button></form>'+
+   '<p class="ad-muted" style="font-size:.84rem">If you forget the password it cannot be recovered. Put the original admin-config.js (the one that says <code>window.SK_ADMIN=null</code>) back to start again.</p></div>';
+}
+/* the form that makes a new admin-config.js; used for first-time setup and for changing the login later */
+function setupForm(host,isChange){
+  if(ui.setup){host.innerHTML=resultHtml(ui.setup);return}
+  host.innerHTML=formHtml(isChange);
+  var f=$('#setup-form',host),pw=$('#s-pw',host),bar=$('#s-bar',host);
+  pw.addEventListener('input',function(){var n=strength(pw.value);bar.style.width=(n*20)+'%';bar.style.background=n<3?'#ff7a7a':n<4?'#ffc857':'#5ae696'});
+  f.addEventListener('submit',function(e){
+    e.preventDefault();var err=$('#s-err',host);err.hidden=true;
+    var em=$('#s-email',host).value.trim(),us=$('#s-user',host).value.trim(),p=pw.value,p2=$('#s-pw2',host).value;
+    function bad(t){err.textContent=t;err.hidden=false}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return bad('Enter a valid email address.');
+    if(us.length<3)return bad('Username must be at least 3 characters.');
+    if(p.length<12)return bad('Password must be at least 12 characters.');
+    if(p!==p2)return bad('The two passwords do not match.');
+    var go=$('#s-go',host);go.disabled=true;go.firstChild.textContent='Creating key…';
+    makeConfig(em,us,p).then(function(c){ui.setup={text:configFile(c),recovery:c._recovery};if(isChange)renderApp();else setupForm(host,false)},function(){go.disabled=false;go.firstChild.textContent='Create my admin key';bad('Something went wrong. Please try again.')});
   });
 }
-function gateView(kind,msg){
-  app.dataset.view='gate';document.body.dataset.v='gate';acts.innerHTML='';
-  var T={login:['Admin sign-in','Only the site owner and approved admins can open this panel.'],
-   denied:['Not an admin','This account is not allowed here. Sign in with an admin account instead.'],
-   nosql:['Almost ready','The owner tools are not installed yet. Run supabase-owner.sql in the Supabase SQL Editor, then refresh this page.'],
-   nocfg:['Not connected','Supabase is not connected. Fill in config.js first.'],
-   error:['Could not check','Something went wrong while checking your account. '+(msg||'')]}[kind];
-  var G='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.51 5.51 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>';
-  var signin=kind==='login'||kind==='denied';
-  app.innerHTML='<div class="gate"><h1>'+T[0]+'</h1><p>'+esc(T[1])+'</p>'+
-    (signin?'<button class="g-btn" type="button" id="g-google">'+G+'<span>Continue with Google</span></button><a class="g-alt" href="#" id="g-mail">Use email and password instead</a>'+(kind==='denied'?'<a class="g-alt" href="#" id="g-out">Sign out</a>':''):'<button class="g-btn" type="button" id="g-retry"><span>Try again</span></button>')+'</div>';
-  function remember(){try{localStorage.setItem('sk_after',JSON.stringify({p:HERE,t:Date.now()}))}catch(e){}}
-  var g=$('#g-google'),m=$('#g-mail'),o=$('#g-out'),r=$('#g-retry');
-  if(g)g.addEventListener('click',function(){remember();var C=window.SK_CFG;
-    location.href=C.url.replace(/\/+$/,'')+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(location.origin+location.pathname.replace(/[^\/]*$/,''))});
-  if(m)m.addEventListener('click',function(e){e.preventDefault();remember();location.href='login'});
-  if(o)o.addEventListener('click',function(e){e.preventDefault();window.skUser.signOut(false)});
-  if(r)r.addEventListener('click',view);
+function resultHtml(r){
+  return '<div class="ad-card ad-narrow"><h1>Your admin key is ready</h1><p class="ad-msg ok">Created in your browser. Your password was not saved or sent anywhere.</p>'+
+   (r.recovery?'<div class="ad-recov"><span>Your recovery key. Shown once. Write it down and keep it safe.</span><b>'+esc(r.recovery)+'</b></div>':'')+'<ol class="ad-steps"><li>Download <b>admin-config.js</b> below.</li><li>Put it in your website folder, replacing the existing <b>admin-config.js</b>.</li><li>Upload the folder to your host, then open this page again and log in.</li></ol>'+
+   '<div class="ad-top" style="margin:0"><button class="btn btn-solid" type="button" data-act="dl-config">Download admin-config.js</button><button class="btn btn-ghost" type="button" data-act="copy-config">Copy text</button></div>'+
+   '<div class="ad-code" id="cfg-text">'+esc(r.text)+'</div>'+
+   '<p class="ad-muted" style="font-size:.84rem">Keep your password somewhere safe. It cannot be recovered from this key.</p>'+
+   '<button class="btn btn-ghost btn-sm" type="button" data-act="setup-done">Done</button></div>';
 }
-/* an admin who is removed, or signs out in another tab, is sent back to the gate within a minute */
-setInterval(function(){if(app.dataset.view==='app'&&!document.hidden)uApi('admin_whoami').then(function(me){ME=me},function(e){if(e&&e.status!==0&&e.message!=='nosupabase'&&!/Failed to fetch|NetworkError/i.test(e.message||''))view()})},60000);
+
+function loginView(){
+  app.dataset.view='login';
+  app.innerHTML='<div class="ad-card ad-narrow"><h1>LOGIN</h1><p>Enter the email, username and password.</p>'+
+   '<form class="ad-form" id="login-form" method="post" action="#" novalidate>'+
+   '<label class="f">Email<input type="email" id="a-email" name="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></label>'+
+   '<label class="f">Username<input type="text" id="a-user" name="username" autocomplete="off" autocapitalize="off" spellcheck="false"></label>'+
+   '<label class="f">Password<input type="password" id="a-pw" name="password" autocomplete="current-password"></label>'+
+   '<p class="ad-msg err" id="a-err" role="alert" hidden></p>'+
+   '<button class="ad-black" type="submit" id="a-go"><span>Log in</span></button><p class="ad-forgot"><a href="#" id="forgot">Recover details</a></p></form>'+
+   '</div>';
+  var f=$('#login-form'),err=$('#a-err');
+  $('#forgot').addEventListener('click',function(e){e.preventDefault();forgotView()});
+  function bad(t){err.textContent=t;err.hidden=false}
+  f.addEventListener('submit',function(e){
+    e.preventDefault();err.hidden=true;
+    var em=$('#a-email').value,us=$('#a-user').value,pw=$('#a-pw').value;
+    if(!em.trim()||!us.trim()||!pw)return bad('Please fill in email, username and password.');
+    var go=$('#a-go');go.disabled=true;go.lastChild.textContent='Checking…';
+    derive(em,us,pw,fromB64(CFG.salt),CFG.iter||ITER).then(function(h){
+      if(same(h,CFG.hash)){startSession();draft=null;view();return}
+      go.disabled=false;go.lastChild.textContent='Log in';
+      bad('Those details do not match.');
+    },function(){go.disabled=false;go.lastChild.textContent='Log in';bad('Something went wrong. Please try again.')});
+  });
+}
+
+
+/* ---------------- forgot password: recovery key first, then a code sent to your email ---------------- */
+function forgotView(){
+  app.dataset.view='forgot';document.body.dataset.v='gate';
+  var st={key:false,sent:null,tries:0};
+  function card(inner){app.innerHTML='<div class="ad-card ad-narrow"><h1>RESET</h1>'+inner+'<p class="ad-forgot"><a href="#" id="fg-back">Back to login</a></p></div>';$('#fg-back').addEventListener('click',function(e){e.preventDefault();loginView()})}
+  function msg(t,k){var m=$('#fg-msg');if(m){m.textContent=t;m.className='ad-msg '+(k||'err');m.hidden=false}}
+  function stepKey(){
+    if(!CFG.rk){card('<p>No recovery key exists yet, so the password cannot be reset from here. Log in and create one under <b>Security</b> (it is also made automatically for any new login).</p>');return}
+    card('<p>Step 1 of 3. Enter your recovery key.</p><form class="ad-form" id="fg-f" novalidate><label class="f">Recovery key<input type="text" id="fg-k" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"></label><p class="ad-msg err" id="fg-msg" hidden></p><button class="ad-black" type="submit"><span>Check key</span></button></form>');
+    $('#fg-f').addEventListener('submit',function(e){e.preventDefault();var v=$('#fg-k').value;if(normKey(v).length!==20)return msg('Enter the full recovery key (20 letters and numbers).');
+      hashKey(v,fromB64(CFG.rk.salt),CFG.rk.iter||ITER).then(function(h){if(same(h,CFG.rk.hash)){st.key=true;stepSend()}else msg('That recovery key is not correct.')},function(){msg('Something went wrong. Please try again.')})});
+  }
+  function stepSend(){
+    var m=CFG.mail;
+    if(!m||!m.service||!m.template||!m.key){card('<p>Recovery key accepted. Step 2 of 3 needs email sending, which is not set up yet. Log in once and add it under <b>Security</b>, or ask the site builder. Without the email code the reset stays locked.</p>');return}
+    card('<p>Recovery key accepted. Step 2 of 3: we will email a 6-digit code to your registered address.</p><form class="ad-form" id="fg-f" novalidate><p class="ad-msg err" id="fg-msg" hidden></p><button class="ad-black" type="submit"><span>Send code to my email</span></button></form>');
+    $('#fg-f').addEventListener('submit',function(e){e.preventDefault();var b=$('#fg-f button');b.disabled=true;b.firstChild.textContent='Sending…';
+      var n=crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000,nonce=toB64(crypto.getRandomValues(new Uint8Array(12))),code=String(n);
+      crypto.subtle.digest('SHA-256',new TextEncoder().encode(code+nonce)).then(function(d){st.sent={h:toB64(new Uint8Array(d)),nonce:nonce,exp:Date.now()+10*60*1000};
+        return fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:m.service,template_id:m.template,user_id:m.key,template_params:{code:code,minutes:10,site:'SK admin'}})})}).then(function(r){
+        if(!r.ok)throw new Error('send');stepCode()},function(){st.sent=null;b.disabled=false;b.firstChild.textContent='Send code to my email';msg('The email could not be sent. Check the email settings under Security, then try again.')});
+    });
+  }
+  function stepCode(){
+    card('<p>Step 3 of 3. We sent a code to your email. It works for 10 minutes. Enter it below.</p><form class="ad-form" id="fg-f" novalidate><label class="f">6-digit code<input type="text" id="fg-c" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label><p class="ad-msg err" id="fg-msg" hidden></p><button class="ad-black" type="submit"><span>Verify code</span></button></form>');
+    $('#fg-f').addEventListener('submit',function(e){e.preventDefault();var c=$('#fg-c').value.trim();
+      if(!/^\d{6}$/.test(c))return msg('Enter the 6-digit code.');
+      if(!st.sent||Date.now()>st.sent.exp)return msg('The code has expired. Go back and start again.');
+      if(++st.tries>5){st.sent=null;return msg('Too many wrong codes. Start again.')}
+      crypto.subtle.digest('SHA-256',new TextEncoder().encode(c+st.sent.nonce)).then(function(d){
+        if(!same(toB64(new Uint8Array(d)),st.sent.h))return msg('That code is not correct.');
+        if(!st.key)return;app.dataset.view='setup';document.body.dataset.v='gate';ui.setup=null;setupForm(app,false);
+      });
+    });
+  }
+  stepKey();
+}
+
 
 /* ---------------- logged-in app ---------------- */
-var NAVI={"analysis": "<path d=\"M4 20V10M10 20V4M16 20v-8M22 20H2\"/>", "feedback": "<path d=\"M4 4h16v12H8l-4 4z\"/>", "orders": "<path d=\"M6 3h12l2 5v12H4V8z\"/><path d=\"M4 8h16M9 12h6\"/>", "users": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.6\"/><path d=\"M16 14.2c3 .1 5 2 5 5.3\"/>", "overview": "<path d=\"M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z\"/>", "content": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1\"/>", "pages": "<path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4\"/>", "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2\"/>", "publish": "<path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/>", "admins": "<path d=\"M12 3l8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z\"/><path d=\"M8.6 12.2l2.4 2.4 4.4-4.8\"/>"};
+var NAVI={"analysis": "<path d=\"M4 20V10M10 20V4M16 20v-8M22 20H2\"/>", "feedback": "<path d=\"M4 4h16v12H8l-4 4z\"/>", "orders": "<path d=\"M6 3h12l2 5v12H4V8z\"/><path d=\"M4 8h16M9 12h6\"/>", "users": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.6\"/><path d=\"M16 14.2c3 .1 5 2 5 5.3\"/>", "overview": "<path d=\"M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z\"/>", "content": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1\"/>", "pages": "<path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4\"/>", "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2\"/>", "publish": "<path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/>", "security": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"9\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 018 0v3\"/>", "admins": "<path d=\"M12 3l8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z\"/><path d=\"M8.6 12.2l2.4 2.4 4.4-4.8\"/>"};
 
 /* ---------------- users (needs Supabase + supabase-admin.sql and supabase-owner.sql) ---------------- */
 var U={state:'idle',list:[],q:'',open:null,err:''};
@@ -232,10 +353,30 @@ function uRows(){
         (ME.is_owner&&!x.is_owner?'<button class="ad-link" type="button" data-act="u-admin" data-id="'+esc(x.id)+'" data-flag="'+(x.is_admin?'0':'1')+'">'+(x.is_admin?'Remove admin rights':'Make admin')+'</button>':'')+'</td></tr>':'');
   }).join('');
 }
+function connectCard(h){
+  return h+'<div class="ad-card ad-narrow"><h2>Connect your data</h2><p>Users, Orders, Feedback and Analysis are read from the server, which only accepts your owner account. Log in with its email and password (set the password once on your Profile page). No Google needed.</p>'+
+   '<form class="ad-form" id="connect-form" novalidate><label class="f">Email<input type="email" id="c-email" autocomplete="username" autocapitalize="off" spellcheck="false"></label>'+
+   '<label class="f">Password<input type="password" id="c-pw" autocomplete="current-password"></label>'+
+   '<p class="ad-msg err" id="c-err" role="alert" hidden></p><button class="ad-black" type="submit" id="c-go"><span>Connect</span></button></form></div>';
+}
+function connect(form){
+  var err=$('#c-err',form),em=$('#c-email',form).value.trim(),pw=$('#c-pw',form).value,go=$('#c-go',form),C=window.SK_CFG||{};
+  function bad(t){err.textContent=t;err.hidden=false}
+  err.hidden=true;if(!em||!pw)return bad('Enter your email and password.');
+  go.disabled=true;go.lastChild.textContent='Connecting…';
+  fetch((C.url||'').replace(/\/+$/,'')+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:C.anon,'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw})}).then(function(r){return r.json().then(function(j){return [r,j]})}).then(function(a){
+    var r=a[0],j=a[1];
+    if(!r.ok||!j.access_token){go.disabled=false;go.lastChild.textContent='Connect';bad(/banned|blocked/i.test(j&&(j.msg||j.error_description)||'')?'This account is blocked.':'Wrong email or password. If you only ever used Google, set a password on your Profile page first.');return}
+    try{localStorage.setItem('sk_sess',JSON.stringify({access:j.access_token,refresh:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000,provider:'email'}))}catch(e){}
+    U.state='idle';A.state='idle';O.state='idle';F.state='idle';ME=null;
+    if(window.skUser&&window.skUser.get)window.skUser.get(true);
+    uApi('admin_whoami').then(function(me){ME=me;renderApp()},function(){renderApp()});renderApp();
+  },function(){go.disabled=false;go.lastChild.textContent='Connect';bad('Cannot reach the server. Check your connection.')});
+}
 function stateCard(h,state,err,what,retry){
   what=what||'This page';
   var msgs={nosql:what+' is not installed yet. Run supabase-admin.sql and supabase-owner.sql in the Supabase SQL Editor.',notadmin:'This account is not an admin.',error:'Could not load '+what.toLowerCase()+'. '+esc(err),loading:'Loading…',idle:'Loading…'};
-  if(state==='noauth')return h+'<div class="ad-card"><h2>Sign in again</h2><p>Your sign-in ended. Refresh this page and continue with Google.</p></div>';
+  if(state==='noauth')return connectCard(h);
   var wait=state==='loading'||state==='idle';
   return h+'<div class="ad-card">'+(wait?'<p class="ad-muted">Loading…</p>':'<p class="ad-msg warn">'+msgs[state]+'</p><div class="ad-btns"><button class="btn btn-solid btn-sm" type="button" data-act="'+retry+'">Try again</button></div>')+'</div>';
 }
@@ -269,6 +410,7 @@ function tabAnalysis(){
   var h='<div class="ad-head"><h1>Analysis</h1><p class="ad-muted">Visits and time spent on your website.</p></div>';
   if(A.state==='idle'){loadAnalysis();return h+'<div class="ad-card"><p class="ad-muted">Loading…</p></div>'}
   if(A.state==='loading')return h+'<div class="ad-card"><p class="ad-muted">Loading…</p></div>';
+  if(A.state==='error'&&A.err==='noauth')return connectCard(h);
   if(A.state!=='ready')return h+'<div class="ad-card"><p class="ad-msg warn">'+(A.state==='nosql'?'Analytics is not installed yet. Run supabase-admin.sql again in the Supabase SQL Editor.':(A.err==='noauth'?'Log in on the website with your admin Google account first, then try again.':'Could not load analytics. '+esc(A.err)))+'</p><div class="ad-btns" style="justify-content:flex-start"><button class="btn btn-solid btn-sm" type="button" data-act="a-refresh">Try again</button></div></div>';
   var d=A.d,cards=[['Total Site Sessions',d.sessions,pct(d.sessions,d.prev_sessions),'a'],['Unique Visitors',d.visitors,pct(d.visitors,d.prev_visitors),'b'],['Average Session Duration',dur(d.avg_seconds),pct(d.avg_seconds,d.prev_avg_seconds),'c']];
   var pages=(d.pages||[]).map(function(p){return '<tr><td>'+esc(p.page)+'</td><td>'+p.views+'</td><td>'+(p.avg_seconds?dur(p.avg_seconds):'-')+'</td></tr>'}).join('')||'<tr><td colspan="3" class="ad-muted">No visits yet.</td></tr>';
@@ -283,6 +425,7 @@ function tabOrders(){
   var h='<div class="ad-head"><h1>Orders</h1><p class="ad-muted">Orders placed from the Buy now page. Mark them paid once you have checked the payment.</p></div>';
   if(O.state==='idle'){loadOrders();return h+'<div class="ad-card"><p class="ad-muted">Loading…</p></div>'}
   if(O.state==='loading')return h+'<div class="ad-card"><p class="ad-muted">Loading…</p></div>';
+  if(O.state==='error'&&O.err==='noauth')return connectCard(h);
   if(O.state!=='ready')return h+'<div class="ad-card"><p class="ad-msg warn">'+(O.state==='nosql'?'Orders are not installed yet. Run supabase-admin.sql again in the Supabase SQL Editor.':(O.err==='noauth'?'Log in on the website with your admin Google account first, then try again.':'Could not load orders. '+esc(O.err)))+'</p><div class="ad-btns" style="justify-content:flex-start"><button class="btn btn-solid btn-sm" type="button" data-act="o-refresh">Try again</button></div></div>';
   var paid=O.list.filter(function(o){return o.status==='paid'}),sum=paid.reduce(function(a,o){return a+o.amount},0);
   var rows=O.list.map(function(o){return '<tr><td>#'+o.id+'</td><td><b>'+esc(o.name)+'</b><span>'+esc(o.email)+(o.phone?' · '+esc(o.phone):'')+'</span></td><td>'+esc(o.item)+'<span>'+esc(o.plan)+'</span></td><td>PKR '+Number(o.amount).toLocaleString('en-US')+'</td><td>'+esc(o.method)+(o.reference?'<span>'+esc(o.reference)+'</span>':'')+'</td><td><em class="chip'+(o.status==='paid'?' ok':o.status==='cancelled'?' danger':'')+'">'+esc(o.status)+'</em></td><td class="u-act">'+(o.status!=='paid'?'<button class="ad-link" type="button" data-act="o-set" data-id="'+o.id+'" data-s="paid">Mark paid</button> ':'')+(o.status!=='cancelled'?'<button class="ad-link u-danger" type="button" data-act="o-set" data-id="'+o.id+'" data-s="cancelled">Cancel</button>':'')+'</td></tr>'}).join('')||'<tr><td colspan="7" class="ad-muted">No orders yet.</td></tr>';
@@ -290,17 +433,26 @@ function tabOrders(){
     '<div class="ad-card"><div class="ad-tablewrap"><table class="ad-table u-table"><thead><tr><th>Order</th><th>Customer</th><th>Item</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 /* ---------------- feedback: comments, complaints and appeals ---------------- */
-var F={state:'idle',list:[],ap:[],err:'',kind:'all',reply:null};
+var F={state:'idle',list:[],ap:[],err:'',kind:'all',reply:null,av:'open'};
 function starsHtml(n){var o='';for(var i=1;i<=5;i++)o+='<svg viewBox="0 0 24 24" class="'+(i<=n?'on':'')+'" aria-hidden="true"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4L2.8 9.3l6.4-.8z"/></svg>';return '<span class="fb-stars" role="img" aria-label="'+n+' out of 5">'+o+'</span>'}
 function loadFeedback(quiet){
   if(!quiet){F.state='loading';renderApp()}
   Promise.all([uApi('admin_list_feedback'),uApi('admin_list_appeals').catch(function(){return []})]).then(function(r){F.list=r[0]||[];F.ap=r[1]||[];F.state='ready';renderApp()},
     function(e){F.state=(e.status===404?'nosql':(e.message==='noauth'?'noauth':'error'));F.err=e.message||'';renderApp()});
 }
+function fsize(n){n=+n||0;return n>=1048576?(n/1048576).toFixed(n>=10485760?0:1)+' MB':Math.max(1,Math.round(n/1024))+' KB'}
+function openFile(path,name){
+  var S=window.skUser;if(!S)return;
+  S.token().then(function(t){return S.api('/storage/v1/object/sign/feedback-files/'+path.split('/').map(encodeURIComponent).join('/'),{method:'POST',token:t,body:{expiresIn:300}})}).then(function(j){
+    var base=(window.SK_CFG.url||'').replace(/\/+$/,'')+'/storage/v1';
+    var a=document.createElement('a');a.href=base+j.signedURL+'&download='+encodeURIComponent(name||'file');a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  },function(){flash('Could not open the file. Run supabase-files.sql in Supabase first.','err');renderApp()});
+}
 function fbCard(f){
   var mail='mailto:'+encodeURIComponent(f.email)+'?subject='+encodeURIComponent('Re: your '+f.kind+' on SkillsKnowledge');
   return '<article class="fb'+(f.status==='done'?' done':'')+'"><header><em class="chip '+(f.kind==='complaint'?'danger':'ok')+'">'+esc(f.kind)+'</em>'+(f.rating?starsHtml(f.rating):'')+'<span class="fb-from">'+esc(f.email)+'</span><span class="fb-date">'+esc(uAgo(f.created_at))+'</span><em class="chip'+(f.status==='done'?' ok':f.status==='read'?'':' warn')+'">'+esc(f.status==='new'?'New':f.status==='read'?'Read':'Done')+'</em></header>'+
     '<p class="fb-msg">'+esc(f.message)+'</p>'+
+    (f.files&&f.files.length?'<ul class="fb-files" aria-label="Attachments">'+f.files.map(function(x){return '<li><button type="button" class="fb-file" data-act="f-file" data-path="'+esc(x.path)+'" data-name="'+esc(x.name)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 01-7.8-7.8l9-9a3.7 3.7 0 015.2 5.2l-9 9a1.8 1.8 0 01-2.6-2.6l8.3-8.3"/></svg><span>'+esc(x.name)+'</span><em>'+fsize(x.size)+'</em></button></li>'}).join('')+'</ul>':'')+
     (f.reply?'<div class="fb-reply"><b>Your reply</b><p>'+esc(f.reply)+'</p></div>':'')+
     (F.reply===f.id?'<form class="fb-form" data-id="'+f.id+'"><textarea id="f-text" rows="4" maxlength="1000" placeholder="Write your reply" aria-label="Your reply">'+esc(f.reply||'')+'</textarea><div class="ad-btns"><button class="btn btn-solid btn-sm" type="submit">Save reply</button><a class="btn btn-ghost btn-sm" href="'+mail+'" data-act="f-mail" data-id="'+f.id+'">Send by email</a><button class="btn btn-ghost btn-sm" type="button" data-act="f-reply" data-id="">Cancel</button></div></form>':
      '<footer><button class="ad-link" type="button" data-act="f-reply" data-id="'+f.id+'">'+(f.reply?'Edit reply':'Reply')+'</button><button class="dd-btn" type="button" data-act="f-menu" data-id="'+f.id+'"><span>Actions</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></footer>')+'</article>';
@@ -318,7 +470,10 @@ function tabFeedback(){
       avg=rated.length?(rated.reduce(function(a,f){return a+f.rating},0)/rated.length).toFixed(1):'-',openAp=F.ap.filter(function(x){return x.status==='open'}).length;
   var segs=[['all','All',F.list.length],['comment','Comments',cm.length],['complaint','Complaints',cp.length],['appeal','Appeals',openAp]];
   var body;
-  if(F.kind==='appeal')body=F.ap.length?'<div class="u-appeals">'+F.ap.map(appealCard).join('')+'</div>':'<p class="ad-muted">No appeals yet.</p>';
+  if(F.kind==='appeal'){
+    var cur=F.ap.filter(function(x){return x.status==='open'}),old=F.ap.filter(function(x){return x.status!=='open'}),L=F.av==='closed'?old:cur;
+    body='<div class="seg seg-sub" role="tablist" aria-label="Appeals">'+[['open','Current',cur.length],['closed','Closed',old.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
+      (L.length?'<div class="u-appeals">'+L.map(appealCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'No closed appeals.':'No current appeals.')+'</p>')}
   else{var shown=F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind});body=shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">Nothing here yet.</p>'}
   return h+'<div class="ad-kpis">'+[['Comments',cm.length],['Average rating',avg],['Complaints',cp.length],['Open appeals',openAp]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
     '<div class="ad-card"><div class="seg" role="tablist" aria-label="Show">'+segs.map(function(s){return '<button type="button" role="tab" data-act="f-kind" data-v="'+s[0]+'"'+(F.kind===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+body+'</div>';
@@ -331,13 +486,13 @@ function fbMenu(btn,id){
   it.push({v:'copy',t:'Copy email address'},{v:'del',t:'Delete',danger:true});
   pop(btn,it,function(v){
     if(v==='copy'){(navigator.clipboard?navigator.clipboard.writeText(f.email):Promise.reject()).then(function(){flash('Email address copied.');renderApp()},function(){flash(f.email);renderApp()});return}
-    if(v==='del'){ask('Delete this message for good?','Delete',true).then(function(ok){if(ok)uApi('admin_delete_feedback',{p_id:id}).then(function(){flash('Deleted.');loadFeedback(true)},function(e){flash(e.message||'Failed.','err');renderApp()})});return}
+    if(v==='del'){ask('Delete this message for good?','Delete',true).then(function(ok){if(ok)uApi('admin_delete_feedback',{p_id:id}).then(function(){(f.files||[]).forEach(function(x){var S=window.skUser;S.token().then(function(tk){return S.api('/storage/v1/object/feedback-files/'+x.path.split('/').map(encodeURIComponent).join('/'),{method:'DELETE',token:tk})}).catch(function(){})});flash('Deleted.');loadFeedback(true)},function(e){flash(e.message||'Failed.','err');renderApp()})});return}
     uApi('admin_set_feedback',{p_id:id,p_status:v}).then(function(){loadFeedback(true)},function(e){flash(e.message||'Failed.','err');renderApp()});
   });
 }
-var TABS=[['overview','Overview'],['analysis','Analysis'],['orders','Orders'],['feedback','Feedback'],['content','Content'],['pages','Pages and sections'],['users','Users'],['settings','Settings'],['publish','Publish'],['admins','Owner and admins']];
+var TABS=[['overview','Overview'],['analysis','Analysis'],['orders','Orders'],['feedback','Feedback'],['content','Content'],['pages','Pages and sections'],['users','Users'],['settings','Settings'],['publish','Publish'],['admins','Owner and admins'],['security','Security']];
 function goTab(t){
-  ui.tab=t;ui.edit=null;
+  ui.tab=t;ui.edit=null;ui.setup=null;ui.next=null;ui.chgOpen=false;
   if((t==='users'||t==='admins')&&U.state!=='ready')U.state='idle';
   renderApp();
 }
@@ -346,9 +501,13 @@ function renderApp(){
   var nav='<aside class="ad-nav" aria-label="Admin sections"><div class="ad-brand"><b>SK</b><span>Control</span></div>'+
     '<p class="ad-me">'+esc(ME.name||'Admin')+VB+'<em>'+(ME.is_owner?'Owner':'Admin')+'</em></p>'+
     TABS.map(function(t){return '<button type="button" data-tab="'+t[0]+'"'+(ui.tab===t[0]?' aria-current="true"':'')+'><svg viewBox="0 0 24 24" aria-hidden="true">'+NAVI[t[0]]+'</svg><span>'+t[1]+'</span>'+(t[0]==='publish'&&dirty()?'<em>•</em>':'')+'</button>'}).join('')+'</aside>';
-  var h=nav+'<div class="ad-main">'+msgHtml()+({overview:tabOverview,content:tabContent,pages:tabPages,users:tabUsers,analysis:tabAnalysis,orders:tabOrders,feedback:tabFeedback,settings:tabSettings,publish:tabPublish,admins:tabAdmins})[ui.tab]()+'</div>';
+  var h=nav+'<div class="ad-main">'+msgHtml()+({overview:tabOverview,content:tabContent,pages:tabPages,users:tabUsers,analysis:tabAnalysis,orders:tabOrders,feedback:tabFeedback,settings:tabSettings,publish:tabPublish,admins:tabAdmins,security:tabSecurity})[ui.tab]()+'</div>';
   app.innerHTML='<div class="ad-shell">'+h+'</div>';
   enhance(app);
+  if(ui.tab==='security'&&ui.chgOpen&&!ui.setup){var host=$('#chg-host');if(host)setupForm(host,true)}
+  var mf=$('#mail-form');if(mf)mf.addEventListener('submit',function(e){e.preventDefault();var s=$('#m-s').value.trim(),t=$('#m-t').value.trim(),k=$('#m-k').value.trim(),er=$('#m-err');
+    if(!s||!t||!k){er.textContent='Please fill in all three fields.';er.hidden=false;return}
+    ui.next=Object.assign({},ui.next||CFG,{mail:{service:s,template:t,key:k}});ui.setup={text:configFile(ui.next)};renderApp()});
 }
 
 function tabOverview(){
@@ -471,13 +630,25 @@ function tabAdmins(){
   return h+owner+'<div class="ad-card"><h2>Admins</h2><div class="ad-tablewrap"><table class="ad-table"><thead><tr><th>Admin</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+xfer;
 }
 
+/* ---------------- security tab: change the login, recovery key, reset email ---------------- */
+function tabSecurity(){
+  if(ui.setup)return resultHtml(ui.setup);
+  return '<div class="ad-card"><h2>Login and key</h2><p>Your login is checked against a one-way key in <b>admin-config.js</b>, built from your email, username and password together with a random salt. The password is not stored and cannot be read back, by anyone, including whoever built this site.</p>'+
+   '<p>Strength depends on your password. A long unique one (16+ characters) is what keeps the key safe if someone ever downloads the file.</p>'+
+   '<p class="ad-msg warn">This site has no server, so the login protects the admin panel in the browser. It does not stop someone who can change your website files on the host. Protect your hosting account too.</p>'+
+   '<div class="ad-top" style="margin:0"><button class="btn btn-solid btn-sm" type="button" data-act="chg-login">Change email, username or password</button><button class="btn btn-ghost btn-sm" type="button" data-act="logout">Log out now</button></div></div><div id="chg-host" style="margin-top:14px"></div>'+
+   '<div class="ad-card" style="margin-top:14px"><h2>Recovery key</h2><p>'+(CFG&&CFG.rk?'A recovery key exists. Creating a new one replaces it.':'No recovery key yet.')+' To reset a forgotten password you need <b>both</b> this key and a code emailed to you. The key is shown once; only a one-way hash is stored.</p><div class="ad-top" style="margin:0"><button class="btn btn-solid btn-sm" type="button" data-act="new-recovery">Create a new recovery key</button></div></div>'+
+   '<div class="ad-card" style="margin-top:14px"><h2>Email for reset codes</h2><p>Codes are sent through <b>EmailJS</b> (free). Create an account at emailjs.com, connect your Gmail, make a template that sends to your Gmail address and contains <code>{{code}}</code>, then paste the three IDs here. Your address is stored in EmailJS, not in this website.</p>'+
+   '<form class="ad-form" id="mail-form" novalidate><label class="f">Service ID<input type="text" id="m-s" value="'+esc((CFG&&CFG.mail&&CFG.mail.service)||'')+'" autocomplete="off"></label><label class="f">Template ID<input type="text" id="m-t" value="'+esc((CFG&&CFG.mail&&CFG.mail.template)||'')+'" autocomplete="off"></label><label class="f">Public key<input type="text" id="m-k" value="'+esc((CFG&&CFG.mail&&CFG.mail.key)||'')+'" autocomplete="off"></label><p class="ad-msg err" id="m-err" hidden></p><div class="ad-top" style="margin:0"><button class="btn btn-solid btn-sm" type="submit">Save email settings</button></div></form></div>';
+}
+
 /* ---------------- events ---------------- */
 function onClick(e){
   var t=e.target.closest('[data-tab],[data-col],[data-act]');if(!t)return;
   if(t.dataset.tab){goTab(t.dataset.tab);return}
   if(t.dataset.col&&!t.dataset.act){ui.col=t.dataset.col;ui.edit=null;renderApp();return}
   var a=t.dataset.act,i=+t.dataset.i,c=COLS.filter(function(x){return x.id===ui.col})[0]||COLS[0];
-  if(a==='logout'){endSession();draft=null;ME=null;window.skUser.signOut(false);return}
+  if(a==='logout'){endSession();draft=null;ME=null;ui.setup=null;view();return}
   if(a==='add'){ui.edit=listOf(c.id).length;renderApp();return}
   if(a==='edit'){ui.edit=i;renderApp();return}
   if(a==='cancel'){ui.edit=null;renderApp();return}
@@ -486,15 +657,22 @@ function onClick(e){
   if(a==='toggle'){editList(c.id,function(L){if(L[i]._off)delete L[i]._off;else L[i]._off=true});renderApp();return}
   if(a==='del'){ask('Delete "'+titleOf(listOf(c.id)[i])+'"? You can bring everything back with "Reset to defaults".','Delete',true).then(function(ok){if(ok){editList(c.id,function(L){L.splice(i,1)});flash('Deleted and saved.');renderApp()}});return}
   if(a==='reset-col'){ask('Reset "'+c.label+'" to the original content?','Reset',true).then(function(ok){if(ok){delete draft.lists[c.id];save();flash('Reset to defaults.');renderApp()}});return}
+  if(a==='chg-login'){ui.setup=null;ui.chgOpen=true;renderApp();return}
+  if(a==='dl-config'){download('admin-config.js',ui.setup.text);return}
+  if(a==='copy-config'){var tx=ui.setup.text;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){t.textContent='Copied'},function(){var r=document.createRange();r.selectNodeContents($('#cfg-text'));var s=getSelection();s.removeAllRanges();s.addRange(r);t.textContent='Press Ctrl+C'});return}
+  if(a==='new-recovery'){newRecovery().then(function(r){ui.next=Object.assign({},ui.next||CFG,{rk:r.rk});ui.setup={text:configFile(ui.next),recovery:r.key};renderApp()});return}
+  if(a==='setup-done'){ui.setup=null;ui.chgOpen=false;if(app.dataset.view==='setup'){location.reload()}else renderApp();return}
   if(a==='publish'){publish();return}
   if(a==='discard'){ask('Discard your saved changes and go back to the published version?','Discard',true).then(function(ok){if(ok){store.del(SK.DRAFT_KEY);draft=null;loadDraft();flash('Changes discarded.');renderApp()}});return}
   if(a==='u-refresh'){loadUsers();return}
   if(a==='a-refresh'){loadAnalysis();return}
   if(a==='o-refresh'){loadOrders();return}
   if(a==='f-refresh'){loadFeedback();return}
+  if(a==='f-av'){F.av=t.dataset.v;renderApp();return}
   if(a==='f-kind'){F.kind=t.dataset.v;F.reply=null;renderApp();return}
   if(a==='f-reply'){F.reply=t.dataset.id?+t.dataset.id:null;renderApp();var ta=$('#f-text');if(ta)ta.focus();return}
   if(a==='f-mail'){var tx=$('#f-text');t.href=t.href.split('&body=')[0]+'&body='+encodeURIComponent(tx?tx.value:'');return}
+  if(a==='f-file'){openFile(t.dataset.path,t.dataset.name);return}
   if(a==='f-menu'){e.stopPropagation();fbMenu(t,+t.dataset.id);return}
   if(a==='o-set'){uApi('admin_set_order',{p_id:+t.dataset.id,p_status:t.dataset.s}).then(function(){flash('Order updated.');loadOrders()},function(er){flash(er.message||'Failed.','err');renderApp()});return}
   if(a==='u-open'){U.open=U.open===t.dataset.id?null:t.dataset.id;renderApp();return}
@@ -509,6 +687,7 @@ app.addEventListener('click',onClick);
 acts.addEventListener('click',onClick);
 app.addEventListener('input',function(e){if(e.target.id==='u-q'){U.q=e.target.value;var b=$('#u-body');if(b)b.innerHTML=uRows();enhance(app)}});
 app.addEventListener('submit',function(e){
+  if(e.target.id==='connect-form'){e.preventDefault();connect(e.target);return}
   var id=e.target.id;
   if(e.target.classList.contains('fb-form')){
     e.preventDefault();var fid=+e.target.dataset.id,txt=$('#f-text').value.trim();

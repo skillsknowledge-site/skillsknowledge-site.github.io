@@ -33,7 +33,7 @@
   var err=q.get('error_description')||(/error_description=/.test(location.hash)&&new URLSearchParams(location.hash.slice(1)).get('error_description'));
   function base(){return location.origin+location.pathname.replace(/[^\/]*$/,'')}
   function email(id){ /* email, username or phone -> email */
-    id=String(id||'').trim();if(id.length<3)return Promise.reject(new Error('Please enter your email, username or phone.'));if(/@/.test(id))return Promise.resolve(id.toLowerCase());
+    id=String(id||'').trim();if(/@/.test(id))return Promise.resolve(id.toLowerCase());
     return api('/rest/v1/rpc/login_email',{identifier:id}).then(function(e){if(!e)throw new Error('Wrong details or password.');return e},
       function(er){if(/not find|404|function/i.test(er.message))throw new Error('Username login is not switched on yet. Use your email.');throw er});
   }

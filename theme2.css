@@ -101,7 +101,7 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 .fbx-f{display:grid;gap:.4rem;font:700 .8rem var(--f-body);color:var(--muted)}.fbx-f[hidden]{display:none}.fbx-f i{font-style:normal;font-weight:500;opacity:.8}
 .fbx-f input{width:100%;padding:.65rem .85rem;border-radius:8px;border:0;background:rgba(79,110,247,.09);color:var(--fg);font:500 .95rem var(--f-body);outline:none}
 .fbx-f input:focus{background:rgba(79,110,247,.16)}
-.fbx-stars{display:flex;justify-content:center;gap:.2rem}.fbx-stars button{border:0;background:none;padding:.15rem;cursor:pointer;color:rgba(79,110,247,.3)}.fbx-stars button svg{width:30px;height:30px;fill:currentColor;display:block}.fbx-stars button.on{color:#f2a93b}
+.fbx-stars{display:flex;justify-content:center;gap:.2rem}.fbx-stars button{border:0;background:none;padding:.15rem;cursor:pointer;color:#c3c6cf}.fbx-stars button svg{width:30px;height:30px;fill:currentColor;display:block}.fbx-stars button.on{color:#2b2e38}
 .fbx-stars button:focus-visible{outline:2px solid rgb(79,110,247);border-radius:6px}
 .fbx-tools{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap}
 .fbx-tools button,.fbx-col{width:34px;height:34px;border:0;border-radius:8px;background:rgba(79,110,247,.09);color:var(--fg);font:600 1rem var(--f-body);display:grid;place-items:center;cursor:pointer;position:relative}
@@ -118,7 +118,7 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 
 /* appearance control in account settings */
 .ac-theme{display:grid;gap:.5rem;margin-bottom:.9rem}.ac-theme b{font-size:.92rem}.ac-theme small{color:var(--muted)}
-.ac-theme>div{display:flex;gap:.4rem;padding:.25rem;border-radius:999px;background:var(--s-soft);width:max-content;max-width:100%}
+.ac-theme>div{display:flex;gap:.4rem;padding:.25rem;border-radius:999px;background:rgba(79,110,247,.18);width:max-content;max-width:100%}
 .ac-theme label{position:relative;cursor:pointer;display:block!important;margin:0!important}.ac-theme input{position:absolute;opacity:0}
 .ac-theme span{display:block;padding:.4rem 1rem;border-radius:999px;font:600 .86rem var(--f-body);color:var(--s-nav-ink)}
 .ac-theme input:checked+span{background:rgb(79,110,247);color:#fff}
@@ -134,3 +134,9 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 .home-btn:hover,.home-btn:focus-visible{background:linear-gradient(135deg,#6f8bff,#4f6ef7)!important;filter:none!important;transform:none!important;box-shadow:0 0 0 3px rgba(111,139,255,.25),0 0 22px rgba(90,125,255,.75)}
 .home-btn:hover i,.home-btn:focus-visible i{opacity:1;transform:scale(1.35)}
 
+
+.fbx-files{display:grid;gap:.5rem;justify-items:start}.fbx-add{cursor:pointer}
+.fbx-flist{list-style:none;margin:0;padding:0;display:grid;gap:.35rem;width:100%}.fbx-flist:empty{display:none}
+.fbx-flist li{display:flex;align-items:center;gap:.6rem;padding:.4rem .4rem .4rem .8rem;border-radius:10px;background:rgba(79,110,247,.09);font:600 .85rem var(--f-body);color:var(--fg)}
+.fbx-flist span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fbx-flist em{font-style:normal;color:var(--muted);font-size:.78rem}
+.fbx-flist button{border:0;background:none;color:var(--fg);font-size:1.2rem;line-height:1;width:28px;height:28px;border-radius:50%;cursor:pointer}.fbx-flist button:hover{background:rgba(79,110,247,.18)}
