@@ -407,7 +407,7 @@ function uAct(p,ok){return p.then(function(){flash(ok);return loadUsersQuiet()},
 var A={days:30,state:'idle',d:null,err:''},O={state:'idle',list:[],err:'',sort:'new',st:'all'};
 function pct(c,p){if(!p)return c?'<span class="an-up">&#9650; new</span>':'<span class="an-flat">-</span>';var v=Math.round((c-p)/p*100);return '<span class="'+(v>=0?'an-up':'an-down')+'">'+(v>=0?'&#9650; ':'&#9660; ')+Math.abs(v)+'%</span>'}
 function dur(s){s=Math.round(s||0);var m=Math.floor(s/60);return m+'M '+('0'+(s%60)).slice(-2)+'S'}
-function loadAnalysis(){A.state='loading';renderApp();uApi('admin_analytics',{p_days:A.days}).then(function(r){A.d=r;A.state='ready';renderApp()},function(e){A.state=(e.status===404?'nosql':'error');A.err=e.message||'';renderApp()})}
+function loadAnalysis(){A.state='loading';renderApp();A.v=null;uApi('admin_visits',{p_days:A.days}).then(function(v){A.v=v;if(A.state==='ready')renderApp()},function(){A.v=false;if(A.state==='ready')renderApp()});uApi('admin_analytics',{p_days:A.days}).then(function(r){A.d=r;A.state='ready';renderApp()},function(e){A.state=(e.status===404?'nosql':'error');A.err=e.message||'';renderApp()})}
 function chart(daily){
   if(!daily||!daily.length)return '<p class="ad-muted">No visits in this period yet.</p>';
   var W=640,H=220,P=34,n=daily.length,mx=Math.max(4,Math.max.apply(null,daily.map(function(x){return x.sessions})));mx=Math.ceil(mx/4)*4;
@@ -417,18 +417,16 @@ function chart(daily){
   var lab=[0,Math.floor((n-1)/2),n-1].filter(function(v,i,a){return a.indexOf(v)===i&&daily[v]}).map(function(i){return '<text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle">'+daily[i].day.slice(5)+'</text>'}).join('');
   return '<svg class="an-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Sessions over time">'+g+'<path d="'+area+'" class="an-area"/><path d="'+line+'" class="an-line"/>'+lab+'</svg>';
 }
-/* signed-in members: how many exist and how many came back in the chosen period (from each person's last visit) */
-function membersCard(){
-  var sub='<p class="ad-muted">People with an account on your website, within the chosen date range.</p>';
-  if(U.state==='idle'){loadUsers();return '<div class="ad-card"><h2>Member visits</h2><p class="ad-muted">Loading…</p></div>'}
-  if(U.state==='loading')return '<div class="ad-card"><h2>Member visits</h2><p class="ad-muted">Loading…</p></div>';
-  if(U.state!=='ready')return '<div class="ad-card"><h2>Member visits</h2><p class="ad-muted">The member list could not be loaded. Open the Users tab to retry.</p></div>';
-  var t0=Date.now()-A.days*864e5,L=U.list,seen=L.filter(function(x){return x.last_seen&&new Date(x.last_seen).getTime()>=t0}),
-      fresh=L.filter(function(x){return new Date(x.created_at).getTime()>=t0}),on=L.filter(isOnline),views=((A.d&&A.d.pages)||[]).reduce(function(a,p){return a+(+p.views||0)},0);
-  var cards=[['Page views',views],['Members in total',L.length],['Members who visited',seen.length],['New members',fresh.length],['Online now',on.length]];
-  var rows=seen.slice().sort(function(a,b){return new Date(b.last_seen)-new Date(a.last_seen)}).slice(0,8).map(function(x){return '<tr><td><b class="u-name">'+esc(nameOf(x))+badges(x)+'</b><span>@'+esc(x.username||'-')+'</span></td><td>'+esc(uAgo(x.last_seen))+'</td></tr>'}).join('')||'<tr><td colspan="2" class="ad-muted">No member visited in this period yet.</td></tr>';
-  return '<div class="ad-card"><h2>Member visits</h2>'+sub+'<div class="an-stats an-5">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b></div>'}).join('')+'</div>'+
-    '<h3 class="an-sub">Most recent visitors</h3><div class="ad-tablewrap"><table class="ad-table"><thead><tr><th>Member</th><th>Last visit</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+/* every visit to the website, signed up or not (counted by track.js; no personal data) */
+function visitsCard(){
+  var head='<div class="ad-card"><h2>Website visits</h2><p class="ad-muted">Everyone who opens your website counts, even without an account. A visit is one page opened. A visitor is one browser, counted once.</p>';
+  var v=A.v;
+  if(v===null||v===undefined)return head+'<p class="ad-muted">Loading…</p></div>';
+  if(v===false)return head+'<p class="ad-msg warn">The daily table is not installed yet. Run supabase-visits.sql once in the Supabase SQL Editor, then refresh.</p></div>';
+  var cards=[['Total visits',v.views],['Visitors',v.visitors],['Sessions',v.sessions],['Visits today',v.today]];
+  var rows=(v.days||[]).map(function(x){var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+'</td><td>'+x.visitors+'</td><td>'+x.sessions+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
+  return head+'<div class="an-stats">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b></div>'}).join('')+'</div>'+
+    '<h3 class="an-sub">Day by day</h3><div class="ad-tablewrap an-scroll"><table class="ad-table"><thead><tr><th>Date</th><th>Visits</th><th>Visitors</th><th>Sessions</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function tabAnalysis(){
   var h='<div class="ad-head"><h1>Analysis</h1><p class="ad-muted">Visits and time spent on your website.</p></div>';
@@ -442,7 +440,7 @@ function tabAnalysis(){
     '<div class="an-stats">'+cards.map(function(c){return '<div class="an-stat an-'+c[3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b>'+c[2]+'</div>'}).join('')+'</div>'+
     '<h3 class="an-sub">Traffic over Time</h3>'+chart(d.daily||[])+'</div>'+
     '<div class="ad-card"><h2>Top pages</h2><div class="ad-tablewrap"><table class="ad-table"><thead><tr><th>Page</th><th>Views</th><th>Avg. time</th></tr></thead><tbody>'+pages+'</tbody></table></div></div>'+
-    membersCard()+
+    visitsCard()+
     '<div class="ad-card"><h2>Ratings</h2><p class="ad-muted">Product ratings will show here when the rating feature is added to your products.</p></div>';
 }
 function loadOrders(){O.state='loading';renderApp();uApi('admin_list_orders').then(function(r){O.list=r||[];O.state='ready';renderApp()},function(e){O.state=(e.status===404?'nosql':'error');O.err=e.message||'';renderApp()})}

@@ -365,3 +365,6 @@ body[data-studio]{overflow:hidden}
 
 .an-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:900px){.an-5{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+
+.an-scroll{max-height:360px;overflow:auto}
+.an-scroll thead th{position:sticky;top:0;background:var(--card)}
