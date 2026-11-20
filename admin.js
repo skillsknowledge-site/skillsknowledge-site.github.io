@@ -423,9 +423,10 @@ function visitsCard(){
   var v=A.v;
   if(v===null||v===undefined)return head+'<p class="ad-muted">Loading…</p></div>';
   if(v===false)return head+'<p class="ad-msg warn">The daily table is not installed yet. Run supabase-visits.sql once in the Supabase SQL Editor, then refresh.</p></div>';
-  var cards=[['Total visits',v.views],['Visitors',v.visitors],['Sessions',v.sessions],['Visits today',v.today]];
-  var rows=(v.days||[]).map(function(x){var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+'</td><td>'+x.visitors+'</td><td>'+x.sessions+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
-  return head+'<div class="an-stats">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b></div>'}).join('')+'</div>'+
+  var dl=v.days||[],yest=dl[1]?dl[1].views:0,hp=function(c,p){return p===undefined||p===null?'':pct(c,p)};
+  var cards=[['Total visits',v.views,hp(v.views,v.prev_views)],['Visitors',v.visitors,hp(v.visitors,v.prev_visitors)],['Sessions',v.sessions,hp(v.sessions,v.prev_sessions)],['Visits today',v.today,dl[1]?pct(v.today,yest):'']];
+  var rows=dl.map(function(x,i){var pv=dl[i+1],ch=function(c,k){return pv?' '+pct(c,pv[k]):''};var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+ch(x.views,'views')+'</td><td>'+x.visitors+ch(x.visitors,'visitors')+'</td><td>'+x.sessions+ch(x.sessions,'sessions')+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
+  return head+'<div class="an-stats">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b>'+c[2]+'</div>'}).join('')+'</div>'+
     '<h3 class="an-sub">Day by day</h3><div class="ad-tablewrap an-scroll"><table class="ad-table"><thead><tr><th>Date</th><th>Visits</th><th>Visitors</th><th>Sessions</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function tabAnalysis(){

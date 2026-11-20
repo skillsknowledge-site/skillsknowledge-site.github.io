@@ -198,6 +198,9 @@ ol.ad-steps{display:grid;gap:.5rem;padding-left:1.3rem;color:var(--muted)}
 .ad-table td b{display:block;font-weight:700}
 .ad-table td b.u-name{display:flex;align-items:center;flex-wrap:wrap;gap:.1rem}
 .ad-table td span{display:block;font-size:.78rem;color:var(--muted)}
+.ad-table td .an-up,.ad-table td .an-down{display:inline;font-size:.78rem;margin-left:.45rem}
+.ad-table td .an-up{color:var(--ok)}.ad-table td .an-down{color:var(--err)}
+.ad-table td .an-flat{display:inline;margin-left:.45rem}
 .u-bar{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
 .u-bar input{flex:1;min-width:200px;width:auto}
 .u-act{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;white-space:nowrap}
@@ -250,6 +253,7 @@ ol.ad-steps{display:grid;gap:.5rem;padding-left:1.3rem;color:var(--muted)}
 .an-stat{display:grid;gap:.3rem;padding:1.1rem 1.2rem;border-radius:14px;background:var(--soft)}
 .an-stat span{font:700 .8rem var(--f-body);color:var(--muted)}
 .an-stat b{font:800 1.8rem var(--f-display)}
+.an-stat .an-up{color:var(--ok)}.an-stat .an-down{color:var(--err)}
 .an-up{color:var(--ok);font-weight:700;font-size:.85rem}
 .an-down{color:var(--err);font-weight:700;font-size:.85rem}
 .an-flat{color:var(--muted)}
