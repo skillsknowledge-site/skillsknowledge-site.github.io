@@ -1,3 +1,5 @@
+/* only the private admin page may run this script (an old admin.html that still exists shows nothing) */
+if(!document.body||!document.body.classList.contains('adm')){document.documentElement.innerHTML='<body style="margin:0;min-height:100vh;display:grid;place-items:center;font:600 1rem system-ui,sans-serif;background:#f4f5ff;color:#1a1d3a"><p>404 &middot; This page does not exist.</p></body>';throw new Error('not the admin page')}
 /* SK admin panel.
    You open it with your admin email, username and password. Your browser checks them against a one-way hash stored in
    admin-config.js (nothing is sent anywhere). The Users, Orders, Feedback and Analysis tabs need more: they only load
@@ -315,7 +317,9 @@ function forgotView(){
 var NAVI={"analysis": "<path d=\"M4 20V10M10 20V4M16 20v-8M22 20H2\"/>", "feedback": "<path d=\"M4 4h16v12H8l-4 4z\"/>", "orders": "<path d=\"M6 3h12l2 5v12H4V8z\"/><path d=\"M4 8h16M9 12h6\"/>", "users": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.6\"/><path d=\"M16 14.2c3 .1 5 2 5 5.3\"/>", "overview": "<path d=\"M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z\"/>", "content": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1\"/>", "pages": "<path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4\"/>", "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2\"/>", "publish": "<path d=\"M12 16V4M7 9l5-5 5 5M4 20h16\"/>", "security": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"9\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 018 0v3\"/>", "admins": "<path d=\"M12 3l8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z\"/><path d=\"M8.6 12.2l2.4 2.4 4.4-4.8\"/>"};
 
 /* ---------------- users (needs Supabase + supabase-admin.sql and supabase-owner.sql) ---------------- */
-var U={state:'idle',list:[],q:'',open:null,err:''};
+var U={state:'idle',list:[],q:'',open:null,err:'',who:'all',st:'all',sort:'new'};
+function sortSel(id,cur,opts,label){return '<select id="'+id+'" data-dd aria-label="'+label+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(cur===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'}
+function cmpDate(k,dir){return function(a,b){var x=new Date(a[k]||0).getTime(),y=new Date(b[k]||0).getTime();return dir==='old'?x-y:y-x}}
 function loadUsers(){
   U.state='loading';renderApp();
   var done=false,timer=setTimeout(function(){if(done)return;done=true;U.state='error';U.err='The server did not answer. Run supabase-owner.sql, then refresh this page (Ctrl+Shift+R).';renderApp()},12000);
@@ -341,7 +345,9 @@ function nameOf(x){return x.display_name||(x.email||'').split('@')[0]||'User'}
 function badges(x){return (x.is_owner?' '+VB+'<em class="chip dark">Owner</em>':x.is_admin?' '+VB+'<em class="chip dark">Admin</em>':'')}
 function uRows(){
   var q=U.q.trim().toLowerCase();
-  var L=U.list.filter(function(x){return !q||[x.email,x.username,x.display_name,x.phone].join(' ').toLowerCase().indexOf(q)>-1});
+  var L=U.list.filter(function(x){return (!q||[x.email,x.username,x.display_name,x.phone].join(' ').toLowerCase().indexOf(q)>-1)&&(U.who==='all'||(U.who==='admins'?x.is_admin:!x.is_admin))&&(U.st==='all'||(U.st==='online'?isOnline(x):U.st==='offline'?!isOnline(x):U.st==='blocked'?x.blocked:!x.blocked))});
+  var nm=function(x){return nameOf(x).toLowerCase()};
+  L=L.slice().sort(U.sort==='old'?cmpDate('created_at','old'):U.sort==='az'?function(a,b){return nm(a)<nm(b)?-1:nm(a)>nm(b)?1:0}:U.sort==='za'?function(a,b){return nm(a)<nm(b)?1:nm(a)>nm(b)?-1:0}:U.sort==='seen'?function(a,b){return new Date(b.last_seen||b.last_sign_in_at||0)-new Date(a.last_seen||a.last_sign_in_at||0)}:cmpDate('created_at','new'));
   if(!L.length)return '<tr><td colspan="6" class="ad-muted">No users match.</td></tr>';
   return L.map(function(x){
     var n=nameOf(x),open=U.open===x.id,fixed=x.is_owner||(x.is_admin&&!ME.is_owner);
@@ -386,14 +392,18 @@ function tabUsers(){
   if(U.state!=='ready')return stateCard(h,U.state,U.err,'The user list','u-refresh');
   var tot=U.list.length,bl=U.list.filter(function(x){return x.blocked}).length,on=U.list.filter(isOnline).length,ad=U.list.filter(function(x){return x.is_admin}).length;
   return h+'<div class="ad-kpis">'+[['Total users',tot],['Online now',on],['Blocked',bl],['Admins',ad]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
-    '<div class="ad-card"><div class="u-bar"><input id="u-q" type="text" placeholder="Search by name, username, email or phone" value="'+esc(U.q)+'" aria-label="Search users"><button class="btn btn-solid btn-sm" type="button" data-act="u-refresh">Refresh</button></div>'+
+    '<div class="ad-card"><div class="seg" role="tablist" aria-label="Who">'+[['all','All',tot],['users','Users',tot-ad],['admins','Admins',ad]].map(function(s){return '<button type="button" role="tab" data-act="u-who" data-v="'+s[0]+'"'+(U.who===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
+    '<div class="u-bar"><input id="u-q" type="text" placeholder="Search by name, username, email or phone" value="'+esc(U.q)+'" aria-label="Search users">'+
+      sortSel('u-st',U.st,[['all','Any status'],['online','Online'],['offline','Offline'],['blocked','Blocked'],['active','Not blocked']],'Filter by status')+
+      sortSel('u-sort',U.sort,[['new','Newest first'],['old','Oldest first'],['az','Name A to Z'],['za','Name Z to A'],['seen','Last seen']],'Sort users')+
+      '<button class="btn btn-solid btn-sm" type="button" data-act="u-refresh">Refresh</button></div>'+
     '<div class="ad-tablewrap"><table class="ad-table u-table"><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Status</th><th>Access</th><th></th></tr></thead><tbody id="u-body">'+uRows()+'</tbody></table></div>'+
     '<p class="ad-muted note">Access: <b>Member</b> is a normal account. <b>Trusted</b> and <b>Editor</b> are extra levels you can use to unlock members-only parts of the site. Blocking takes effect at once for logging in.</p></div>';
 }
 function uAct(p,ok){return p.then(function(){flash(ok);return loadUsersQuiet()},function(e){flash(e.message||'Something went wrong.','err');renderApp()})}
 
 /* ---------------- analysis + orders (need the extra part of supabase-admin.sql) ---------------- */
-var A={days:30,state:'idle',d:null,err:''},O={state:'idle',list:[],err:''};
+var A={days:30,state:'idle',d:null,err:''},O={state:'idle',list:[],err:'',sort:'new',st:'all'};
 function pct(c,p){if(!p)return c?'<span class="an-up">&#9650; new</span>':'<span class="an-flat">-</span>';var v=Math.round((c-p)/p*100);return '<span class="'+(v>=0?'an-up':'an-down')+'">'+(v>=0?'&#9650; ':'&#9660; ')+Math.abs(v)+'%</span>'}
 function dur(s){s=Math.round(s||0);var m=Math.floor(s/60);return m+'M '+('0'+(s%60)).slice(-2)+'S'}
 function loadAnalysis(){A.state='loading';renderApp();uApi('admin_analytics',{p_days:A.days}).then(function(r){A.d=r;A.state='ready';renderApp()},function(e){A.state=(e.status===404?'nosql':'error');A.err=e.message||'';renderApp()})}
@@ -428,12 +438,14 @@ function tabOrders(){
   if(O.state==='error'&&O.err==='noauth')return connectCard(h);
   if(O.state!=='ready')return h+'<div class="ad-card"><p class="ad-msg warn">'+(O.state==='nosql'?'Orders are not installed yet. Run supabase-admin.sql again in the Supabase SQL Editor.':(O.err==='noauth'?'Log in on the website with your admin Google account first, then try again.':'Could not load orders. '+esc(O.err)))+'</p><div class="ad-btns" style="justify-content:flex-start"><button class="btn btn-solid btn-sm" type="button" data-act="o-refresh">Try again</button></div></div>';
   var paid=O.list.filter(function(o){return o.status==='paid'}),sum=paid.reduce(function(a,o){return a+o.amount},0);
-  var rows=O.list.map(function(o){return '<tr><td>#'+o.id+'</td><td><b>'+esc(o.name)+'</b><span>'+esc(o.email)+(o.phone?' · '+esc(o.phone):'')+'</span></td><td>'+esc(o.item)+'<span>'+esc(o.plan)+'</span></td><td>PKR '+Number(o.amount).toLocaleString('en-US')+'</td><td>'+esc(o.method)+(o.reference?'<span>'+esc(o.reference)+'</span>':'')+'</td><td><em class="chip'+(o.status==='paid'?' ok':o.status==='cancelled'?' danger':'')+'">'+esc(o.status)+'</em></td><td class="u-act">'+(o.status!=='paid'?'<button class="ad-link" type="button" data-act="o-set" data-id="'+o.id+'" data-s="paid">Mark paid</button> ':'')+(o.status!=='cancelled'?'<button class="ad-link u-danger" type="button" data-act="o-set" data-id="'+o.id+'" data-s="cancelled">Cancel</button>':'')+'</td></tr>'}).join('')||'<tr><td colspan="7" class="ad-muted">No orders yet.</td></tr>';
+  var OL=O.list.filter(function(o){return O.st==='all'||o.status===O.st}).slice().sort(O.sort==='old'?cmpDate('created_at','old'):O.sort==='hi'?function(a,b){return b.amount-a.amount}:O.sort==='lo'?function(a,b){return a.amount-b.amount}:cmpDate('created_at','new'));
+  var rows=OL.map(function(o){return '<tr><td>#'+o.id+'</td><td><b>'+esc(o.name)+'</b><span>'+esc(o.email)+(o.phone?' · '+esc(o.phone):'')+'</span></td><td>'+esc(o.item)+'<span>'+esc(o.plan)+'</span></td><td>PKR '+Number(o.amount).toLocaleString('en-US')+'</td><td>'+esc(o.method)+(o.reference?'<span>'+esc(o.reference)+'</span>':'')+'</td><td><em class="chip'+(o.status==='paid'?' ok':o.status==='cancelled'?' danger':'')+'">'+esc(o.status)+'</em></td><td class="u-act">'+(o.status!=='paid'?'<button class="ad-link" type="button" data-act="o-set" data-id="'+o.id+'" data-s="paid">Mark paid</button> ':'')+(o.status!=='cancelled'?'<button class="ad-link u-danger" type="button" data-act="o-set" data-id="'+o.id+'" data-s="cancelled">Cancel</button>':'')+'</td></tr>'}).join('')||'<tr><td colspan="7" class="ad-muted">No orders yet.</td></tr>';
   return h+'<div class="ad-kpis">'+[['Orders',O.list.length],['Paid',paid.length],['Pending',O.list.filter(function(o){return o.status==='pending'}).length],['Paid total','PKR '+sum.toLocaleString('en-US')]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
-    '<div class="ad-card"><div class="ad-tablewrap"><table class="ad-table u-table"><thead><tr><th>Order</th><th>Customer</th><th>Item</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    '<div class="ad-card"><div class="u-bar fb-sortbar">'+sortSel('o-st',O.st,[['all','Any status'],['pending','Pending'],['paid','Paid'],['cancelled','Cancelled']],'Filter orders')+sortSel('o-sort',O.sort,[['new','Newest first'],['old','Oldest first'],['hi','Highest amount'],['lo','Lowest amount']],'Sort orders')+'</div><div class="ad-tablewrap"><table class="ad-table u-table"><thead><tr><th>Order</th><th>Customer</th><th>Item</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 /* ---------------- feedback: comments, complaints and appeals ---------------- */
-var F={state:'idle',list:[],ap:[],err:'',kind:'all',reply:null,av:'open'};
+var F={state:'idle',list:[],ap:[],err:'',kind:'all',reply:null,av:'open',sort:'new'};
+function fbSort(L){return L.slice().sort(F.sort==='old'?cmpDate('created_at','old'):F.sort==='high'?function(a,b){return (b.rating||0)-(a.rating||0)||cmpDate('created_at','new')(a,b)}:F.sort==='low'?function(a,b){return (a.rating||9)-(b.rating||9)||cmpDate('created_at','new')(a,b)}:cmpDate('created_at','new'))}
 function starsHtml(n){var o='';for(var i=1;i<=5;i++)o+='<svg viewBox="0 0 24 24" class="'+(i<=n?'on':'')+'" aria-hidden="true"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4L2.8 9.3l6.4-.8z"/></svg>';return '<span class="fb-stars" role="img" aria-label="'+n+' out of 5">'+o+'</span>'}
 function loadFeedback(quiet){
   if(!quiet){F.state='loading';renderApp()}
@@ -471,12 +483,13 @@ function tabFeedback(){
   var segs=[['all','All',F.list.length],['comment','Comments',cm.length],['complaint','Complaints',cp.length],['appeal','Appeals',openAp]];
   var body;
   if(F.kind==='appeal'){
-    var cur=F.ap.filter(function(x){return x.status==='open'}),old=F.ap.filter(function(x){return x.status!=='open'}),L=F.av==='closed'?old:cur;
+    var cur=F.ap.filter(function(x){return x.status==='open'}),old=F.ap.filter(function(x){return x.status!=='open'}),L=fbSort(F.av==='closed'?old:cur);
     body='<div class="seg seg-sub" role="tablist" aria-label="Appeals">'+[['open','Current',cur.length],['closed','Closed',old.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
       (L.length?'<div class="u-appeals">'+L.map(appealCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'No closed appeals.':'No current appeals.')+'</p>')}
-  else{var shown=F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind});body=shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">Nothing here yet.</p>'}
+  else{var shown=fbSort(F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind}));body=shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">Nothing here yet.</p>'}
   return h+'<div class="ad-kpis">'+[['Comments',cm.length],['Average rating',avg],['Complaints',cp.length],['Open appeals',openAp]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
-    '<div class="ad-card"><div class="seg" role="tablist" aria-label="Show">'+segs.map(function(s){return '<button type="button" role="tab" data-act="f-kind" data-v="'+s[0]+'"'+(F.kind===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+body+'</div>';
+    '<div class="ad-card"><div class="seg" role="tablist" aria-label="Show">'+segs.map(function(s){return '<button type="button" role="tab" data-act="f-kind" data-v="'+s[0]+'"'+(F.kind===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
+    '<div class="u-bar fb-sortbar"><span class="ad-muted">Sort</span>'+sortSel('f-sort',F.sort,[['new','Newest first'],['old','Oldest first']].concat(F.kind==='appeal'?[]:[['high','Highest rating'],['low','Lowest rating']]),'Sort feedback')+'</div>'+body+'</div>';
 }
 function fbMenu(btn,id){
   var f=F.list.filter(function(x){return x.id===id})[0];if(!f)return;
@@ -499,7 +512,7 @@ function goTab(t){
 function renderApp(){
   acts.innerHTML='<a class="btn btn-ghost btn-sm" href="index.html">Preview site</a><button class="btn btn-solid btn-sm" type="button" data-act="publish" title="Choose where to save the file that makes your changes live">Publish'+(dirty()?' •':'')+'</button><button class="btn btn-ghost btn-sm" type="button" data-act="logout">Log out</button>';
   var nav='<aside class="ad-nav" aria-label="Admin sections"><div class="ad-brand"><b>SK</b><span>Control</span></div>'+
-    '<p class="ad-me">'+esc(ME.name||'Admin')+VB+'<em>'+(ME.is_owner?'Owner':'Admin')+'</em></p>'+
+    '<p class="ad-me">'+esc(ME.is_owner?'SkillsKnowledge':(ME.name||'Admin'))+VB+'<em>'+(ME.is_owner?'Owner':'Admin')+'</em></p>'+
     TABS.map(function(t){return '<button type="button" data-tab="'+t[0]+'"'+(ui.tab===t[0]?' aria-current="true"':'')+'><svg viewBox="0 0 24 24" aria-hidden="true">'+NAVI[t[0]]+'</svg><span>'+t[1]+'</span>'+(t[0]==='publish'&&dirty()?'<em>•</em>':'')+'</button>'}).join('')+'</aside>';
   var h=nav+'<div class="ad-main">'+msgHtml()+({overview:tabOverview,content:tabContent,pages:tabPages,users:tabUsers,analysis:tabAnalysis,orders:tabOrders,feedback:tabFeedback,settings:tabSettings,publish:tabPublish,admins:tabAdmins,security:tabSecurity})[ui.tab]()+'</div>';
   app.innerHTML='<div class="ad-shell">'+h+'</div>';
@@ -625,9 +638,11 @@ function tabAdmins(){
   if(U.state!=='ready')return h+owner+stateCard('',U.state,U.err,'The admin list','u-refresh');
   var ads=U.list.filter(function(x){return x.is_admin&&!x.is_owner});
   var rows=ads.length?ads.map(function(x){return '<tr><td><b class="u-name">'+esc(nameOf(x))+badges(x)+'</b><span>'+esc(x.email)+'</span></td><td class="u-act"><button class="ad-link u-danger" type="button" data-act="u-admin" data-id="'+esc(x.id)+'" data-flag="0">Remove admin</button></td></tr>'}).join(''):'<tr><td colspan="2" class="ad-muted">No other admins. To add one, open <b>Users</b>, press Details on that person and choose <b>Make admin</b>.</td></tr>';
-  var xfer=ads.length?'<div class="ad-card"><h2>Hand over ownership</h2><p>Choose an admin to become the new owner. You stay an admin but lose the owner rights, and only the new owner could give them back.</p>'+
+  var ho=ME.handover,hoEnd=ho&&ho.ends?new Date(ho.ends).toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+  var hoCard=ho?'<div class="ad-card"><h2>Ownership handover running</h2>'+(ho.state==='leaving'?'<p>The new owner already has full owner rights. You keep yours until <b>'+esc(hoEnd)+'</b>, then you become a normal admin. If this was not you, or you changed your mind, cancel it now and everything returns to you.</p><div class="ad-btns" style="justify-content:flex-start"><button class="btn btn-danger btn-sm" type="button" data-act="x-cancel">Cancel handover</button></div>':'<p>You are the owner now. The previous owner keeps owner rights until <b>'+esc(hoEnd)+'</b> and may cancel the handover before then.</p>')+'</div>':'';
+  var xfer=ho?'':ads.length?'<div class="ad-card"><h2>Hand over ownership</h2><p>Choose an admin to become the new owner. They get owner rights at once. You keep yours for 3 more days, so you can cancel if something is wrong, then you become a normal admin.</p>'+
     '<div class="ad-row2"><select id="x-to" data-dd aria-label="New owner">'+ads.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(nameOf(x))+' ('+esc(x.email)+')</option>'}).join('')+'</select><button class="btn btn-danger btn-sm" type="button" data-act="x-owner">Hand over ownership</button></div></div>':'';
-  return h+owner+'<div class="ad-card"><h2>Admins</h2><div class="ad-tablewrap"><table class="ad-table"><thead><tr><th>Admin</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+xfer;
+  return h+owner+hoCard+'<div class="ad-card"><h2>Admins</h2><div class="ad-tablewrap"><table class="ad-table"><thead><tr><th>Admin</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+xfer;
 }
 
 /* ---------------- security tab: change the login, recovery key, reset email ---------------- */
@@ -669,7 +684,8 @@ function onClick(e){
   if(a==='o-refresh'){loadOrders();return}
   if(a==='f-refresh'){loadFeedback();return}
   if(a==='f-av'){F.av=t.dataset.v;renderApp();return}
-  if(a==='f-kind'){F.kind=t.dataset.v;F.reply=null;renderApp();return}
+  if(a==='u-who'){U.who=t.dataset.v;renderApp();return}
+  if(a==='f-kind'){if(t.dataset.v==='appeal'&&(F.sort==='high'||F.sort==='low'))F.sort='new';F.kind=t.dataset.v;F.reply=null;renderApp();return}
   if(a==='f-reply'){F.reply=t.dataset.id?+t.dataset.id:null;renderApp();var ta=$('#f-text');if(ta)ta.focus();return}
   if(a==='f-mail'){var tx=$('#f-text');t.href=t.href.split('&body=')[0]+'&body='+encodeURIComponent(tx?tx.value:'');return}
   if(a==='f-file'){openFile(t.dataset.path,t.dataset.name);return}
@@ -680,7 +696,8 @@ function onClick(e){
   if(a==='u-appeal-ok'){var aid=+t.dataset.id,au=t.dataset.uid;ask('Unblock this person and close their appeal?','Unblock').then(function(ok){if(ok)uApi('admin_set_blocked',{uid:au,flag:false}).then(function(){return uApi('admin_close_appeal',{aid:aid})}).then(function(){flash('Unblocked. Appeal closed.');loadUsersQuiet().catch(function(){});loadFeedback(true)},function(er){flash(er.message||'Failed.','err');renderApp()})});return}
   if(a==='u-appeal-no'){var rid=+t.dataset.id;ask('Reject this appeal? The person stays blocked.','Reject',true).then(function(ok){if(ok)uApi('admin_close_appeal',{aid:rid}).then(function(){flash('Appeal rejected.');loadFeedback(true)},function(er){flash(er.message||'Failed.','err');renderApp()})});return}
   if(a==='u-admin'){var g=t.dataset.flag==='1',gid=t.dataset.id;ask(g?'Give this person full admin rights?':'Remove this person\'s admin rights?',g?'Make admin':'Remove',!g).then(function(ok){if(ok)uAct(uApi('admin_set_admin',{uid:gid,flag:g}),g?'Admin rights given.':'Admin rights removed.')});return}
-  if(a==='x-owner'){var to=$('#x-to').value;ask('Hand over ownership? You will stay an admin, but only the new owner can give ownership back.','Hand over',true).then(function(ok){if(ok)uApi('admin_transfer_owner',{uid:to}).then(function(){U.state='idle';flash('Ownership handed over.');view()},function(er){flash(er.message||'Failed.','err');renderApp()})});return}
+  if(a==='x-cancel'){ask('Cancel the handover? The new owner loses owner rights at once.','Cancel handover',true).then(function(ok){if(ok)uApi('admin_cancel_handover').then(function(){U.state='idle';flash('Handover cancelled. You are the only owner again.');uApi('admin_whoami').then(function(me){ME=me;renderApp()},function(){renderApp()})},function(er){flash(er.message||'Failed.','err');renderApp()})});return}
+  if(a==='x-owner'){var to=$('#x-to').value;ask('Hand over ownership? The new owner gets owner rights at once. You keep yours for 3 days and can cancel until then.','Hand over',true).then(function(ok){if(ok)uApi('admin_transfer_owner',{uid:to}).then(function(){U.state='idle';flash('Done. The new owner has owner rights now; yours end in 3 days unless you cancel.');return uApi('admin_whoami').then(function(me){ME=me;renderApp()})},function(er){flash(er.message||'Failed.','err');renderApp()})});return}
   if(a==='goto-col'){ui.tab='content';ui.col=t.dataset.col;ui.edit=null;renderApp();return}
 }
 app.addEventListener('click',onClick);
@@ -725,6 +742,11 @@ app.addEventListener('submit',function(e){
 app.addEventListener('change',function(e){
   var t=e.target;
   if(t.id==='an-days'){A.days=+t.value;loadAnalysis();return}
+  if(t.id==='u-st'){U.st=t.value;renderApp();return}
+  if(t.id==='u-sort'){U.sort=t.value;renderApp();return}
+  if(t.id==='f-sort'){F.sort=t.value;renderApp();return}
+  if(t.id==='o-st'){O.st=t.value;renderApp();return}
+  if(t.id==='o-sort'){O.sort=t.value;renderApp();return}
   var s=t.closest&&t.closest('.u-role');if(s){uAct(uApi('admin_set_role',{uid:s.dataset.id,new_role:s.value}),'Access updated.');return}
   if(t.id==='imp'&&t.files&&t.files[0]){
     var r=new FileReader();

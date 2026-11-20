@@ -92,9 +92,9 @@ body[data-v=gate] .vb path,:root[data-theme=dark] .vb path{stroke:#000}
 .ad-kpi{display:flex;align-items:center;gap:1rem;padding:1.1rem 1.2rem;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow)}
 .ad-ico{display:grid;place-items:center;width:46px;height:46px;flex:none;border-radius:14px;background:var(--soft)}
 .ad-ico svg{width:22px;height:22px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ad-kpi span{display:block;font:700 .72rem var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.ad-kpi b{display:block;font:800 1.8rem/1.15 var(--f-display)}
-.ad-kpi small{font-size:.78rem;color:var(--muted)}
+.ad-kpi>div>span{display:block;font:700 .72rem var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ad-kpi>div>b{display:block;font:800 1.8rem/1.15 var(--f-display)}
+.ad-kpi>div>small{font-size:.78rem;color:var(--muted)}
 .ow-name{display:flex;align-items:center;gap:.3rem;flex-wrap:wrap}
 .ow-name b{font:800 1.5rem var(--f-display)}
 .ow-name .vb{width:26px;height:26px;margin-left:.2rem}
@@ -303,3 +303,6 @@ body[data-v=gate] .ad-narrow .ad-forgot{margin:0;text-align:center}
 body[data-v=gate] .ad-narrow .ad-steps{text-align:left;font-size:.84rem;padding-left:1.2rem}
 body[data-v=gate] .ad-recov{background:rgba(255,255,255,.1);color:#fff}
 body[data-v=gate] .ad-code{background:rgba(0,0,0,.35);color:#fff}
+
+.u-bar+.ad-tablewrap,.seg+.u-bar{margin-top:.9rem}.u-bar select{min-width:0}
+.fb-sortbar{justify-content:flex-end;margin:.9rem 0 1rem}
