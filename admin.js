@@ -408,15 +408,40 @@ var A={days:30,state:'idle',d:null,err:''},O={state:'idle',list:[],err:'',sort:'
 function pct(c,p){if(!p)return c?'<span class="an-up">&#9650; new</span>':'<span class="an-flat">-</span>';var v=Math.round((c-p)/p*100);return '<span class="'+(v>=0?'an-up':'an-down')+'">'+(v>=0?'&#9650; ':'&#9660; ')+Math.abs(v)+'%</span>'}
 function dur(s){s=Math.round(s||0);var m=Math.floor(s/60);return m+'M '+('0'+(s%60)).slice(-2)+'S'}
 function loadAnalysis(){A.state='loading';renderApp();A.v=null;uApi('admin_visits',{p_days:A.days}).then(function(v){A.v=v;if(A.state==='ready')renderApp()},function(){A.v=false;if(A.state==='ready')renderApp()});uApi('admin_analytics',{p_days:A.days}).then(function(r){A.d=r;A.state='ready';renderApp()},function(e){A.state=(e.status===404?'nosql':'error');A.err=e.message||'';renderApp()})}
-function chart(daily){
+function chart(daily,ser){
   if(!daily||!daily.length)return '<p class="ad-muted">No visits in this period yet.</p>';
-  var W=640,H=220,P=34,n=daily.length,mx=Math.max(4,Math.max.apply(null,daily.map(function(x){return x.sessions})));mx=Math.ceil(mx/4)*4;
+  ser=ser||[{k:'sessions',l:'Sessions'}];
+  var W=640,H=220,P=34,n=daily.length,mx=Math.max.apply(null,[4].concat(daily.map(function(x){return Math.max.apply(null,ser.map(function(q){return x[q.k]||0}))})));mx=Math.ceil(mx/4)*4;
   function X(i){return P+(n<2?0:i*(W-P-8)/(n-1))}function Y(v){return H-24-v*(H-44)/mx}
-  var pts=daily.map(function(x,i){return X(i)+','+Y(x.sessions)}),line='M'+pts.join(' L'),area=line+' L'+X(n-1)+','+(H-24)+' L'+X(0)+','+(H-24)+' Z',g='';
+  var g='',paths='';
   for(var k=0;k<=4;k++){var v=mx/4*k;g+='<line x1="'+P+'" x2="'+W+'" y1="'+Y(v)+'" y2="'+Y(v)+'" class="an-grid"/><text x="'+(P-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+Math.round(v)+'</text>'}
+  ser.forEach(function(q,j){var line='M'+daily.map(function(x,i){return X(i)+','+Y(x[q.k]||0)}).join(' L');
+    if(j===0)paths+='<path d="'+line+' L'+X(n-1)+','+(H-24)+' L'+X(0)+','+(H-24)+' Z" class="an-area"/>';
+    paths+='<path d="'+line+'" class="an-line'+(j?' an-line2':'')+'"/>'});
   var lab=[0,Math.floor((n-1)/2),n-1].filter(function(v,i,a){return a.indexOf(v)===i&&daily[v]}).map(function(i){return '<text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle">'+daily[i].day.slice(5)+'</text>'}).join('');
-  return '<svg class="an-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Sessions over time">'+g+'<path d="'+area+'" class="an-area"/><path d="'+line+'" class="an-line"/>'+lab+'</svg>';
+  var tips=daily.map(function(x,i){var dt=new Date(x.day+'T00:00:00');
+    return {x:X(i),y:ser.map(function(q){return Y(x[q.k]||0)}),
+      h:'<b>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</b>'+ser.map(function(q,j){return '<span><i class="d'+j+'"></i>'+esc(q.l)+'<em>'+(x[q.k]||0)+'</em></span>'}).join('')}});
+  var dots=ser.map(function(q,j){return '<circle class="an-dot an-dot'+j+'" visibility="hidden" r="4.5" cx="-9" cy="-9"/>'}).join('');
+  var legend=ser.length>1?'<p class="an-leg">'+ser.map(function(q,j){return '<span><i class="d'+j+'"></i>'+esc(q.l)+'</span>'}).join('')+'</p>':'';
+  return '<div class="an-cw" data-w="'+W+'" data-h="'+H+'" data-tip="'+esc(JSON.stringify(tips))+'"><svg class="an-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(ser.map(function(q){return q.l}).join(' and '))+' over time">'+g+paths+lab+'<line class="an-guide" visibility="hidden" x1="-9" x2="-9" y1="10" y2="'+(H-24)+'"/>'+dots+'</svg><div class="an-tip" hidden></div></div>'+legend;
 }
+/* hover details on charts (works with mouse and touch) */
+(function(){
+  function hide(){var a=document.querySelectorAll('.an-cw');for(var i=0;i<a.length;i++){var t=a[i].querySelector('.an-tip');if(t)t.hidden=true;var gl=a[i].querySelector('.an-guide');if(gl)gl.setAttribute('visibility','hidden');var d=a[i].querySelectorAll('.an-dot');for(var j=0;j<d.length;j++)d[j].setAttribute('visibility','hidden')}}
+  function move(e){
+    var cw=e.target.closest&&e.target.closest('.an-cw');if(!cw){hide();return}
+    var tips;try{tips=cw._tips||(cw._tips=JSON.parse(cw.dataset.tip))}catch(x){return}
+    var svg=cw.querySelector('svg'),r=svg.getBoundingClientRect(),c=cw.getBoundingClientRect(),W=+cw.dataset.w,H=+cw.dataset.h,sc=Math.min(r.width/W,r.height/H),off=(r.width-W*sc)/2,vx=(e.clientX-r.left-off)/sc,bi=0,bd=1e9;
+    tips.forEach(function(t,i){var dd=Math.abs(t.x-vx);if(dd<bd){bd=dd;bi=i}});
+    var t=tips[bi],gl=cw.querySelector('.an-guide');gl.setAttribute('x1',t.x);gl.setAttribute('x2',t.x);gl.setAttribute('visibility','visible');
+    var d=cw.querySelectorAll('.an-dot');for(var j=0;j<d.length;j++){d[j].setAttribute('visibility','visible');d[j].setAttribute('cx',t.x);d[j].setAttribute('cy',t.y[j])}
+    var tp=cw.querySelector('.an-tip');tp.innerHTML=t.h;tp.hidden=false;
+    var left=r.left-c.left+off+t.x*sc,w=tp.offsetWidth;left=Math.max(w/2+4,Math.min(c.width-w/2-4,left));tp.style.left=left+'px';tp.style.top='8px';
+  }
+  document.addEventListener('pointermove',move);document.addEventListener('pointerdown',move);
+  document.addEventListener('pointerleave',hide);window.addEventListener('scroll',hide,true);
+})();
 /* every visit to the website, signed up or not (counted by track.js; no personal data) */
 function visitsCard(){
   var head='<div class="ad-card"><h2>Website visits</h2><p class="ad-muted">Everyone who opens your website counts, even without an account. A visit is one page opened. A visitor is one browser, counted once.</p>';
@@ -424,10 +449,11 @@ function visitsCard(){
   if(v===null||v===undefined)return head+'<p class="ad-muted">Loading…</p></div>';
   if(v===false)return head+'<p class="ad-msg warn">The daily table is not installed yet. Run supabase-visits.sql once in the Supabase SQL Editor, then refresh.</p></div>';
   var dl=v.days||[],yest=dl[1]?dl[1].views:0,hp=function(c,p){return p===undefined||p===null?'':pct(c,p)};
-  var cards=[['Total visits',v.views,hp(v.views,v.prev_views)],['Visitors',v.visitors,hp(v.visitors,v.prev_visitors)],['Sessions',v.sessions,hp(v.sessions,v.prev_sessions)],['Visits today',v.today,dl[1]?pct(v.today,yest):'']];
-  var rows=dl.map(function(x,i){var pv=dl[i+1],ch=function(c,k){return pv?' '+pct(c,pv[k]):''};var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+ch(x.views,'views')+'</td><td>'+x.visitors+ch(x.visitors,'visitors')+'</td><td>'+x.sessions+ch(x.sessions,'sessions')+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
+  var cards=[['Visits today',v.today,dl[1]?pct(v.today,yest):''],['Visitors',v.visitors,hp(v.visitors,v.prev_visitors)],['Sessions',v.sessions,hp(v.sessions,v.prev_sessions)],['Total visits',v.views,hp(v.views,v.prev_views)]];
+  var rows=dl.map(function(x,i){if(!x.views&&!x.visitors&&!x.sessions)return '';var pv=dl[i+1],ch=function(c,k){return pv?' '+pct(c,pv[k]):''};var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+ch(x.views,'views')+'</td><td>'+x.visitors+ch(x.visitors,'visitors')+'</td><td>'+x.sessions+ch(x.sessions,'sessions')+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
   return head+'<div class="an-stats">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b>'+c[2]+'</div>'}).join('')+'</div>'+
-    '<h3 class="an-sub">Day by day</h3><div class="ad-tablewrap an-scroll"><table class="ad-table"><thead><tr><th>Date</th><th>Visits</th><th>Visitors</th><th>Sessions</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    '<h3 class="an-sub">Day by day</h3><div class="ad-tablewrap an-scroll"><table class="ad-table"><thead><tr><th>Date</th><th>Visits</th><th>Visitors</th><th>Sessions</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<h3 class="an-sub">Visits and visitors over time</h3>'+chart(dl.slice().reverse(),[{k:'views',l:'Visits'},{k:'visitors',l:'Visitors'}])+'</div>';
 }
 function tabAnalysis(){
   var h='<div class="ad-head"><h1>Analysis</h1><p class="ad-muted">Visits and time spent on your website.</p></div>';
@@ -500,7 +526,9 @@ function tabFeedback(){
     var cur=F.ap.filter(function(x){return x.status==='open'}),old=F.ap.filter(function(x){return x.status!=='open'}),L=fbSort(F.av==='closed'?old:cur);
     body='<div class="seg seg-sub" role="tablist" aria-label="Appeals">'+[['open','Current',cur.length],['closed','Closed',old.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
       (L.length?'<div class="u-appeals">'+L.map(appealCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'No closed appeals.':'No current appeals.')+'</p>')}
-  else{var shown=fbSort(F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind}));body=shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">Nothing here yet.</p>'}
+  else{var all=F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind}),cur2=all.filter(function(f){return f.status!=='done'}),old2=all.filter(function(f){return f.status==='done'}),shown=fbSort(F.av==='closed'?old2:cur2);
+    body='<div class="seg seg-sub" role="tablist" aria-label="Status">'+[['open','Current',cur2.length],['closed','Done',old2.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
+      (shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'Nothing marked done yet.':'Nothing waiting for you.')+'</p>')}
   return h+'<div class="ad-kpis">'+[['Comments',cm.length],['Average rating',avg],['Complaints',cp.length],['Open appeals',openAp]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
     '<div class="ad-card"><div class="seg" role="tablist" aria-label="Show">'+segs.map(function(s){return '<button type="button" role="tab" data-act="f-kind" data-v="'+s[0]+'"'+(F.kind===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
     '<div class="u-bar fb-sortbar"><span class="ad-muted">Sort</span>'+sortSel('f-sort',F.sort,[['new','Newest first'],['old','Oldest first']].concat(F.kind==='appeal'?[]:[['high','Highest rating'],['low','Lowest rating']]),'Sort feedback')+'</div>'+body+'</div>';
