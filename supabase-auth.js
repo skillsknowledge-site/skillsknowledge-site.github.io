@@ -33,9 +33,14 @@
   var err=q.get('error_description')||(/error_description=/.test(location.hash)&&new URLSearchParams(location.hash.slice(1)).get('error_description'));
   function base(){return location.origin+location.pathname.replace(/[^\/]*$/,'')}
   function email(id){ /* email, username or phone -> email */
-    id=String(id||'').trim();if(/@/.test(id))return Promise.resolve(id.toLowerCase());
+    id=String(id||'').trim();if(id.length<3)return Promise.reject(new Error('Please enter your email, username or phone.'));if(/@/.test(id))return Promise.resolve(id.toLowerCase());
     return api('/rest/v1/rpc/login_email',{identifier:id}).then(function(e){if(!e)throw new Error('Wrong details or password.');return e},
       function(er){if(/not find|404|function/i.test(er.message))throw new Error('Username login is not switched on yet. Use your email.');throw er});
+  }
+  function fn(body){
+    return fetch(url+'/functions/v1/sk-login',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+C.anon,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){
+      return r.text().then(function(t){var j=null;try{j=t?JSON.parse(t):null}catch(e){}return {status:r.status,j:j}})},
+      function(){return {status:0,j:null}});
   }
   window.skAuth={
     social:function(provider){
@@ -44,25 +49,41 @@
       return new Promise(function(){});
     },
     login:function(id,pw){
+      id=String(id||'').trim();
+      /* the server looks the username up itself, so the browser never learns anybody's email */
+      return fn({action:'login',identifier:id,password:pw}).then(function(r){
+        if(r.status===404||r.status===0)return legacyLogin(id,pw);
+        if(r.j&&r.j.access_token){saveSession(r.j);setTimeout(home,600);return}
+        if(r.j&&r.j.blocked&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
+        throw new Error(nice((r.j&&(r.j.error||r.j.msg||r.j.message))||''));
+      });
+    },
+    reset:function(id){
+      var m='If that account exists, a reset link is on its way to its email.';
+      return fn({action:'reset',identifier:String(id||'').trim(),redirect_to:base()}).then(function(r){
+        if(r.status===404||r.status===0)return legacyReset(id);return m},function(){return m});
+    }
+  };
+  function legacyReset(id){
+    var m='If that account exists, a reset link is on its way to its email.';
+    return email(id).then(function(em){return api('/auth/v1/recover?redirect_to='+encodeURIComponent(base()),{email:em})}).then(function(){return m},function(){return m});
+  }
+  function legacyLogin(id,pw){
       return email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})}).then(function(j){saveSession(j);setTimeout(home,600)},function(er){
         /* blocked? show the termination screen instead of a vague error */
         return api('/rest/v1/rpc/account_status',{identifier:id}).then(function(b){
           if(b===true&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
           throw er},function(){throw er})});
-    },
-    signup:function(name,em,pw,un,ph){
+    
+  }
+  window.skAuth.signup=function(name,em,pw,un,ph){
       var chk=un?api('/rest/v1/rpc/username_available',{name:un}).catch(function(){return true}):Promise.resolve(true);
       return chk.then(function(free){if(free===false)throw new Error('That username is already taken.');
       return api('/auth/v1/signup',{email:em,password:pw,data:{full_name:name,username:un||'',phone:(ph||'').replace(/[^0-9+]/g,'')}})}).then(function(j){return j}).then(function(j){
         if(j&&j.access_token){saveSession(j);setTimeout(home,600);return 'Account created.'}
         return 'Almost done. Check your email and click the link to confirm.';
       });
-    },
-    reset:function(id){
-      return email(id).then(function(em){return api('/auth/v1/recover?redirect_to='+encodeURIComponent(base()),{email:em})}).then(function(){return 'If that account exists, a reset link is on its way to its email.'},
-        function(){return 'If that account exists, a reset link is on its way to its email.'});
-    }
-  };
+    };
   if(err&&/banned|blocked|user_banned/i.test(err+location.search+location.hash)){window.addEventListener('DOMContentLoaded',function(){if(window.skTerminated)window.skTerminated(null)});err=''}
   if(err)window.addEventListener('DOMContentLoaded',function(){var f=document.querySelector('.aform:not([hidden]) .aalert');if(f){f.textContent=err+' You can log in with your email or username and password instead.';f.className='aalert';f.hidden=false}});
 })();
