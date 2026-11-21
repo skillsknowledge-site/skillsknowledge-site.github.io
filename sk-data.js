@@ -24,6 +24,9 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 function admin(){var s=get(SESSION_KEY);return !!(s&&s.exp>Date.now())}
 function data(){
+  /* the private admin panel (on its own address) shows this page inside a frame and hands over its draft through the frame's name,
+     so the preview works without the admin and the website sharing an address. Only a framed page reads it, and it is never saved. */
+  if(window.top!==window&&typeof window.name==='string'&&window.name.indexOf('skdraft:')===0){try{var pd=JSON.parse(window.name.slice(8));if(pd&&typeof pd==='object')return pd}catch(e){}}
   if(admin()){var d=get(DRAFT_KEY);if(d&&typeof d==='object')return d}
   var p=window.SK_PUBLISHED;return (p&&typeof p==='object')?p:{lists:{},settings:{}};
 }
@@ -103,16 +106,6 @@ function ready(){
     var li=a.closest('nav li');if(li){li.remove();return}
     if(a.id==='login-btn'||a.classList.contains('btn')){a.remove()}else{a.removeAttribute('href');a.style.pointerEvents='none'}
   });
-  banner();
-}
-function banner(){
-  if(!admin()||window.top!==window||document.body.classList.contains('adm'))return;
-  var d=document.createElement('div');d.id='sk-admin-bar';
-  d.innerHTML='<b>Admin preview</b><span>'+(get(DRAFT_KEY)?'showing your draft':'no draft yet')+'</span><a href="ctl-k7q2x9m4.html">Open admin</a><button type="button">Exit</button>';
-  var s=document.createElement('style');
-  s.textContent='#sk-admin-bar{position:fixed;left:12px;bottom:12px;z-index:9999;display:flex;align-items:center;gap:.7rem;padding:.5rem .8rem;border-radius:8px;background:rgba(10,14,12,.92);color:#fff;font:500 .78rem system-ui,sans-serif;border:1px solid rgba(255,255,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.45)}#sk-admin-bar span{opacity:.7}#sk-admin-bar a,#sk-admin-bar button{color:#0a0e0c;background:#7fe3a0;border:0;border-radius:5px;padding:.25rem .6rem;font:600 .75rem system-ui,sans-serif;text-decoration:none;cursor:pointer}';
-  document.head.appendChild(s);document.body.appendChild(d);
-  d.querySelector('button').addEventListener('click',function(){del(SESSION_KEY);location.reload()});
 }
 /* deferred scripts run while readyState is 'interactive', so wait for DOMContentLoaded to run after the page scripts */
 if(document.readyState==='complete')ready();else document.addEventListener('DOMContentLoaded',ready);
