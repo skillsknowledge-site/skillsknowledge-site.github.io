@@ -140,3 +140,18 @@ dialog.fbx[open]{animation:fbxin .25s ease both}@keyframes fbxin{from{opacity:0;
 .fbx-flist li{display:flex;align-items:center;gap:.6rem;padding:.4rem .4rem .4rem .8rem;border-radius:10px;background:rgba(79,110,247,.09);font:600 .85rem var(--f-body);color:var(--fg)}
 .fbx-flist span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fbx-flist em{font-style:normal;color:var(--muted);font-size:.78rem}
 .fbx-flist button{border:0;background:none;color:var(--fg);font-size:1.2rem;line-height:1;width:28px;height:28px;border-radius:50%;cursor:pointer}.fbx-flist button:hover{background:rgba(79,110,247,.18)}
+
+/* ES button: shows "ES", opens up to "Explore Skills" on hover or focus */
+.btn-es{display:inline-flex;align-items:baseline;white-space:nowrap;letter-spacing:.04em;font-weight:700}
+.btn-es .es-x{display:inline-block;max-width:0;overflow:hidden;opacity:0;vertical-align:bottom;transition:max-width .55s cubic-bezier(.2,.8,.2,1),opacity .4s ease .1s}
+.btn-es:hover .es-x,.btn-es:focus-visible .es-x,.btn-es:active .es-x{max-width:6em;opacity:1}
+
+/* welcome message after the first log in */
+.wl{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;background:rgba(10,14,30,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .4s ease}
+.wl.in{opacity:1}
+.wl-card{width:min(100%,400px);display:grid;justify-items:center;gap:.8rem;text-align:center;padding:2rem 1.6rem;border-radius:24px;background:#fff;color:#141c38;box-shadow:0 30px 80px rgba(10,20,60,.35);transform:translateY(18px) scale(.97);transition:transform .5s cubic-bezier(.2,1,.3,1)}
+.wl.in .wl-card{transform:none}
+.wl-card h2{margin:0;font:800 1.7rem/1.15 var(--f-display)}
+.wl-card p{margin:0;color:#566083}
+.wl-tick{width:76px;height:76px}.wl-tick circle{fill:#2eb88a}.wl-tick path{fill:none;stroke:#fff;stroke-width:4.6;stroke-linecap:round;stroke-linejoin:round}
+.wl-card .btn{margin-top:.4rem}

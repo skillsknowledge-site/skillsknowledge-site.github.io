@@ -63,12 +63,14 @@
       var C=window.SK_CFG||{};if(!(C.url&&C.anon)){msg.textContent='Sending is not set up yet.';return}
       var btn=$('[data-send]',d);btn.disabled=true;msg.className='fbx-msg';msg.textContent='Sending…';
       Promise.resolve().then(function(){return window.skUser&&window.skUser.token?window.skUser.token():''}).catch(function(){return ''}).then(function(t){
-        var done=0;function prog(p){msg.textContent='Uploading file '+(done+1)+' of '+files.length+' ('+Math.round(p*100)+'%)'}
+        if(!t)throw new Error('login');var done=0;function prog(p){msg.textContent='Uploading file '+(done+1)+' of '+files.length+' ('+Math.round(p*100)+'%)'}
         return files.reduce(function(pr,f){return pr.then(function(list){return put(C,t,f,prog).then(function(r){done++;list.push(r);return list})})},Promise.resolve([])).then(function(list){msg.textContent='Sending…';return [t,list]})}).then(function(a){var t=a[0],list=a[1];
         return fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/submit_feedback',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+(t||C.anon),'Content-Type':'application/json'},body:JSON.stringify({p_kind:mode,p_rating:mode==='comment'?rating:null,p_email:em,p_message:text,p_font:font||null,p_files:list})})})
       .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j&&j.message||'failed');return j})})
       .then(function(){$('[data-form]',d).hidden=true;$('[data-done]',d).hidden=false;$('[data-dtext]',d).textContent=mode==='comment'?'Your comment was sent. We read every one.':'Your complaint was sent. We will look into it and reply by email.';btn.disabled=false},
-        function(x){btn.disabled=false;msg.className='fbx-msg err';msg.textContent=/rate/.test(x.message)?'You sent a few messages already. Please try again later.':x.message==='toobig'?'A file is bigger than the server allows. Try a smaller file.':x.message==='upload'?'A file could not be uploaded. Please try again.':'Could not send. Please try again.'});
+        function(x){btn.disabled=false;msg.className='fbx-msg err';var w=/^wait:(\d+)/.exec(x.message||'');if(w){var sec=+w[1],h=Math.floor(sec/3600),mi=Math.ceil(sec%3600/60);if(mi===60){h++;mi=0}msg.textContent='You can send another '+mode+' in '+(h?h+' h ':'')+(mi||!h?mi+' min':'').trim()+'.';return}
+        if(x.message==='login'||/login required|permission denied|JWT/i.test(x.message||'')){msg.textContent='Login required. Please log in to send this.';return}
+        msg.textContent=/rate/.test(x.message)?'You sent a few messages already. Please try again later.':x.message==='toobig'?'A file is bigger than the server allows. Try a smaller file.':x.message==='upload'?'A file could not be uploaded. Please try again.':'Could not send. Please try again.'});
     });
     return d;
   }

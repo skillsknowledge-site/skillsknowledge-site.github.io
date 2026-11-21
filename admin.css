@@ -392,3 +392,20 @@ body[data-studio]{overflow:hidden}
 /* no visible scroll bars (everything still scrolls) */
 html,body,.ad-nav,.ad-side,.an-scroll,.ad-tablewrap,.dd-pop,.st-tree,.st-edit,.st-code pre,.ad-code{scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar,.ad-nav::-webkit-scrollbar,.ad-side::-webkit-scrollbar,.an-scroll::-webkit-scrollbar,.ad-tablewrap::-webkit-scrollbar,.dd-pop::-webkit-scrollbar,.st-tree::-webkit-scrollbar,.st-edit::-webkit-scrollbar,.st-code pre::-webkit-scrollbar,.ad-code::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* small status lines */
+.ad-empty{font-size:.8rem;font-weight:600}
+/* smooth motion */
+@keyframes adIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes adDraw{to{stroke-dashoffset:0}}
+@keyframes adFade{from{opacity:0}to{opacity:.14}}
+.ad-main{transition:opacity .24s ease,transform .24s ease}
+.ad-main.ad-out{opacity:0;transform:translateY(6px)}
+.ad-anim .ad-main>*{animation:adIn .6s cubic-bezier(.2,.8,.2,1) both}
+.ad-anim .ad-main>*:nth-child(2){animation-delay:.07s}.ad-anim .ad-main>*:nth-child(3){animation-delay:.14s}
+.ad-anim .ad-main>*:nth-child(4){animation-delay:.21s}.ad-anim .ad-main>*:nth-child(n+5){animation-delay:.28s}
+.an-line{stroke-dasharray:1;stroke-dashoffset:1;animation:adDraw 1.4s .15s cubic-bezier(.4,0,.2,1) forwards}
+.an-area{animation:adFade 1.2s .5s ease both}
+.dd-pop{animation:adIn .22s ease both}
+.ad-nav button,.ad-side button,.seg button,.dd-btn,.ad-link,.btn{transition:background .35s ease,color .35s ease,border-color .35s ease,transform .2s ease}
+@media (prefers-reduced-motion:reduce){.an-line{stroke-dasharray:none;stroke-dashoffset:0;animation:none}.an-area{animation:none}.ad-anim .ad-main>*,.dd-pop{animation:none}}
