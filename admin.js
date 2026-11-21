@@ -422,20 +422,20 @@ function chart(daily,ser){
   var tips=daily.map(function(x,i){var dt=new Date(x.day+'T00:00:00');
     return {x:X(i),y:ser.map(function(q){return Y(x[q.k]||0)}),
       h:'<b>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</b>'+ser.map(function(q,j){return '<span><i class="d'+j+'"></i>'+esc(q.l)+'<em>'+(x[q.k]||0)+'</em></span>'}).join('')}});
-  var dots=ser.map(function(q,j){return '<circle class="an-dot an-dot'+j+'" r="4.5" cx="-9" cy="-9"/>'}).join('');
+  var dots=ser.map(function(q,j){return '<circle class="an-dot an-dot'+j+'" visibility="hidden" r="4.5" cx="-9" cy="-9"/>'}).join('');
   var legend=ser.length>1?'<p class="an-leg">'+ser.map(function(q,j){return '<span><i class="d'+j+'"></i>'+esc(q.l)+'</span>'}).join('')+'</p>':'';
-  return '<div class="an-cw" data-w="'+W+'" data-h="'+H+'" data-tip="'+esc(JSON.stringify(tips))+'"><svg class="an-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(ser.map(function(q){return q.l}).join(' and '))+' over time">'+g+paths+lab+'<line class="an-guide" x1="-9" x2="-9" y1="10" y2="'+(H-24)+'"/>'+dots+'</svg><div class="an-tip" hidden></div></div>'+legend;
+  return '<div class="an-cw" data-w="'+W+'" data-h="'+H+'" data-tip="'+esc(JSON.stringify(tips))+'"><svg class="an-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(ser.map(function(q){return q.l}).join(' and '))+' over time">'+g+paths+lab+'<line class="an-guide" visibility="hidden" x1="-9" x2="-9" y1="10" y2="'+(H-24)+'"/>'+dots+'</svg><div class="an-tip" hidden></div></div>'+legend;
 }
 /* hover details on charts (works with mouse and touch) */
 (function(){
-  function hide(){var a=document.querySelectorAll('.an-cw');for(var i=0;i<a.length;i++){var t=a[i].querySelector('.an-tip');if(t)t.hidden=true;var gl=a[i].querySelector('.an-guide');if(gl){gl.setAttribute('x1',-9);gl.setAttribute('x2',-9)}var d=a[i].querySelectorAll('.an-dot');for(var j=0;j<d.length;j++)d[j].setAttribute('cx',-9)}}
+  function hide(){var a=document.querySelectorAll('.an-cw');for(var i=0;i<a.length;i++){var t=a[i].querySelector('.an-tip');if(t)t.hidden=true;var gl=a[i].querySelector('.an-guide');if(gl)gl.setAttribute('visibility','hidden');var d=a[i].querySelectorAll('.an-dot');for(var j=0;j<d.length;j++)d[j].setAttribute('visibility','hidden')}}
   function move(e){
     var cw=e.target.closest&&e.target.closest('.an-cw');if(!cw){hide();return}
     var tips;try{tips=cw._tips||(cw._tips=JSON.parse(cw.dataset.tip))}catch(x){return}
     var svg=cw.querySelector('svg'),r=svg.getBoundingClientRect(),c=cw.getBoundingClientRect(),W=+cw.dataset.w,H=+cw.dataset.h,sc=Math.min(r.width/W,r.height/H),off=(r.width-W*sc)/2,vx=(e.clientX-r.left-off)/sc,bi=0,bd=1e9;
     tips.forEach(function(t,i){var dd=Math.abs(t.x-vx);if(dd<bd){bd=dd;bi=i}});
-    var t=tips[bi],gl=cw.querySelector('.an-guide');gl.setAttribute('x1',t.x);gl.setAttribute('x2',t.x);
-    var d=cw.querySelectorAll('.an-dot');for(var j=0;j<d.length;j++){d[j].setAttribute('cx',t.x);d[j].setAttribute('cy',t.y[j])}
+    var t=tips[bi],gl=cw.querySelector('.an-guide');gl.setAttribute('x1',t.x);gl.setAttribute('x2',t.x);gl.setAttribute('visibility','visible');
+    var d=cw.querySelectorAll('.an-dot');for(var j=0;j<d.length;j++){d[j].setAttribute('visibility','visible');d[j].setAttribute('cx',t.x);d[j].setAttribute('cy',t.y[j])}
     var tp=cw.querySelector('.an-tip');tp.innerHTML=t.h;tp.hidden=false;
     var left=r.left-c.left+off+t.x*sc,w=tp.offsetWidth;left=Math.max(w/2+4,Math.min(c.width-w/2-4,left));tp.style.left=left+'px';tp.style.top='8px';
   }
@@ -450,7 +450,7 @@ function visitsCard(){
   if(v===false)return head+'<p class="ad-msg warn">The daily table is not installed yet. Run supabase-visits.sql once in the Supabase SQL Editor, then refresh.</p></div>';
   var dl=v.days||[],yest=dl[1]?dl[1].views:0,hp=function(c,p){return p===undefined||p===null?'':pct(c,p)};
   var cards=[['Visits today',v.today,dl[1]?pct(v.today,yest):''],['Visitors',v.visitors,hp(v.visitors,v.prev_visitors)],['Sessions',v.sessions,hp(v.sessions,v.prev_sessions)],['Total visits',v.views,hp(v.views,v.prev_views)]];
-  var rows=dl.map(function(x,i){var pv=dl[i+1],ch=function(c,k){return pv?' '+pct(c,pv[k]):''};var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+ch(x.views,'views')+'</td><td>'+x.visitors+ch(x.visitors,'visitors')+'</td><td>'+x.sessions+ch(x.sessions,'sessions')+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
+  var rows=dl.map(function(x,i){if(!x.views&&!x.visitors&&!x.sessions)return '';var pv=dl[i+1],ch=function(c,k){return pv?' '+pct(c,pv[k]):''};var dt=new Date(x.day+'T00:00:00');return '<tr><td>'+esc(dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))+'</td><td>'+x.views+ch(x.views,'views')+'</td><td>'+x.visitors+ch(x.visitors,'visitors')+'</td><td>'+x.sessions+ch(x.sessions,'sessions')+'</td></tr>'}).join('')||'<tr><td colspan="4" class="ad-muted">No visits yet.</td></tr>';
   return head+'<div class="an-stats">'+cards.map(function(c,i){return '<div class="an-stat an-'+'abc'[i%3]+'"><span>'+c[0]+'</span><b>'+c[1]+'</b>'+c[2]+'</div>'}).join('')+'</div>'+
     '<h3 class="an-sub">Day by day</h3><div class="ad-tablewrap an-scroll"><table class="ad-table"><thead><tr><th>Date</th><th>Visits</th><th>Visitors</th><th>Sessions</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<h3 class="an-sub">Visits and visitors over time</h3>'+chart(dl.slice().reverse(),[{k:'views',l:'Visits'},{k:'visitors',l:'Visitors'}])+'</div>';
@@ -526,7 +526,9 @@ function tabFeedback(){
     var cur=F.ap.filter(function(x){return x.status==='open'}),old=F.ap.filter(function(x){return x.status!=='open'}),L=fbSort(F.av==='closed'?old:cur);
     body='<div class="seg seg-sub" role="tablist" aria-label="Appeals">'+[['open','Current',cur.length],['closed','Closed',old.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
       (L.length?'<div class="u-appeals">'+L.map(appealCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'No closed appeals.':'No current appeals.')+'</p>')}
-  else{var shown=fbSort(F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind}));body=shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">Nothing here yet.</p>'}
+  else{var all=F.list.filter(function(f){return F.kind==='all'||f.kind===F.kind}),cur2=all.filter(function(f){return f.status!=='done'}),old2=all.filter(function(f){return f.status==='done'}),shown=fbSort(F.av==='closed'?old2:cur2);
+    body='<div class="seg seg-sub" role="tablist" aria-label="Status">'+[['open','Current',cur2.length],['closed','Done',old2.length]].map(function(s){return '<button type="button" role="tab" data-act="f-av" data-v="'+s[0]+'"'+(F.av===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
+      (shown.length?'<div class="fb-list">'+shown.map(fbCard).join('')+'</div>':'<p class="ad-muted">'+(F.av==='closed'?'Nothing marked done yet.':'Nothing waiting for you.')+'</p>')}
   return h+'<div class="ad-kpis">'+[['Comments',cm.length],['Average rating',avg],['Complaints',cp.length],['Open appeals',openAp]].map(function(k){return '<div class="ad-kpi"><div><span>'+k[0]+'</span><b>'+k[1]+'</b></div></div>'}).join('')+'</div>'+
     '<div class="ad-card"><div class="seg" role="tablist" aria-label="Show">'+segs.map(function(s){return '<button type="button" role="tab" data-act="f-kind" data-v="'+s[0]+'"'+(F.kind===s[0]?' aria-current="true"':'')+'>'+s[1]+'<i>'+s[2]+'</i></button>'}).join('')+'</div>'+
     '<div class="u-bar fb-sortbar"><span class="ad-muted">Sort</span>'+sortSel('f-sort',F.sort,[['new','Newest first'],['old','Oldest first']].concat(F.kind==='appeal'?[]:[['high','Highest rating'],['low','Lowest rating']]),'Sort feedback')+'</div>'+body+'</div>';
