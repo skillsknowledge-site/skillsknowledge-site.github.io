@@ -108,20 +108,25 @@
   '.un-box{position:relative;border-radius:2px}.un-box.wide{width:min(640px,100%);padding:2rem 1.8rem}.un-view{display:grid;gap:.8rem}.un-view[hidden]{display:none}.un-in,.un-st+*{border-radius:2px}.un-big textarea{min-height:240px;resize:vertical}.un-end{justify-content:flex-end}.un-box .btn{border-radius:2px}'+
   '.un-x{position:absolute;top:.5rem;right:.7rem;width:2rem;height:2rem;border:0;background:none;color:#fff;font:400 1.9rem/1 var(--f-body);cursor:pointer}'+
   '.un-done{justify-items:center;text-align:center;padding:1.4rem 0}.un-tick{width:84px;height:84px}.un-tick circle{fill:none;stroke:#2fd27a;stroke-width:3;stroke-dasharray:151;stroke-dashoffset:151;animation:untk .6s ease forwards}.un-tick path{fill:none;stroke:#2fd27a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:untk .4s .5s ease forwards}@keyframes untk{to{stroke-dashoffset:0}}.un-done h2{color:#2fd27a}'+
-  '.un-st{min-height:1.2em;font-size:.84rem;color:var(--muted)}.un-st.ok{color:#5be39a}.un-st.bad{color:#ff8f8f}'+
+  '.acct-menu .pts-off{opacity:.5;cursor:not-allowed;display:flex;justify-content:space-between;align-items:center}.acct-menu .pts-off small{font-size:.72rem}.un-st{min-height:1.2em;font-size:.84rem;color:var(--muted)}.un-st.ok{color:#5be39a}.un-st.bad{color:#ff8f8f}'+
   '.un-row{display:flex;gap:.6rem;align-items:center;justify-content:space-between}.un-link{background:none;border:0;color:var(--muted);cursor:pointer;font:500 .84rem var(--f-body);padding:0}';
   document.head.appendChild(css);
 
   function avatar(u){return u&&u.photo?'<img src="'+esc(u.photo)+'" alt="">':'<span class="ini">'+esc((u&&u.name||'?').charAt(0).toUpperCase())+'</span>'}
   function avInner(u){return u&&u.photo?'<img src="'+esc(u.photo)+'" alt="">':esc((u&&u.name||'?').charAt(0).toUpperCase())}
 
+  /* points are locked for the first hour after sign-up (the server checks this too) */
+  function ptsLink(u){
+    var at=u&&u.created?new Date(u.created).getTime()+3600000:0;
+    return at>Date.now()?'<a class="pts-off" aria-disabled="true" role="menuitem" title="Points open 1 hour after you join">Points<small>opens in '+Math.max(1,Math.ceil((at-Date.now())/60000))+' min</small></a>':'<a href="points" role="menuitem">Points</a>';
+  }
   /* ---- header: the Login button becomes the avatar menu ---- */
   function header(u){
     var b=$('#login-btn');if(!b||!has)return;
     var w=$('.acct');if(!w){w=document.createElement('div');w.className='acct';b.parentNode.insertBefore(w,b);b.style.display='none'}
     w.innerHTML='<button class="acct-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Your account">'+avatar(u)+'</button>'+
       '<div class="acct-menu" role="menu"><div class="acct-who"><span class="av">'+avInner(u)+'</span><div><b>'+esc(u.name)+'</b><span>'+(u.username?'@'+esc(u.username):esc(u.email))+'</span></div></div>'+
-      '<a href="account" role="menuitem">Profile and settings</a>'+
+      '<a href="account" role="menuitem">Profile and settings</a>'+ptsLink(u)+
       '<div class="acct-theme" role="group" aria-label="Colour theme"><button type="button" data-th="light" aria-pressed="'+(curTheme()==='light')+'">Light</button><button type="button" data-th="dark" aria-pressed="'+(curTheme()==='dark')+'">Dark</button></div>'+
       '<button type="button" id="acct-out" role="menuitem">Log out</button></div>';
     var btn=$('.acct-btn',w);
@@ -137,6 +142,24 @@
   function curTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
 
   /* ---- required step: choose a username nobody else has ---- */
+  /* someone joined with a reference code: they must approve it. It cannot be closed and comes back after refresh, logout and login. */
+  function refStep(u){
+    return token().then(function(t){if(!t)return;
+      return api('/rest/v1/rpc/my_pending_reference',{method:'POST',token:t,body:{}}).then(function(r){
+        if(!r||$('.un-back.ref'))return;
+        var d=overlay('<div class="un-box" role="alertdialog" aria-modal="true" aria-labelledby="rf-h"><div class="un-view"><h2 id="rf-h">You joined with a reference</h2>'+
+          '<p>Welcome, '+esc(u.name)+'. You logged in using a reference code from <b>'+esc(r.who)+'</b>. Thank you for trusting them.</p>'+
+          '<p>Please press the button below to approve this reference. Approving it gives <b>'+esc(r.who)+'</b> 1 point. This message stays until you approve it.</p>'+
+          '<div class="un-st" id="rf-s" role="status"></div><div class="un-row"><span></span><button class="btn btn-solid btn-sm" type="button" id="rf-go">Approve Reference</button></div></div></div>');
+        d.classList.add('ref');
+        var b=$('#rf-go',d),st=$('#rf-s',d);
+        b.addEventListener('click',function(){b.disabled=true;b.textContent='Approving…';
+          token().then(function(t2){return api('/rest/v1/rpc/approve_reference',{method:'POST',token:t2,body:{}})}).then(function(){
+            d.innerHTML='<div class="un-box"><div class="un-view un-done"><svg class="un-tick" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg><h2>Reference approved</h2></div></div>';
+            setTimeout(function(){d.remove()},1400)},function(){b.disabled=false;b.textContent='Approve Reference';st.textContent='Could not approve. Please try again.';st.className='un-st bad'})});
+        document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('.un-back.ref'))e.preventDefault()},true);
+      })}).catch(function(){});
+  }
   function usernameStep(u){
     if($('.un-back'))return;
     var d=document.createElement('div');d.className='un-back';
@@ -238,6 +261,7 @@
       if(!u){if(onAcct)goReplace('login');var w=$('.acct');if(w)w.remove();var b=$('#login-btn');if(b)b.style.display='';return}
       applyPrefs(u.prefs&&Object.keys(u.prefs).length?u.prefs:rd(PKEY));header(u);beat(u);
       var rec=false;try{rec=sessionStorage.getItem('sk_recovery')==='1';sessionStorage.removeItem('sk_recovery')}catch(e){}
+      refStep(u);
       if(rec)passDialog();else if(u.ready&&!u.username&&!document.body.classList.contains('adm'))usernameStep(u);
       if(onAcct)page(u);
     });
@@ -274,6 +298,8 @@
       '<label class="ac-sw"><input type="checkbox" id="s-news"'+(p.updates?' checked':'')+'><i></i><span><b>Email updates</b><small>Occasional news about new work. Off by default.</small></span></label></section>'+
     '<section class="card"><h2>Account</h2><dl class="ac-dl"><dt>Signed in with</dt><dd>'+esc(u.provider==='google'?'Google':u.provider)+'</dd><dt>Member since</dt><dd>'+esc(fmt(u.created))+'</dd><dt>Last sign-in</dt><dd>'+esc(fmt(u.last))+'</dd></dl>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="button" id="a-out">Log out</button><button class="btn btn-ghost btn-sm" type="button" id="a-all">Log out everywhere</button></div></section>'+
+    '<section class="card" id="pts-card"><h2>Points</h2><p class="ac-note" id="pts-n">Earn points by sharing your reference code. Every point takes 0.1 USD off your next order.</p>'+
+      '<div class="ac-row">'+(ptsLink(u).indexOf('pts-off')>-1?'<span class="ac-note">Points open 1 hour after you join.</span>':'<a class="btn btn-solid btn-sm" href="points">Open points</a>')+'</div></section>'+
     '<section class="card"><h2>Password</h2>'+
       (u.hasPw?
       '<div class="ac-pw-last"><p class="ac-note">Last changed: <b>'+esc(u.pwAt?fmt(u.pwAt):'not recorded')+'</b></p><button class="btn btn-solid btn-sm" type="button" id="pw-open">Change password</button></div>'+
@@ -323,6 +349,7 @@
     $('#f-pw').addEventListener('submit',function(e){e.preventDefault();var a=$('#n-pw1').value,b=$('#n-pw2').value;
       if(a.length<8){msg('Use at least 8 characters.',true);return}if(a!==b){msg('The two passwords do not match.',true);return}
       setPassword(a).then(function(){u.pwAt=new Date().toISOString();u.hasPw=true;page(u);msg('Password saved.')},function(er){msg(er.message,true)})});
+    if($('#pts-card')&&ptsLink(u).indexOf('pts-off')<0)token().then(function(t){return t&&api('/rest/v1/rpc/points_status',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&$('#pts-n'))$('#pts-n').innerHTML='You have <b>'+r.balance+'</b> usable point'+(r.balance===1?'':'s')+'. Every point takes 0.1 USD off your next order.'}).catch(function(){});
     $('#a-out').addEventListener('click',function(){signOut(false)});
     $('#a-all').addEventListener('click',function(){signOut(true)});
     $('#a-dl').addEventListener('click',function(){

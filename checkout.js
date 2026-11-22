@@ -17,7 +17,9 @@
   var q=new URLSearchParams(location.search),key=ITEMS[q.get('item')]?q.get('item'):'video',it=ITEMS[key];
   var plan=it.plans[0],method=null;
   function pkr(n){return 'PKR '+n.toLocaleString('en-US')}
-  function sum(){$('#s-item').textContent=it.name;$('#s-plan').textContent=plan.n;$('#s-amt').textContent=$('#s-tot').textContent=pkr(plan.p);var m=METHODS.filter(function(x){return x.id===method})[0];$('#s-method').textContent=m?m.n:'Not chosen'}
+  var P={bal:0,rate:28,use:0,disc:0};
+  function calc(){var on=$('#pt-use')&&$('#pt-use').checked;var max=Math.floor(plan.p/P.rate);P.use=on?Math.min(P.bal,max):0;P.disc=Math.floor(P.use*P.rate)}
+  function sum(){calc();$('#s-item').textContent=it.name;$('#s-plan').textContent=plan.n;$('#s-amt').textContent=pkr(plan.p);$('#s-tot').textContent=pkr(Math.max(plan.p-P.disc,0));$('#s-dl').hidden=!P.use;$('#s-disc').textContent='- '+pkr(P.disc);if($('#pt-txt'))$('#pt-txt').textContent=P.use?'Using '+P.use+' point'+(P.use>1?'s':''):'Use my points';var m=METHODS.filter(function(x){return x.id===method})[0];$('#s-method').textContent=m?m.n:'Not chosen'}
   function plans(){$('#co-plans').innerHTML=it.plans.map(function(p){return '<label class="co-opt"><input type="radio" name="plan" value="'+p.id+'"'+(p===plan?' checked':'')+'><span><b>'+p.n+'</b><i>'+pkr(p.p)+'</i></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
   function methods(){$('#co-methods').innerHTML=METHODS.map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
@@ -32,12 +34,15 @@
     if(!method){err('Please choose a payment method.');return}
     if((method==='jazzcash'||method==='easypaisa'||method==='bank')&&ref.trim().length<4){err('Enter the transaction ID or reference after you pay.');return}
     var go=$('#co-go');go.disabled=true;go.textContent='Placing order…';
-    var body={p_item:it.name,p_plan:plan.n,p_amount:plan.p,p_name:n,p_email:em,p_phone:ph,p_note:note,p_method:method,p_reference:ref.trim()};
-    var done=function(id){$('.co-grid').hidden=true;$('#co-steps').hidden=true;$('#co-done').hidden=false;$('#co-done-t').textContent='Order'+(id?' #'+id:'')+' for '+it.name+' ('+plan.n+', '+pkr(plan.p)+') is saved. Your payment will be checked within 2-3 days and a confirmation will be sent to '+em+'.'};
+    var body={p_item:it.name,p_plan:plan.n,p_amount:plan.p,p_name:n,p_email:em,p_phone:ph,p_note:note,p_method:method,p_reference:ref.trim(),p_points:P.use};
+    var done=function(res){var id=res&&typeof res==='object'?res.id:res,dsc=res&&res.discount||0;$('.co-grid').hidden=true;$('#co-steps').hidden=true;$('#co-done').hidden=false;$('#co-done-t').textContent='Order'+(id?' #'+id:'')+' for '+it.name+' ('+plan.n+', '+pkr(plan.p-dsc)+(dsc?' after '+pkr(dsc)+' points discount':'')+') is saved. Your payment will be checked within 2-3 days and a confirmation will be sent to '+em+'.'};
     if(!(C.url&&C.anon)){done('');return}
     fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/create_order',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+(token()||C.anon),'Content-Type':'application/json'},body:JSON.stringify(body)})
       .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j&&j.message||'failed');return j})})
       .then(done,function(x){go.disabled=false;go.textContent='Place order';err('Could not place the order. '+(x&&x.message||'')+' Please try again.')});
   });
-  document.title='Checkout - '+it.name+' | SkillsKnowledge';plans();methods();sum();
+  function loadPts(){var t=token();if(!t||!(C.url&&C.anon))return;
+    fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/points_status',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'})
+      .then(function(r){return r.ok?r.json():null}).then(function(s){if(!s||!s.balance)return;P.bal=s.balance;P.rate=s.usd_per_point*s.usd_to_pkr;$('#pt-bal').textContent=s.balance+' point'+(s.balance>1?'s':'')+' ('+pkr(Math.floor(s.balance*P.rate))+')';$('#co-pts').hidden=false;$('#pt-use').addEventListener('change',sum)}).catch(function(){})}
+  document.title='Checkout - '+it.name+' | SkillsKnowledge';plans();methods();sum();loadPts();
 })();

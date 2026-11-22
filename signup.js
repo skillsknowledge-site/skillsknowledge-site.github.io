@@ -54,6 +54,7 @@
         '<div class="su-row"><button class="su-link" type="button" id="su-resend">Send a new code</button><button class="btn btn-solid" type="submit">Verify</button></div></form>'+
       '<form class="su-step" data-s="4" hidden novalidate><h2>Choose a username</h2><p class="su-sub">Nobody else can use it. Use 3 to 20 letters, numbers, dots or underscores.</p>'+
         '<div class="af su-at"><label for="su-un">Username</label><b>@</b><input id="su-un" type="text" maxlength="20" placeholder=" " autocomplete="off" autocapitalize="off" spellcheck="false"></div><p class="su-msg" id="su-m4" role="status"></p>'+
+        '<div class="af su-ref"><label for="su-ref">Reference code (optional)</label><input id="su-ref" type="text" maxlength="14" placeholder=" " autocomplete="off" autocapitalize="characters" spellcheck="false"></div>'+
         '<label class="chk su-terms"><input type="checkbox" id="su-terms"><span>I agree to the <a href="terms.html#terms" target="_blank" rel="noopener">Terms</a> and <a href="terms.html#privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>'+
         '<div class="su-row"><span></span><button class="btn btn-solid" type="submit" id="su-go4" disabled>Finish</button></div></form>'+
       '<div class="su-step su-done" data-s="5" hidden><svg class="su-tick" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46"/><path d="M28 50l14 14 27-30"/></svg><h2>Account created</h2><p class="su-sub">Now log in with your details.</p></div>'+
@@ -143,19 +144,26 @@
     if(!freeName||!$('#su-terms').checked){say('su-m4','Pick an available username and accept the Terms and Privacy Policy.','bad');return}
     var go=$('#su-go4');busy(go,true,'Saving…');
     api('/rest/v1/profiles?id=eq.'+encodeURIComponent(data.uid),{username:freeName,display_name:(data.first+' '+data.last).slice(0,60),updated_at:new Date().toISOString()},data.token,'PATCH').then(function(){
+      var rc=($('#su-ref').value||'').trim();
+      return rc?api('/rest/v1/rpc/claim_reference',{p_code:rc},data.token).then(function(){},function(er){
+        var m=/bad_code/.test(er.message)?'That reference code is not correct.':/expired/.test(er.message)?'That reference code has expired.':/full/.test(er.message)?'That reference code was already used by 3 people.':/own_code/.test(er.message)?'You cannot use your own code.':'The reference code could not be used. Clear the box to continue without it.';
+        throw Object.assign(new Error(m),{ref:1})}):null;
+    }).then(function(){
       try{localStorage.removeItem('sk_sess');localStorage.setItem('sk_welcome',JSON.stringify({name:data.first,t:Date.now()}))}catch(e){}
       api('/auth/v1/logout',null,data.token).catch(function(){});
       show(5);setTimeout(toLogin,1300)},function(er){busy(go,false,'Finish');
-      say('su-m4',er.status===409||er.code==='23505'?'That username is already taken.':er.message,'bad')});
+      say('su-m4',er.ref?er.message:er.status===409||er.code==='23505'?'That username is already taken.':er.message,'bad')});
   }
 
+  function prefill(){var m=location.search.match(/[?&]ref=([A-Za-z0-9-]{3,14})/);if(m&&el)$('#su-ref').value=m[1].toUpperCase()}
   function start(e){
     if(e)e.preventDefault();
     if(el)return;
     build();
     if(!ready){$('.su-card form[data-s="0"] .su-sub').textContent='The database is not connected yet, so accounts cannot be created.'}
-    show(0);
+    show(0);prefill();
   }
   openers.forEach(function(a){a.addEventListener('click',start)});
+  if(/[?&]ref=/.test(location.search))start();
   if(location.hash==='#signup')start();
 })();
