@@ -27,10 +27,10 @@
     if(c){for(var i=0;i<c.max;i++)dots+='<i class="'+(i<c.used?'on':'')+'"></i>';
       people=S.referrals.filter(function(r){return r.current_code}).map(function(r){return '<li><span>'+esc(r.who)+'</span><em class="'+r.status+'">'+(r.status==='approved'?'Approved, 1 point added':'Waiting for approval')+'</em></li>'}).join('')}
     var way1='<section class="card pt-way"><h2><span>1</span> Share your reference code</h2>'+
-      '<h3>Step 1: Copy your code and share it</h3>'+
-      '<p>Thank you for being part of SkillsKnowledge. Every member has a personal reference code. Please copy it and share it kindly with someone you know and trust, such as a friend, a classmate or a family member, who may enjoy our work. We would be very glad to welcome them.</p>'+
-      '<p>When that person creates an account and writes your code in the "Reference code" box (or opens the link you share), you will be told, and after they approve it you receive <b>1 point</b>.</p>'+
-      (c?'<div class="pt-code"><code id="pt-c">'+esc(c.code)+'</code><div><button class="btn btn-solid btn-sm" type="button" id="pt-copy">Copy code</button><button class="btn btn-ghost btn-sm" type="button" id="pt-link">Copy link</button></div></div>'+
+      '<h3>Step 1: Copy your link and share it</h3>'+
+      '<p>Thank you for being part of SkillsKnowledge. Every member has a personal reference link, made with their own reference code. Please copy your link and share it kindly with someone you know and trust, such as a friend, a classmate or a family member, who may enjoy our work. We would be very glad to welcome them.</p>'+
+      '<p>When that person creates an account and opens your link and creates an account (your code is filled in for them automatically), you will be told, and after they approve it you receive <b>1 point</b>.</p>'+
+      (c?'<div class="pt-code"><code id="pt-c">'+esc(c.code)+'</code><div><button class="btn btn-solid btn-sm" type="button" id="pt-link">Copy link</button></div></div>'+
         '<div class="pt-meter"><div class="pt-dots" aria-label="'+c.used+' of '+c.max+' people joined">'+dots+'</div><b>'+c.used+' of '+c.max+' people joined</b><span>This code ends in <b id="pt-left"></b></span></div>'+
         (people?'<ul class="pt-list">'+people+'</ul>':'<p class="pt-none">Nobody has joined with this code yet.</p>'):
         '<div class="pt-code none"><p>'+(S.referrals.length?'Your last code has ended. You can make a fresh one.':'You have not made a code yet. Press the button to start earning points.')+'</p><button class="btn btn-solid btn-sm" type="button" id="pt-gen">'+(S.referrals.length?'Generate new code':'Activate my points')+'</button></div>')+
@@ -42,8 +42,8 @@
     var lots=S.lots.length?'<section class="card"><h2>Your usable points</h2><ul class="pt-list">'+S.lots.map(function(l){return '<li><span>'+l.left_pts+' point'+(l.left_pts>1?'s':'')+'</span><em>use before '+day(l.expires_at)+'</em></li>'}).join('')+'</ul></section>':'';
     var way2='<section class="card pt-way soon"><h2><span>2</span> Another way to earn</h2><p>A second way to earn points is coming soon. We will announce it here.</p></section>';
     shell(top+'<p class="ac-msg bad" id="pt-msg" role="alert" hidden></p>'+way1+way2+lots);
-    var cp=document.getElementById('pt-copy');
-    if(cp){cp.onclick=function(){copy(c.code,cp,'Copy code')};document.getElementById('pt-link').onclick=function(){var b=document.getElementById('pt-link');copy(new URL('login.html?ref='+encodeURIComponent(c.code),location.href).href,b,'Copy link')};
+    var cp=document.getElementById('pt-link');
+    if(cp){document.getElementById('pt-link').onclick=function(){var b=document.getElementById('pt-link');copy(new URL('login.html?ref='+encodeURIComponent(c.code),location.href).href,b,'Copy link')};
       var end2=new Date(c.expires_at).getTime();var el=document.getElementById('pt-left');
       var t=function(){var l=end2-Date.now();if(l<=0){load();return}el.textContent=left(l)};t();tick=setInterval(t,1000)}
     var g=document.getElementById('pt-gen');if(g)g.onclick=function(){g.disabled=true;g.textContent='Please wait…';

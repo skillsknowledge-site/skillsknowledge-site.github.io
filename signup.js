@@ -37,17 +37,18 @@
   function field(id,label,type,extra){return '<div class="af"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+type+'" placeholder=" " '+(extra||'')+'></div>'}
   function build(){
     el=document.createElement('div');el.className='su';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','su-h');
-    el.innerHTML='<div class="su-card">'+
+    el.innerHTML='<div class="su-load" aria-hidden="true"><i id="su-bar"></i></div><div class="su-card">'+
       '<div class="su-top"><span class="su-logo">'+LOGO+'</span><button class="su-x" type="button" id="su-x" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
-      '<ol class="su-dots" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li></ol>'+
+      
       '<form class="su-step" data-s="0" novalidate><h2 id="su-h">What is your name?</h2><p class="su-sub">Create your SkillsKnowledge account. It takes less than a minute.</p>'+
         '<div class="su-two">'+field('su-fn','First name','text','autocomplete="given-name" maxlength="40"')+field('su-ln','Last name','text','autocomplete="family-name" maxlength="40"')+'</div><p class="su-msg" id="su-m0" role="alert"></p>'+
         '<div class="su-row"><button class="su-link" type="button" id="su-back0">Back to log in</button><button class="btn btn-solid" type="submit">Next</button></div></form>'+
-      '<form class="su-step" data-s="1" hidden novalidate><h2>What is your email?</h2><p class="su-sub">We will send a code to it to check that it is yours.</p>'+
+      '<form class="su-step" data-s="1" hidden novalidate><h2>What is your email?</h2><p class="su-sub">We will send a 6-digit code to this email to check that it is yours. Please use an email you can open right now.</p>'+
         field('su-em','Email','email','autocomplete="email" autocapitalize="off" spellcheck="false"')+'<p class="su-msg" id="su-m1" role="alert"></p>'+
         '<div class="su-row"><button class="su-link" type="button" data-to="0">Back</button><button class="btn btn-solid" type="submit">Next</button></div></form>'+
       '<form class="su-step" data-s="2" hidden novalidate><h2>Create a password</h2><p class="su-sub">At least 8 characters, with a letter and a number.</p>'+
-        '<div class="af"><label for="su-pw">Password</label><div class="pwrap"><input id="su-pw" type="password" placeholder=" " autocomplete="new-password"><button class="eye" type="button" aria-label="Show password" data-eye>'+EYE+'</button></div></div><p class="su-msg" id="su-m2" role="alert"></p>'+
+        '<div class="af"><label for="su-pw">Password</label><div class="pwrap"><input id="su-pw" type="password" placeholder=" " autocomplete="new-password"><button class="eye" type="button" aria-label="Show password" data-eye>'+EYE+'</button></div></div>'+
+        '<div class="af"><label for="su-pw2">Confirm password</label><div class="pwrap"><input id="su-pw2" type="password" placeholder=" " autocomplete="new-password"></div></div><p class="su-msg" id="su-m2" role="alert"></p>'+
         '<div class="su-row"><button class="su-link" type="button" data-to="1">Back</button><button class="btn btn-solid" type="submit">Next</button></div></form>'+
       '<form class="su-step" data-s="3" hidden novalidate><h2>Check your email</h2><p class="su-sub" id="su-sent"></p>'+
         '<div class="af su-code"><label for="su-code">Code</label><input id="su-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder=" "></div><p class="su-msg" id="su-m3" role="alert"></p>'+
@@ -63,7 +64,7 @@
     $('#su-x').addEventListener('click',close);$('#su-back0').addEventListener('click',close);
     el.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
     [].forEach.call(el.querySelectorAll('[data-to]'),function(b){b.addEventListener('click',function(){show(+b.dataset.to)})});
-    $('[data-eye]').addEventListener('click',function(){var i=$('#su-pw'),s=i.type==='password';i.type=s?'text':'password';this.setAttribute('aria-label',s?'Hide password':'Show password')});
+    $('[data-eye]').addEventListener('click',function(){var i=$('#su-pw'),s=i.type==='password';i.type=s?'text':'password';$('#su-pw2').type=i.type;this.setAttribute('aria-label',s?'Hide password':'Show password')});
     el.addEventListener('submit',function(e){e.preventDefault();var n=+e.target.dataset.s;[stepName,stepEmail,stepPassword,verify,finish][n]()});
     $('#su-resend').addEventListener('click',resend);
     $('#su-code').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'')});
@@ -73,7 +74,7 @@
   function gate(){var go=$('#su-go4');if(go)go.disabled=!(freeName&&$('#su-terms').checked)}
   function show(n){
     step=n;[].forEach.call(el.querySelectorAll('.su-step'),function(s){s.hidden=+s.dataset.s!==n});
-    [].forEach.call(el.querySelectorAll('.su-dots li'),function(d,i){d.classList.toggle('on',i<=Math.min(n,4))});
+    var bar=$('#su-bar');if(bar)bar.style.width=Math.min(100,Math.round((n+1)/6*100))+'%';
     var f=el.querySelector('.su-step:not([hidden]) input');if(f)setTimeout(function(){f.focus()},40);
   }
   function close(){if(!el)return;clearInterval(coolT);el.remove();el=null;document.body.style.overflow='';
@@ -93,13 +94,14 @@
   function stepPassword(){
     var p=$('#su-pw').value,b=$('#su-pw').closest('form').querySelector('.btn');
     if(p.length<8||!/[a-z]/i.test(p)||!/[0-9]/.test(p)){say('su-m2','Use at least 8 characters with a letter and a number.','bad');return}
+    if(p!==$('#su-pw2').value){say('su-m2','The two passwords are not the same.','bad');return}
     if(!ready){say('su-m2','The database is not connected yet, so accounts cannot be created.','bad');return}
     busy(b,true,'Sending code…');say('su-m2','');
-    api('/auth/v1/signup',{email:data.email,password:p,data:{full_name:data.first+' '+data.last}}).then(function(j){
+    api('/auth/v1/signup',{email:data.email,password:p,data:{full_name:data.first+' '+data.last,ref:refFromUrl()}}).then(function(j){
       busy(b,false,'Next');
       if(j&&j.access_token){saveSession(j);data.uid=j.user&&j.user.id;data.token=j.access_token;show(4);return}
       if(j&&j.user&&Array.isArray(j.user.identities)&&!j.user.identities.length){say('su-m2','An account with this email already exists.','bad');return}
-      $('#su-sent').textContent='We sent a code to '+data.email+'. Type it here.';say('su-m3','');startCool();show(3);
+      $('#su-sent').textContent='We sent a 6-digit code to '+data.email+'. Open your email, copy the code and type it here. It may take a minute. Check Spam if you do not see it.';say('su-m3','');startCool();show(3);
     },function(er){busy(b,false,'Next');say('su-m2',er.message,'bad')});
   }
   function startCool(){
@@ -149,13 +151,14 @@
         var m=/bad_code/.test(er.message)?'That reference code is not correct.':/expired/.test(er.message)?'That reference code has expired.':/full/.test(er.message)?'That reference code was already used by 3 people.':/own_code/.test(er.message)?'You cannot use your own code.':'The reference code could not be used. Clear the box to continue without it.';
         throw Object.assign(new Error(m),{ref:1})}):null;
     }).then(function(){
-      try{localStorage.removeItem('sk_sess');localStorage.setItem('sk_welcome',JSON.stringify({name:data.first,t:Date.now()}))}catch(e){}
+      try{localStorage.removeItem('sk_ref');localStorage.removeItem('sk_sess');localStorage.setItem('sk_welcome',JSON.stringify({name:data.first,t:Date.now()}))}catch(e){}
       api('/auth/v1/logout',null,data.token).catch(function(){});
       show(5);setTimeout(toLogin,1300)},function(er){busy(go,false,'Finish');
       say('su-m4',er.ref?er.message:er.status===409||er.code==='23505'?'That username is already taken.':er.message,'bad')});
   }
 
-  function prefill(){var m=location.search.match(/[?&]ref=([A-Za-z0-9-]{3,14})/);if(m&&el)$('#su-ref').value=m[1].toUpperCase()}
+  function refFromUrl(){var m=location.search.match(/[?&]ref=([A-Za-z0-9-]{3,14})/),v=m?m[1].toUpperCase():'';try{if(v)localStorage.setItem('sk_ref',v);else v=localStorage.getItem('sk_ref')||''}catch(e){}return v}
+  function prefill(){var m=location.search.match(/[?&]ref=([A-Za-z0-9-]{3,14})/);var v=refFromUrl();if(v&&el)$('#su-ref').value=v}
   function start(e){
     if(e)e.preventDefault();
     if(el)return;

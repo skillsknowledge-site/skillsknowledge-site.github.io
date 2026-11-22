@@ -67,7 +67,7 @@
 /* ---------- create account: a full-screen window with one question at a time ---------- */
 .su{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;overflow:auto;
   background:radial-gradient(900px 600px at 88% -4%,rgba(79,110,247,.14),transparent 62%),radial-gradient(800px 560px at -4% 40%,rgba(180,120,220,.12),transparent 62%),var(--s-bg,#eef3fe)}
-.su-card{position:relative;width:min(100%,440px);display:grid;gap:1.1rem;padding:clamp(1.4rem,4vw,2.2rem);border-radius:24px;background:var(--s-surface,#fff);color:var(--s-ink,#1c2542);box-shadow:0 20px 60px rgba(40,60,130,.14)}
+.su-card{position:relative;width:min(100%,560px);display:grid;gap:1.1rem;padding:clamp(1.6rem,5vw,3rem);border-radius:28px;background:var(--s-surface,#fff);color:var(--s-ink,#1c2542);box-shadow:0 20px 60px rgba(40,60,130,.14)}
 .su-top{display:flex;align-items:center;justify-content:space-between}
 .su-logo{display:block;width:44px;color:var(--s-ink,#1c2542)}
 .su-logo svg{display:block;width:100%;height:auto}
@@ -104,3 +104,7 @@
 
 .su-two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .su-terms{display:flex;align-items:flex-start;gap:.6rem;font-size:.86rem;color:var(--muted)}.su-terms a{color:rgb(var(--acc));font-weight:700}
+
+.su-load{position:fixed;top:0;left:0;right:0;height:4px;z-index:101;background:transparent}
+.su-load i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff2d3d,#ff5a4d);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,45,61,.6);transition:width .55s cubic-bezier(.3,.8,.2,1)}
+.su-card h2{font-size:1.9rem}.su-card .su-sub{font-size:1rem;line-height:1.55}
