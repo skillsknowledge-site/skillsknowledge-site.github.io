@@ -15,8 +15,9 @@
 .pt-way.soon{opacity:.75}.pt-clock{font:700 2rem ui-monospace,Menlo,monospace}
 .pt h2{font-size:1.45rem;line-height:1.2}
 
+.pt-dim{opacity:.4;filter:grayscale(.6);pointer-events:none;user-select:none;display:grid;gap:1rem}
 .pt-lv{display:grid;gap:.25rem;border-radius:14px;padding:.9rem 1.1rem;background:rgba(127,127,127,.1);font-size:.88rem}
 .pt-lv span{color:var(--fg)}.pt-lv small{color:var(--muted)}.pt-lv>b{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pt-warn{margin:.8rem 0 0;padding:.6rem .85rem;border-radius:10px;background:rgba(240,170,40,.18);font-weight:700;font-size:.9rem}
 .pt-warn.bad{background:rgba(163,24,42,.14);color:#a3182a}
-.pt-block{border:1px solid rgba(163,24,42,.5);display:grid;gap:1rem}.pt-blk-row{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}.pt-blk-msg{margin:0;color:#a3182a;font-weight:800;line-height:1.5;flex:1 1 260px}.pt-blk-msg small{font-weight:600;color:var(--muted)}.pt-apf{display:grid;gap:.7rem}.pt-apf label{display:grid;gap:.4rem;font-weight:700;font-size:.9rem}.pt-apf textarea{width:100%;padding:.7rem .9rem;border-radius:12px;border:0;background:rgba(127,127,127,.14);color:var(--fg);font:500 .92rem var(--f-body);resize:vertical}.pt-apst{margin:0;font-size:.88rem;font-weight:700;min-height:1.2em}.pt-apst.bad{color:#a3182a}.pt-apst.ok{color:#1f9d6c}
+.pt-block{border:1px solid rgba(163,24,42,.5);display:grid;gap:1rem}.pt-blk-row{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}.pt-blk-msg{margin:0;color:#a3182a;font-weight:800;line-height:1.5;flex:1 1 260px}.pt-blk-msg small{font-weight:600;color:var(--muted)}.pt-apf{display:grid;gap:.7rem}.pt-apf[hidden]{display:none}.pt-apf label{display:grid;gap:.4rem;font-weight:700;font-size:.9rem}.pt-apf textarea{width:100%;padding:.7rem .9rem;border-radius:12px;border:0;background:rgba(127,127,127,.14);color:var(--fg);font:500 .92rem var(--f-body);resize:vertical}.pt-apst{margin:0;font-size:.88rem;font-weight:700;min-height:1.2em}.pt-apst.bad{color:#a3182a}.pt-apst.ok{color:#1f9d6c}

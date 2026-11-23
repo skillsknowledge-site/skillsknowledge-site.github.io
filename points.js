@@ -20,24 +20,25 @@
     clearInterval(tick);
     var usd=(S.balance*S.usd_per_point),pkr=Math.floor(S.balance*S.usd_per_point*S.usd_to_pkr);
     var top='<div class="pt-bal card"><div><span>Your points</span><b>'+S.balance+'</b></div><p>'+(S.balance?'This takes about <b>'+usd.toFixed(1)+' USD</b> (PKR '+pkr.toLocaleString('en-US')+') off your next order at checkout.':'You have no usable points right now.')+'</p><small>1 point = 0.1 USD. 10 points = 1 USD.</small></div>';
-    var L=S.limit||{made:0,max:8},lv='<div class="pt-lv"><b>Your level</b><span>You can make <b>'+L.max+'</b> codes each month. Used so far: <b>'+L.made+'</b>. Resets on '+day(L.resets_at)+'.</span><small>Every paid small order gives +'+L.small+' codes. A big order (PKR '+Number(L.big_pkr||0).toLocaleString('en-US')+' or more) gives +'+L.big+' codes.</small></div>';
+    var L=S.limit,lv='';
     if(S.blocked){
-      var bk=S.blocked,msg;
+      var bk=S.blocked,msg,dimmed=top+'<section class="card pt-way"><h2><span>1</span> Share your reference code</h2><p>Points are not available on this account right now.</p></section>';
+
       if(bk.kind==='temp')msg="You can't use Points features right now. Code:"+esc(bk.code);
       else if(bk.kind==='policy')msg=esc(bk.reason||"You can't use Points features right now.");
       else if(bk.kind==='ban')msg='Your Points access was removed for good and your account was terminated. Code:'+esc(bk.code)+(bk.reason?'<br><small>'+esc(bk.reason)+'</small>':'');
       else msg='You are blocked to use this feature Code:'+esc(bk.code)+(bk.until?'<br><small>The block was lifted. You can use Points again on '+day(bk.until)+'.</small>':'');
-      shell(top+'<section class="card pt-block" role="alert"><div class="pt-blk-row"><p class="pt-blk-msg">'+msg+'</p><button class="btn btn-solid btn-sm" type="button" id="pt-ap">Appeal</button></div>'+
-        '<form class="pt-apf" id="pt-apf" hidden novalidate><label>Why should this be reviewed?<textarea id="pt-apm" rows="5" maxlength="1000" placeholder="Explain what happened (at least 5 characters)"></textarea></label><p class="pt-apst" id="pt-aps" role="status"></p><button class="btn btn-solid btn-sm" type="submit" id="pt-apg">Send appeal</button></form></section>'+lv);
+      shell('<section class="card pt-block" role="alert"><div class="pt-blk-row"><p class="pt-blk-msg">'+msg+'</p><button class="btn btn-solid btn-sm" type="button" id="pt-ap">Appeal</button></div>'+
+        '<form class="pt-apf" id="pt-apf" hidden novalidate><label>Why should this be reviewed?<textarea id="pt-apm" rows="5" maxlength="1000" placeholder="Explain what happened (at least 5 characters)"></textarea></label><p class="pt-apst" id="pt-aps" role="status"></p><button class="btn btn-solid btn-sm" type="submit" id="pt-apg">Send appeal</button></form></section><div class="pt-dim" aria-hidden="true">'+dimmed+'</div>');
       var apb=document.getElementById('pt-ap'),apf=document.getElementById('pt-apf'),aps=document.getElementById('pt-aps');
       apb.onclick=function(){apf.hidden=!apf.hidden;if(!apf.hidden)document.getElementById('pt-apm').focus()};
       apf.onsubmit=function(e){e.preventDefault();var m=document.getElementById('pt-apm').value.trim(),g=document.getElementById('pt-apg');
         if(m.length<5){aps.textContent='Please write a few words.';aps.className='pt-apst bad';return}
         g.disabled=true;aps.textContent='Sending…';aps.className='pt-apst';
-        call('/rest/v1/rpc/submit_appeal2',{p_kind:'points',p_identifier:'',p_message:m},tok).then(function(){apf.innerHTML='<p class="pt-apst ok">Appeal sent. We will reply within 2 to 3 days.</p>'},function(){g.disabled=false;aps.textContent='Could not send. Please try again.';aps.className='pt-apst bad'})};
+        call('/rest/v1/rpc/submit_appeal2',{p_kind:'points',p_identifier:'',p_message:m},tok).then(function(r){apf.innerHTML=r==='wait'?'<p class="pt-apst bad">You already sent an appeal. Please wait 24 hours before sending another one.</p>':'<p class="pt-apst ok">Appeal sent. We will reply within 2 to 3 days.</p>'},function(){g.disabled=false;aps.textContent='Could not send. Please try again.';aps.className='pt-apst bad'})};
       return}
     if(!S.unlocked){
-      shell(top+'<section class="card pt-lock"><h2>Points open soon</h2><p>To keep the system fair, points open <b>1 hour after you create your account</b>. Please come back when the time below is over.</p><div class="pt-clock" id="pt-lock">'+left(S.secs_left*1000)+'</div></section>');
+      shell(top+'<section class="card pt-lock"><h2>Points open soon</h2><p>To keep the system fair, points open a short time after you create your account. Please come back when the time below is over.</p><div class="pt-clock" id="pt-lock">'+left(S.secs_left*1000)+'</div></section>');
       var end=Date.now()+S.secs_left*1000;tick=setInterval(function(){var l=end-Date.now();if(l<=0){load();return}document.getElementById('pt-lock').textContent=left(l)},1000);return}
     var c=S.code,dots='',people='';
     if(c){for(var i=0;i<c.max;i++)dots+='<i class="'+(i<c.used?'on':'')+'"></i>';
@@ -50,9 +51,7 @@
         '<div class="pt-meter"><div class="pt-dots" aria-label="'+c.used+' of '+c.max+' people joined">'+dots+'</div><b>'+c.used+' of '+c.max+' people joined</b><span>This code ends in <b id="pt-left"></b></span></div>'+
         (people?'<ul class="pt-list">'+people+'</ul>':'<p class="pt-none">Nobody has joined with this code yet.</p>'):
         '<div class="pt-code none"><p>'+(S.referrals.length?'Your last code has ended. You can make a fresh one.':'You have not made a code yet. Press the button to start earning points.')+'</p><button class="btn btn-solid btn-sm" type="button" id="pt-gen">'+(S.referrals.length?'Generate new code':'Activate my points')+'</button></div>')+
-      (L.made>=L.max&&c?'<p class="pt-warn">This is your last code this month ('+L.made+' of '+L.max+'). You have almost reached your limit.</p>':'')+
-      (!c&&L.made>=L.max?'<p class="pt-warn bad">You have used all '+L.max+' codes this month. Another attempt now may block your points. Your limit resets on '+day(L.resets_at)+'.</p>':'')+
-      (L.warned?'<p class="pt-warn bad">Warning: you already tried after reaching the limit. One more attempt will block your points.</p>':'')+
+      (L?'<p class="pt-warn bad" role="alert">You reached your limit. You cannot make more codes until '+day(L.resets_at)+'. If you try to make a code before that day, your Points will be blocked.</p>':'')+
       '<h3>Step 2: How the code works</h3>'+
       '<ul class="pt-rules"><li>One code can be used by <b>3 people</b> only (1 code = 3 people = 3 points = 0.3 USD).</li>'+
       '<li>A code lasts <b>24 hours</b>, counted from the moment you activate it. When the time is over you can generate a new code, and it follows the same rules.</li>'+
@@ -60,7 +59,7 @@
       '<li>Points are added only after the new member presses <b>Approve Reference</b>. Everything is counted and stored securely on our server, and nobody can change it by hand.</li></ul></section>';
     var lots=S.lots.length?'<section class="card"><h2>Your usable points</h2><ul class="pt-list">'+S.lots.map(function(l){return '<li><span>'+l.left_pts+' point'+(l.left_pts>1?'s':'')+'</span><em>use before '+day(l.expires_at)+'</em></li>'}).join('')+'</ul></section>':'';
     var way2='<section class="card pt-way soon"><h2><span>2</span> Another way to earn</h2><p>A second way to earn points is coming soon. We will announce it here.</p></section>';
-    shell(top+'<p class="ac-msg bad" id="pt-msg" role="alert" hidden></p>'+way1+way2+lots+lv);
+    shell(top+'<p class="ac-msg bad" id="pt-msg" role="alert" hidden></p>'+way1+way2+lots);
     var cp=document.getElementById('pt-link');
     if(cp){document.getElementById('pt-link').onclick=function(){var b=document.getElementById('pt-link');copy(new URL('login.html?ref='+encodeURIComponent(c.code),location.href).href,b,'Copy link')};
       var end2=new Date(c.expires_at).getTime();var el=document.getElementById('pt-left');

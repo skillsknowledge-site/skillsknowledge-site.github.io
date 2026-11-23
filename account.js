@@ -43,8 +43,8 @@
     var m=u.user_metadata||{};pr=pr||{};
     return {id:u.id,email:u.email||'',username:pr.username||'',
       name:pr.display_name||m.display_name||m.full_name||m.name||(u.email||'').split('@')[0]||'Member',
-      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked,reason:pr.block_reason||'',code:pr.block_code||'',website:pr.website||'',location:pr.location||'',
-      provider:(u.app_metadata&&u.app_metadata.provider)||'google',pwAt:m.pw_changed_at||'',hasPw:!!m.pw_changed_at||((u.app_metadata&&u.app_metadata.provider)||'google')==='email',created:u.created_at,last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
+      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked&&(!pr.blocked_until||new Date(pr.blocked_until).getTime()>Date.now()),reason:pr.block_reason||'',code:pr.block_code||'',website:pr.website||'',location:pr.location||'',
+      provider:(u.app_metadata&&u.app_metadata.provider)||'google',pwAt:m.pw_changed_at||'',hasPw:!!m.pw_changed_at||((u.app_metadata&&u.app_metadata.provider)||'google')==='email',created:u.created_at,unlockAt:pr.points_unlock_at||(u.created_at?new Date(new Date(u.created_at).getTime()+3600000).toISOString():''),until:pr.blocked_until||'',last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
   }
   function getProfile(t,id){
     return api('/rest/v1/profiles?id=eq.'+encodeURIComponent(id)+'&select=*',{token:t}).then(function(r){
@@ -117,6 +117,10 @@
   '.un-box h2{margin:0;font-size:1.3rem}.un-box p{margin:0;color:var(--muted);font-size:.9rem}'+
   '.un-in{display:flex;align-items:center;gap:.3rem;padding:.2rem .9rem;border-radius:12px;background:rgba(255,255,255,.1)}.un-in span{color:var(--muted)}'+
   '.un-in textarea{flex:1;min-width:0;border:0;background:none;color:#fff;font:500 .95rem var(--f-body);padding:.65rem 0;outline:0;resize:vertical}.un-in input{flex:1;min-width:0;border:0;background:none;color:#fff;font:500 1rem var(--f-body);padding:.65rem 0;outline:0}'+
+  '.un-box.rf-box{width:min(560px,100%);padding:2.6rem 2rem;text-align:center;border-radius:20px}.rf-view{justify-items:center;gap:1rem}.rf-view h2{font-size:1.7rem;margin:0}.rf-view p{margin:0;max-width:40ch;line-height:1.6}'+
+  '.rf-ic{width:72px;height:72px;fill:none;stroke:rgb(var(--acc));stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}'+
+  '.rf-go{margin-top:.6rem;width:min(360px,100%);padding:1.15rem 1.5rem;border:0;border-radius:16px;background:rgb(var(--acc));color:#fff;font:800 1.3rem var(--f-body);cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.25);transition:transform .15s}.rf-go:hover{transform:translateY(-2px)}.rf-go:disabled{opacity:.6;cursor:wait;transform:none}'+
+  '.ntf-it.warn .ntf-ic{background:rgba(163,24,42,.16);color:#d12a42}.ntf-it.warn b{color:#d12a42}'+
   '.un-box{position:relative;border-radius:2px}.un-box.wide{width:min(640px,100%);padding:2rem 1.8rem}.un-view{display:grid;gap:.8rem}.un-view[hidden]{display:none}.un-in,.un-st+*{border-radius:2px}.un-big textarea{min-height:240px;resize:vertical}.un-end{justify-content:flex-end}.un-box .btn{border-radius:2px}'+
   '.un-x{position:absolute;top:.5rem;right:.7rem;width:2rem;height:2rem;border:0;background:none;color:#fff;font:400 1.9rem/1 var(--f-body);cursor:pointer}'+
   '.un-done{justify-items:center;text-align:center;padding:1.4rem 0}.un-tick{width:84px;height:84px}.un-tick circle{fill:none;stroke:#2fd27a;stroke-width:3;stroke-dasharray:151;stroke-dashoffset:151;animation:untk .6s ease forwards}.un-tick path{fill:none;stroke:#2fd27a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:untk .4s .5s ease forwards}@keyframes untk{to{stroke-dashoffset:0}}.un-done h2{color:#2fd27a}'+
@@ -129,14 +133,15 @@
 
   /* points are locked for the first hour after sign-up (the server checks this too) */
   function ptsLink(u){
-    var at=u&&u.created?new Date(u.created).getTime()+3600000:0;
-    return at>Date.now()?'<a class="pts-off" aria-disabled="true" role="menuitem" title="Points open 1 hour after you join">Points<small>opens in '+Math.max(1,Math.ceil((at-Date.now())/60000))+' min</small></a>':'<a href="points" role="menuitem">Points</a>';
+    var at=u&&u.unlockAt?new Date(u.unlockAt).getTime():0;
+    return at>Date.now()?'<a class="pts-off" aria-disabled="true" role="menuitem" title="Points are not open yet">Points<small>opens in '+Math.max(1,Math.ceil((at-Date.now())/60000))+' min</small></a>':'<a href="points" role="menuitem">Points</a>';
   }
 
   /* ---- notification bell: welcome notice, website updates, points news (all stored in Supabase) ---- */
   var ICONS={bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
     welcome:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
-    update:'<path d="M4 10v4l3 .5L13 19V5L7 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6"/>'};
+    update:'<path d="M4 10v4l3 .5L13 19V5L7 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6"/>',
+    warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>'};
   function ago(d){var s=Math.max(0,(Date.now()-new Date(d).getTime())/1000);if(s<60)return 'Just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';if(s<604800)return Math.floor(s/86400)+' d ago';return fmt(d)}
   function bell(w){
     var n=document.createElement('div');n.className='ntf';
@@ -150,7 +155,7 @@
       btn.setAttribute('aria-label','Notifications'+(data.unread?' ('+data.unread+' new)':''));
       list.innerHTML=data.items.length?data.items.map(function(i){
         var ok=/^(https:\/\/[^\s"<>]+|[a-z0-9._\/#?=&-]+)$/i.test(i.link||''),tag=ok?'a':'div',ic=ICONS[i.kind]||ICONS.bell;
-        return '<'+tag+' class="ntf-it'+(i.read?'':' new')+'"'+(ok?' href="'+esc(i.link)+'"'+(/^https:/i.test(i.link)?' target="_blank" rel="noopener"':''):'')+'><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic+'</svg></span><span><b>'+esc(i.title)+'</b>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(ago(i.created_at))+'</time></span></'+tag+'>'}).join(''):'<p class="ntf-empty">You are all caught up.</p>';
+        return '<'+tag+' class="ntf-it'+(i.read?'':' new')+(i.kind==='warn'?' warn':'')+'"'+(ok?' href="'+esc(i.link)+'"'+(/^https:/i.test(i.link)?' target="_blank" rel="noopener"':''):'')+'><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic+'</svg></span><span><b>'+esc(i.title)+'</b>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(ago(i.created_at))+'</time></span></'+tag+'>'}).join(''):'<p class="ntf-empty">You are all caught up.</p>';
     }
     function load(){token().then(function(t){return t&&api('/rest/v1/rpc/notifications_list',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&r.items){data=r;paint()}else if(!data){list.innerHTML='<p class="ntf-empty">Nothing here yet.</p>'}}).catch(function(){if(!data)list.innerHTML='<p class="ntf-empty">Notifications could not load. Try again later.</p>'})}
     function markRead(){if(!data||!data.unread)return;token().then(function(t){return t&&api('/rest/v1/rpc/notifications_mark_read',{method:'POST',token:t,body:{}})}).then(function(){
@@ -194,16 +199,17 @@
     return token().then(function(t){if(!t)return;
       return api('/rest/v1/rpc/my_pending_reference',{method:'POST',token:t,body:{}}).then(function(r){
         if(!r||$('.un-back.ref'))return;
-        var d=overlay('<div class="un-box" role="alertdialog" aria-modal="true" aria-labelledby="rf-h"><div class="un-view"><h2 id="rf-h">You joined with a reference</h2>'+
-          '<p>Welcome, '+esc(u.name)+'. You logged in using a reference code from <b>'+esc(r.who)+'</b>. Thank you for trusting them.</p>'+
-          '<p>Please press the button below to approve this reference. Approving it gives <b>'+esc(r.who)+'</b> 1 point. This message stays until you approve it.</p>'+
-          '<div class="un-st" id="rf-s" role="status"></div><div class="un-row"><span></span><button class="btn btn-solid btn-sm" type="button" id="rf-go">Approve Reference</button></div></div></div>');
+        var d=overlay('<div class="un-box rf-box" role="alertdialog" aria-modal="true" aria-labelledby="rf-h"><div class="un-view rf-view"><svg class="rf-ic" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg><h2 id="rf-h">Approve your reference</h2>'+
+          '<p>Welcome, '+esc(u.name)+'. You joined using a reference code from <b>'+esc(r.who)+'</b>.</p>'+
+          '<p>Please press the big button to approve this reference. This message stays until you approve it.</p>'+
+          '<button class="rf-go" type="button" id="rf-go">Approve</button>'+
+          '<div class="un-st" id="rf-s" role="status"></div></div></div>');
         d.classList.add('ref');
         var b=$('#rf-go',d),st=$('#rf-s',d);
-        b.addEventListener('click',function(){b.disabled=true;b.textContent='Approving…';
+        b.addEventListener('click',function(){b.disabled=true;b.textContent='Please wait…';
           token().then(function(t2){return api('/rest/v1/rpc/approve_reference',{method:'POST',token:t2,body:{}})}).then(function(){
             d.innerHTML='<div class="un-box"><div class="un-view un-done"><svg class="un-tick" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg><h2>Reference approved</h2></div></div>';
-            setTimeout(function(){d.remove()},1400)},function(){b.disabled=false;b.textContent='Approve Reference';st.textContent='Could not approve. Please try again.';st.className='un-st bad'})});
+            setTimeout(function(){d.remove()},1400)},function(){b.disabled=false;b.textContent='Approve';st.textContent='Could not approve. Please try again.';st.className='un-st bad'})});
         document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('.un-back.ref'))e.preventDefault()},true);
       })}).catch(function(){});
   }
@@ -240,7 +246,7 @@
       '<div id="tm-main" class="un-view"><h2 id="tm-h">Your account has been terminated</h2>'+
       '<p>'+(who?esc(who)+' has':'This account has')+' been blocked by the site owner, so you can no longer use your profile or settings.</p>'+
       (u&&u.reason?'<p><b>Reason:</b> '+esc(u.reason)+'</p>':'')+(u&&u.code?'<p class="un-code">Code: '+esc(u.code)+'</p>':'')+
-      '<p>If you think this is a mistake, you can send an appeal. Otherwise log out.</p>'+
+      (u&&u.until?'<p>You can use the website again on <b>'+esc(fmt(u.until))+'</b>.</p>':'<p>If you think this is a mistake, you can send an appeal. Otherwise log out.</p>')+
       '<div class="un-row"><button class="un-link" type="button" id="tm-out">Log out</button><button class="btn btn-solid btn-sm" type="button" id="tm-ap">Appeal</button></div></div>'+
       '<div id="tm-form" class="un-view" hidden><button class="un-x" type="button" id="tm-x" aria-label="Close">&times;</button><h2>Appeal your termination</h2><p>Tell us why you think this was a mistake.</p>'+(known?'':'<div class="un-in"><input id="tm-id" type="text" placeholder="Your email or username" autocomplete="username" autocapitalize="off"></div>')+
       '<div class="un-in un-big"><textarea id="tm-msg" rows="9" maxlength="1000" placeholder="Write your appeal here (at least 5 characters)"></textarea></div>'+
@@ -304,7 +310,7 @@
     if(back&&/^[a-z0-9-]+\.html$/.test(back.p||'')&&Date.now()-back.t<600000){location.replace(back.p);return}
     if(onLogin&&!/signup|error/.test(location.hash+location.search)){goReplace('account');return}
     if(cached){header(cached);if(onAcct)page(cached)}
-    loadUser().then(function(u){
+    token().then(function(t){return t&&api('/rest/v1/rpc/release_block_if_due',{method:'POST',token:t,body:{}})}).catch(function(){}).then(function(){return loadUser()}).then(function(u){
       if((u&&u.blocked)||banned){terminated(u||cached);return}
       if(!u){if(onAcct)goReplace('login');var w=$('.acct');if(w)w.remove();var b=$('#login-btn');if(b)b.style.display='';return}
       applyPrefs(u.prefs&&Object.keys(u.prefs).length?u.prefs:rd(PKEY));header(u);beat(u);
@@ -345,7 +351,7 @@
     '<section class="card"><h2>Account</h2><dl class="ac-dl"><dt>Signed in with</dt><dd>'+esc(u.provider==='google'?'Google':u.provider)+'</dd><dt>Member since</dt><dd>'+esc(fmt(u.created))+'</dd><dt>Last sign-in</dt><dd>'+esc(fmt(u.last))+'</dd></dl>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="button" id="a-out">Log out</button><button class="btn btn-ghost btn-sm" type="button" id="a-all">Log out everywhere</button></div></section>'+
     '<section class="card" id="pts-card"><h2>Points</h2><p class="ac-note" id="pts-n">Earn points by sharing your reference code. Every point takes 0.1 USD off your next order.</p>'+
-      '<div class="ac-row">'+(ptsLink(u).indexOf('pts-off')>-1?'<span class="ac-note">Points open 1 hour after you join.</span>':'<a class="btn btn-solid btn-sm" href="points">Open points</a>')+'</div></section>'+
+      '<div class="ac-row">'+(ptsLink(u).indexOf('pts-off')>-1?'<span class="ac-note">Points are not open yet.</span>':'<a class="btn btn-solid btn-sm" href="points">Open points</a>')+'</div></section>'+
     '<section class="card"><h2>Password</h2>'+
       (u.hasPw?
       '<div class="ac-pw-last"><p class="ac-note">Last changed: <b>'+esc(u.pwAt?fmt(u.pwAt):'not recorded')+'</b></p><button class="btn btn-solid btn-sm" type="button" id="pw-open">Change password</button></div>'+
