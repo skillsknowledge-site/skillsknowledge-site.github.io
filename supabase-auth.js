@@ -15,7 +15,7 @@
     if(/invalid login/i.test(m))return 'Wrong details or password.';
     if(/banned|blocked/i.test(m))return 'This account has been terminated. Contact the site owner to appeal.';
     if(/not confirmed/i.test(m))return 'Please confirm your email first. Check your inbox.';
-    if(/already registered|already been registered/i.test(m))return 'An account with this email already exists.';
+    if(/already registered|already been registered/i.test(m))return 'Could not create the account. Please check your details and try again.';
     if(/rate limit|too many|security purposes/i.test(m))return 'Too many tries. Please wait a minute and try again.';
     if(/password should|weak/i.test(m))return 'Please choose a stronger password.';
     return m||'Something went wrong. Please try again.';

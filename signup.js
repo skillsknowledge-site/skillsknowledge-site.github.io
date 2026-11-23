@@ -15,7 +15,7 @@
   function $(s){return el.querySelector(s)}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function nice(m){
-    if(/already registered|already been registered/i.test(m))return 'An account with this email already exists.';
+    if(/already registered|already been registered/i.test(m))return 'exists';
     if(/rate limit|too many|security purposes|seconds/i.test(m))return 'Too many tries. Please wait a minute and try again.';
     if(/password should|weak|least/i.test(m))return 'Please choose a stronger password.';
     if(/expired|invalid|otp|token/i.test(m))return 'That code is wrong or has expired.';
@@ -99,9 +99,15 @@
     api('/auth/v1/signup',{email:data.email,password:p,data:{full_name:data.first+' '+data.last,ref:refFromUrl()}}).then(function(j){
       busy(b,false,'Next');
       if(j&&j.access_token){saveSession(j);data.uid=j.user&&j.user.id;data.token=j.access_token;show(4);return}
-      if(j&&j.user&&Array.isArray(j.user.identities)&&!j.user.identities.length){say('su-m2','An account with this email already exists.','bad');return}
-      $('#su-sent').textContent='We sent a 6-digit code to '+data.email+'. Open your email, copy the code and type it here. It may take a minute. Check Spam if you do not see it.';say('su-m3','');startCool();show(3);
-    },function(er){busy(b,false,'Next');say('su-m2',er.message,'bad')});
+      toCode();
+    },function(er){busy(b,false,'Next');
+      /* an email that already has an account looks exactly like a new one, so nobody can use this form to find out who is registered */
+      if(er.message==='exists'){toCode();return}
+      say('su-m2',er.message,'bad')});
+  }
+  function toCode(){
+    $('#su-sent').textContent='We sent a 6-digit code to '+data.email+'. Open your email, copy the code and type it here. It may take a minute. Check Spam if you do not see it.';
+    say('su-m3','');startCool();show(3);
   }
   function startCool(){
     cool=60;clearInterval(coolT);var b=$('#su-resend');b.disabled=true;

@@ -89,8 +89,20 @@
   var cached=rd(UKEY),has=!!sess();
   var css=document.createElement('style');
   css.textContent='.reduce-motion .snow{display:none!important}.reduce-motion *,.reduce-motion *::before,.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}html.big-text{font-size:17px}'+
-  '.acct{position:relative}.acct-btn{position:relative;display:block;width:38px;height:38px;border-radius:50%;border:0;background:rgba(var(--tint),.2);color:#fff;padding:0;cursor:pointer;overflow:hidden;font:700 .9rem var(--f-body)}'+
+  '.acct{position:relative;display:flex;align-items:center;gap:10px}.acct-btn{position:relative;display:block;width:38px;height:38px;border-radius:50%;border:0;background:rgba(var(--tint),.2);color:#fff;padding:0;cursor:pointer;overflow:hidden;font:700 .9rem var(--f-body)}'+
   '.acct-btn .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.acct-btn img,.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.acct-btn:hover{filter:brightness(1.15)}'+
+'.ntf{position:relative}.ntf-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:0;background:rgba(var(--tint),.2);color:var(--fg,#fff);padding:0;cursor:pointer}.ntf-btn:hover{background:rgba(var(--tint),.3)}'+
+  '.ntf-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}'+
+  '.ntf-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#e5283b;color:#fff;font:800 .68rem/18px var(--f-body);text-align:center;box-shadow:0 0 0 2px var(--bg,#fff)}.ntf-dot[hidden]{display:none}'+
+  '.ntf-panel{position:absolute;right:-48px;top:calc(100% + 10px);width:min(380px,calc(100vw - 24px));max-height:min(70vh,520px);display:flex;flex-direction:column;border-radius:16px;background:var(--s-surface,rgba(10,14,14,.97));color:var(--s-ink,#fff);box-shadow:0 18px 50px rgba(30,50,120,.25);z-index:60;overflow:hidden}.ntf-panel[hidden]{display:none}'+
+  '.ntf-h{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-bottom:1px solid var(--line,rgba(127,127,127,.2))}.ntf-h b{font:800 1rem var(--f-display)}.ntf-all{border:0;background:none;color:rgb(var(--acc));font:700 .8rem var(--f-body);cursor:pointer;padding:.2rem}.ntf-all:disabled{opacity:.4;cursor:default}'+
+  '.ntf-list{overflow:auto;padding:.3rem}.ntf-it{display:grid;grid-template-columns:36px 1fr;gap:.7rem;padding:.7rem .7rem;border-radius:12px;text-decoration:none;color:inherit;position:relative}a.ntf-it:hover{background:var(--s-soft,rgba(127,127,127,.12))}'+
+  '.ntf-ic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--s-soft,rgba(127,127,127,.14));color:rgb(var(--acc))}.ntf-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}'+
+  '.ntf-it b{display:block;font:800 .9rem/1.3 var(--f-body)}.ntf-it p{margin:.15rem 0 0;font:500 .84rem/1.45 var(--f-body);opacity:.8}.ntf-it time{display:block;margin-top:.25rem;font:600 .72rem var(--f-body);opacity:.55}'+
+  '.ntf-it.new::after{content:"";position:absolute;right:.7rem;top:.9rem;width:9px;height:9px;border-radius:50%;background:rgb(var(--acc))}.ntf-it.new b{padding-right:1.2rem}'+
+  '.ntf-empty{padding:2rem 1rem;text-align:center;opacity:.65;font:600 .9rem var(--f-body)}'+
+  '@media (max-width:480px){.ntf-panel{position:fixed;left:12px;right:12px;top:64px;width:auto}}'+
+  
   '.acct-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:250px;padding:.5rem;border-radius:14px;background:var(--s-surface,rgba(10,14,14,.97));box-shadow:0 14px 40px rgba(30,50,120,.2);display:none;z-index:60}'+
   '.acct.open .acct-menu{display:block}.acct-who{display:flex;gap:.7rem;align-items:center;padding:.6rem .6rem .8rem;border-bottom:1px solid var(--line,rgba(255,255,255,.1));margin-bottom:.3rem}'+
   '.acct-who div span{display:block;font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}.acct-who b{display:block;font-size:.92rem;color:var(--s-ink,#fff)}'+
@@ -120,6 +132,40 @@
     var at=u&&u.created?new Date(u.created).getTime()+3600000:0;
     return at>Date.now()?'<a class="pts-off" aria-disabled="true" role="menuitem" title="Points open 1 hour after you join">Points<small>opens in '+Math.max(1,Math.ceil((at-Date.now())/60000))+' min</small></a>':'<a href="points" role="menuitem">Points</a>';
   }
+
+  /* ---- notification bell: welcome notice, website updates, points news (all stored in Supabase) ---- */
+  var ICONS={bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+    welcome:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+    update:'<path d="M4 10v4l3 .5L13 19V5L7 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6"/>'};
+  function ago(d){var s=Math.max(0,(Date.now()-new Date(d).getTime())/1000);if(s<60)return 'Just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';if(s<604800)return Math.floor(s/86400)+' d ago';return fmt(d)}
+  function bell(w){
+    var n=document.createElement('div');n.className='ntf';
+    n.innerHTML='<button class="ntf-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true">'+ICONS.bell+'</svg><b class="ntf-dot" hidden></b></button>'+
+      '<div class="ntf-panel" role="dialog" aria-label="Notifications" hidden><div class="ntf-h"><b>Notifications</b><button class="ntf-all" type="button" disabled>Mark all as read</button></div><div class="ntf-list"><p class="ntf-empty">Loading…</p></div></div>';
+    w.insertBefore(n,w.firstChild);
+    var btn=$('.ntf-btn',n),dot=$('.ntf-dot',n),panel=$('.ntf-panel',n),list=$('.ntf-list',n),all=$('.ntf-all',n),data=null,mt=0;
+    function paint(){
+      if(!data)return;
+      dot.hidden=!data.unread;dot.textContent=data.unread>9?'9+':data.unread;all.disabled=!data.unread;
+      btn.setAttribute('aria-label','Notifications'+(data.unread?' ('+data.unread+' new)':''));
+      list.innerHTML=data.items.length?data.items.map(function(i){
+        var ok=/^(https:\/\/[^\s"<>]+|[a-z0-9._\/#?=&-]+)$/i.test(i.link||''),tag=ok?'a':'div',ic=ICONS[i.kind]||ICONS.bell;
+        return '<'+tag+' class="ntf-it'+(i.read?'':' new')+'"'+(ok?' href="'+esc(i.link)+'"'+(/^https:/i.test(i.link)?' target="_blank" rel="noopener"':''):'')+'><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic+'</svg></span><span><b>'+esc(i.title)+'</b>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(ago(i.created_at))+'</time></span></'+tag+'>'}).join(''):'<p class="ntf-empty">You are all caught up.</p>';
+    }
+    function load(){token().then(function(t){return t&&api('/rest/v1/rpc/notifications_list',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&r.items){data=r;paint()}else if(!data){list.innerHTML='<p class="ntf-empty">Nothing here yet.</p>'}}).catch(function(){if(!data)list.innerHTML='<p class="ntf-empty">Notifications could not load. Try again later.</p>'})}
+    function markRead(){if(!data||!data.unread)return;token().then(function(t){return t&&api('/rest/v1/rpc/notifications_mark_read',{method:'POST',token:t,body:{}})}).then(function(){
+      data.unread=0;dot.hidden=true;all.disabled=true;btn.setAttribute('aria-label','Notifications')},function(){})}
+    function close(){panel.hidden=true;btn.setAttribute('aria-expanded','false');clearTimeout(mt);if(data&&!data.unread){data.items.forEach(function(i){i.read=true});paint()}}
+    btn.addEventListener('click',function(e){e.stopPropagation();w.classList.remove('open');
+      if(!panel.hidden){close();return}
+      panel.hidden=false;btn.setAttribute('aria-expanded','true');load();
+      mt=setTimeout(markRead,1800)});
+    all.addEventListener('click',function(){markRead();clearTimeout(mt)});
+    document.addEventListener('click',function(e){if(!panel.hidden&&!n.contains(e.target))close()});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!panel.hidden){close();btn.focus()}});
+    $('.acct-btn',w).addEventListener('click',function(){if(!panel.hidden)close()});
+    load();clearInterval(window.__skNtf);window.__skNtf=setInterval(function(){if(!document.hidden)load()},90000);
+  }
   /* ---- header: the Login button becomes the avatar menu ---- */
   function header(u){
     var b=$('#login-btn');if(!b||!has)return;
@@ -129,6 +175,7 @@
       '<a href="account" role="menuitem">Profile and settings</a>'+ptsLink(u)+
       '<div class="acct-theme" role="group" aria-label="Colour theme"><button type="button" data-th="light" aria-pressed="'+(curTheme()==='light')+'">Light</button><button type="button" data-th="dark" aria-pressed="'+(curTheme()==='dark')+'">Dark</button></div>'+
       '<button type="button" id="acct-out" role="menuitem">Log out</button></div>';
+    bell(w);
     var btn=$('.acct-btn',w);
     btn.addEventListener('click',function(e){e.stopPropagation();var o=w.classList.toggle('open');btn.setAttribute('aria-expanded',o)});
     document.addEventListener('click',function(e){if(!w.contains(e.target)){w.classList.remove('open');btn.setAttribute('aria-expanded','false')}});
