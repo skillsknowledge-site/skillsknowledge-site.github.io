@@ -275,7 +275,8 @@
     if(u.owner===undefined&&u.ready){u.owner=false;token().then(function(t){return t&&api('/rest/v1/rpc/admin_whoami',{method:'POST',token:t,body:{}})}).then(function(me){if(me&&me.is_owner){u.owner=true;page(u)}}).catch(function(){})}
     var p=Object.assign({},rd(PKEY)||{},u.prefs||{}),msgText=$('#ac-msg')&&!$('#ac-msg').hidden?$('#ac-msg').textContent:'';
     root.innerHTML=
-    '<div class="ac-head"><span class="av big">'+avInner(u)+'</span><div><h1>'+esc(u.name)+'</h1><p>'+(u.username?'@'+esc(u.username)+' · ':'')+esc(u.email)+'</p></div></div>'+
+    '<div class="ac-head"><div class="av-wrap"><button type="button" class="av big av-edit" id="av-btn" aria-haspopup="true" aria-expanded="false" aria-label="Change profile photo">'+avInner(u)+'<i class="av-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></i></button>'+
+      '<div class="av-menu" id="av-menu" role="menu" hidden><label class="av-it" role="menuitem">'+(u.photo?'Change photo':'Add photo')+'<input id="p-file" type="file" accept="image/*" hidden></label>'+(u.photo?'<button class="av-it" type="button" role="menuitem" id="p-reset">Remove photo</button>':'')+'</div></div><div><h1>'+esc(u.name)+'</h1><p>'+(u.username?'@'+esc(u.username)+' · ':'')+esc(u.email)+'</p></div></div>'+
     '<p class="ac-msg" id="ac-msg" role="status" hidden></p>'+
     (u.ready?'':'<p class="ac-msg bad">The profile database is not set up yet, so username, bio and the other profile fields are switched off. Run <b>supabase-profiles.sql</b> in Supabase.</p>')+
     '<div class="ac-grid">'+
@@ -288,9 +289,6 @@
       '<div class="ac-two"><label>Email<input type="email" value="'+esc(u.email)+'" disabled></label>'+
       '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+(u.ready?'':' disabled')+'><small>Optional. You can log in with it.</small></label></div>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Save profile</button></div></form></section>'+
-    '<section class="card"><h2>Photo</h2><p class="ac-note">'+(u.photo?'Your uploaded photo is shown.':'No photo yet. Your first letter is shown.')+'</p>'+
-      '<div class="ac-row"><label class="btn btn-solid btn-sm ac-file">Upload photo<input id="p-file" type="file" accept="image/*" hidden></label>'+
-      (u.photo?'<button class="btn btn-ghost btn-sm" type="button" id="p-reset">Remove photo</button>':'')+'</div></section>'+
     '<section class="card"><h2>Preferences</h2>'+
       '<div class="ac-theme" role="radiogroup" aria-label="Colour theme"><b>Appearance</b><div>'+[['light','Light'],['dark','Dark'],['system','System']].map(function(o){return '<label><input type="radio" name="s-theme" value="'+o[0]+'"'+((p.theme||'light')===o[0]?' checked':'')+'><span>'+o[1]+'</span></label>'}).join('')+'</div><small>Dark and light mode. System follows your device.</small></div>'+
       '<label class="ac-sw"><input type="checkbox" id="s-motion"'+(p.reduceMotion?' checked':'')+'><i></i><span><b>Reduce motion</b><small>Turns off snow and page animations on this site.</small></span></label>'+
@@ -334,6 +332,10 @@
         var tel=$('#p-tel').value.replace(/[^0-9+]/g,'');if(tel&&!/^\+?[0-9]{7,15}$/.test(tel)){msg('Enter a valid phone number, for example +923001234567.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
       }
       saveProfile(patch).then(function(x){done(x,'Profile saved.')},function(er){msg(er.message,true)})});
+    var avb=$('#av-btn'),avm=$('#av-menu');
+    avb.addEventListener('click',function(e){e.stopPropagation();var o=avm.hidden;avm.hidden=!o;avb.setAttribute('aria-expanded',o?'true':'false')});
+    document.addEventListener('click',function(e){if(!avm.hidden&&!avm.contains(e.target)){avm.hidden=true;avb.setAttribute('aria-expanded','false')}});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!avm.hidden){avm.hidden=true;avb.focus()}});
     $('#p-file').addEventListener('change',function(){var f=this.files[0];if(!f)return;
       if(!/^image\//.test(f.type)){msg('Please choose an image file.',true);return}
       var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){

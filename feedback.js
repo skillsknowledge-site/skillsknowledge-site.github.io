@@ -87,4 +87,5 @@
     dlg.showModal();em.value?ed.focus():em.focus();
   }
   bC.addEventListener('click',function(){open('comment')});bX.addEventListener('click',function(){open('complaint')});
+  if(location.hash==='#complaint'){history.replaceState(null,'',location.pathname+location.search);setTimeout(function(){open('complaint')},400)}
 })();
