@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 
-<link rel="stylesheet" href="appeal.css">
+<link rel="stylesheet" href="appeal.css?v=2">
 <link rel="stylesheet" href="theme2.css?v=7">
 </head>
 <body data-pp>
@@ -31,8 +31,9 @@
   <a class="ap-x" href="login.html" aria-label="Close and go back to log in"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
   <p class="ap-eye">Account support</p>
   <h1>Submit an appeal</h1>
-  <p class="ap-sub">If your account was blocked by mistake, explain what happened and we will review it.</p>
+  <p class="ap-sub">Tell us what is wrong with your account and we will review it.</p>
   <form class="ap-card" id="ap-form" novalidate>
+    <label class="ap-f"><span>What is the problem?</span><select id="ap-kind"><option value="account">My account is blocked</option><option value="points">My Points access is blocked</option><option value="email">My email is not verified</option></select></label>
     <label class="ap-f"><span>Email, username or phone</span><input id="ap-id" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Enter the details for the blocked account"></label>
     <label class="ap-f"><span>What would you like us to review?</span><textarea id="ap-msg" rows="9" maxlength="1000" placeholder="Explain what happened and include any details that may help us review your request."></textarea></label>
     <p class="ap-st" id="ap-st" role="status"></p>
@@ -40,7 +41,7 @@
   </form>
   <div class="ap-card ap-done" id="ap-done" hidden>
     <svg class="ap-tick" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="25"/><path d="M15.5 27l7.5 7.5L37 19.5"/></svg>
-    <p class="ap-dt">We will respond in 2&ndash;3 days of your submission.</p>
+    <p class="ap-dt">If the details match an account, we have received your appeal. We will respond within 2&ndash;3 days.</p>
   </div>
 </div></main>
 
@@ -51,6 +52,6 @@
 <script src="config.js" defer></script>
 <script src="track.js" defer></script>
 <script src="a11y.js" defer></script>
-<script src="appeal.js" defer></script>
+<script src="appeal.js?v=2" defer></script>
 </body>
 </html>

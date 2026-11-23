@@ -54,7 +54,7 @@
       return fn({action:'login',identifier:id,password:pw}).then(function(r){
         if(r.status===404||r.status===0)return legacyLogin(id,pw);
         if(r.j&&r.j.access_token){saveSession(r.j);setTimeout(home,600);return}
-        if(r.j&&r.j.blocked&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
+        if(r.j&&r.j.blocked&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id,reason:r.j.reason||'',code:r.j.code||''});return new Promise(function(){})}
         throw new Error(nice((r.j&&(r.j.error||r.j.msg||r.j.message))||''));
       });
     },

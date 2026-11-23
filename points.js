@@ -22,7 +22,20 @@
     var top='<div class="pt-bal card"><div><span>Your points</span><b>'+S.balance+'</b></div><p>'+(S.balance?'This takes about <b>'+usd.toFixed(1)+' USD</b> (PKR '+pkr.toLocaleString('en-US')+') off your next order at checkout.':'You have no usable points right now.')+'</p><small>1 point = 0.1 USD. 10 points = 1 USD.</small></div>';
     var L=S.limit||{made:0,max:8},lv='<div class="pt-lv"><b>Your level</b><span>You can make <b>'+L.max+'</b> codes each month. Used so far: <b>'+L.made+'</b>. Resets on '+day(L.resets_at)+'.</span><small>Every paid small order gives +'+L.small+' codes. A big order (PKR '+Number(L.big_pkr||0).toLocaleString('en-US')+' or more) gives +'+L.big+' codes.</small></div>';
     if(S.blocked){
-      shell(top+'<section class="card pt-block" role="alert"><h2>Points are blocked</h2><p>'+(S.blocked.auto?'Your points were blocked automatically because too many codes were requested in one month.':'Your points were blocked by the admin.')+(S.blocked.reason&&!S.blocked.auto?' Reason: '+esc(S.blocked.reason):'')+'</p><p>Your code does not work and your points cannot be used while this is active. If you think this is a mistake, you can send us a complaint.</p><a class="btn btn-solid btn-sm" href="index.html#complaint">Send a complaint</a></section>'+lv);return}
+      var bk=S.blocked,msg;
+      if(bk.kind==='temp')msg="You can't use Points features right now. Code:"+esc(bk.code);
+      else if(bk.kind==='policy')msg=esc(bk.reason||"You can't use Points features right now.");
+      else if(bk.kind==='ban')msg='Your Points access was removed for good and your account was terminated. Code:'+esc(bk.code)+(bk.reason?'<br><small>'+esc(bk.reason)+'</small>':'');
+      else msg='You are blocked to use this feature Code:'+esc(bk.code)+(bk.until?'<br><small>The block was lifted. You can use Points again on '+day(bk.until)+'.</small>':'');
+      shell(top+'<section class="card pt-block" role="alert"><div class="pt-blk-row"><p class="pt-blk-msg">'+msg+'</p><button class="btn btn-solid btn-sm" type="button" id="pt-ap">Appeal</button></div>'+
+        '<form class="pt-apf" id="pt-apf" hidden novalidate><label>Why should this be reviewed?<textarea id="pt-apm" rows="5" maxlength="1000" placeholder="Explain what happened (at least 5 characters)"></textarea></label><p class="pt-apst" id="pt-aps" role="status"></p><button class="btn btn-solid btn-sm" type="submit" id="pt-apg">Send appeal</button></form></section>'+lv);
+      var apb=document.getElementById('pt-ap'),apf=document.getElementById('pt-apf'),aps=document.getElementById('pt-aps');
+      apb.onclick=function(){apf.hidden=!apf.hidden;if(!apf.hidden)document.getElementById('pt-apm').focus()};
+      apf.onsubmit=function(e){e.preventDefault();var m=document.getElementById('pt-apm').value.trim(),g=document.getElementById('pt-apg');
+        if(m.length<5){aps.textContent='Please write a few words.';aps.className='pt-apst bad';return}
+        g.disabled=true;aps.textContent='Sending…';aps.className='pt-apst';
+        call('/rest/v1/rpc/submit_appeal2',{p_kind:'points',p_identifier:'',p_message:m},tok).then(function(){apf.innerHTML='<p class="pt-apst ok">Appeal sent. We will reply within 2 to 3 days.</p>'},function(){g.disabled=false;aps.textContent='Could not send. Please try again.';aps.className='pt-apst bad'})};
+      return}
     if(!S.unlocked){
       shell(top+'<section class="card pt-lock"><h2>Points open soon</h2><p>To keep the system fair, points open <b>1 hour after you create your account</b>. Please come back when the time below is over.</p><div class="pt-clock" id="pt-lock">'+left(S.secs_left*1000)+'</div></section>');
       var end=Date.now()+S.secs_left*1000;tick=setInterval(function(){var l=end-Date.now();if(l<=0){load();return}document.getElementById('pt-lock').textContent=left(l)},1000);return}

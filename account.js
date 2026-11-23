@@ -43,7 +43,7 @@
     var m=u.user_metadata||{};pr=pr||{};
     return {id:u.id,email:u.email||'',username:pr.username||'',
       name:pr.display_name||m.display_name||m.full_name||m.name||(u.email||'').split('@')[0]||'Member',
-      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked,website:pr.website||'',location:pr.location||'',
+      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked,reason:pr.block_reason||'',code:pr.block_code||'',website:pr.website||'',location:pr.location||'',
       provider:(u.app_metadata&&u.app_metadata.provider)||'google',pwAt:m.pw_changed_at||'',hasPw:!!m.pw_changed_at||((u.app_metadata&&u.app_metadata.provider)||'google')==='email',created:u.created_at,last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
   }
   function getProfile(t,id){
@@ -239,6 +239,7 @@
     var d=overlay('<form class="un-box" novalidate role="alertdialog" aria-modal="true" aria-labelledby="tm-h">'+
       '<div id="tm-main" class="un-view"><h2 id="tm-h">Your account has been terminated</h2>'+
       '<p>'+(who?esc(who)+' has':'This account has')+' been blocked by the site owner, so you can no longer use your profile or settings.</p>'+
+      (u&&u.reason?'<p><b>Reason:</b> '+esc(u.reason)+'</p>':'')+(u&&u.code?'<p class="un-code">Code: '+esc(u.code)+'</p>':'')+
       '<p>If you think this is a mistake, you can send an appeal. Otherwise log out.</p>'+
       '<div class="un-row"><button class="un-link" type="button" id="tm-out">Log out</button><button class="btn btn-solid btn-sm" type="button" id="tm-ap">Appeal</button></div></div>'+
       '<div id="tm-form" class="un-view" hidden><button class="un-x" type="button" id="tm-x" aria-label="Close">&times;</button><h2>Appeal your termination</h2><p>Tell us why you think this was a mistake.</p>'+(known?'':'<div class="un-in"><input id="tm-id" type="text" placeholder="Your email or username" autocomplete="username" autocapitalize="off"></div>')+
@@ -261,9 +262,9 @@
       if(!id){say('Enter your email or username.','bad');return}
       if(m.length<5){say('Please write a few words about why this is a mistake.','bad');return}
       $('#tm-send',d).disabled=true;say('Sending…');
-      api('/rest/v1/rpc/submit_appeal',{method:'POST',body:{identifier:id,message:m}}).then(function(r){
+      api('/rest/v1/rpc/submit_appeal2',{method:'POST',body:{p_kind:'account',p_identifier:id,p_message:m}}).then(function(r){
         if(r==='ok'){$('#tm-msg',d).value='';say('');$('#tm-send',d).disabled=false;show('tm-done')}
-        else{$('#tm-send',d).disabled=false;say(r==='wait'?'You already sent an appeal today. Please wait for a reply.':r==='short'?'Please write a little more.':'We could not find a blocked account with those details.','bad')}
+        else{$('#tm-send',d).disabled=false;say(r==='short'?'Please write a little more.':'Could not send. Please try again.','bad')}
       },function(){$('#tm-send',d).disabled=false;say('Could not send. Please try again.','bad')})});
   }
   function passDialog(){
