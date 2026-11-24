@@ -33,3 +33,5 @@
 .co-ptuse{display:flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer;margin-top:6px}
 
 .co-sum select{padding:.35rem .6rem;border-radius:8px;border:0;background:rgba(127,127,127,.16);color:inherit;font:600 .85rem var(--f-body)}.co-pkrnote{margin:.4rem 0 0;font-size:.8rem;color:var(--muted)}
+
+.co-gate{max-width:520px;margin:3rem auto;padding:2rem;text-align:center;display:grid;gap:1rem;justify-items:center}.co-gate h2{margin:0}.co-gate p{margin:0;opacity:.8}

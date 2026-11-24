@@ -93,7 +93,7 @@
   '.acct-btn .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.acct-btn img,.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.acct-btn:hover{filter:brightness(1.15)}'+
 '.ntf{position:relative}.ntf-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:0;background:rgba(var(--tint),.2);color:var(--fg,#fff);padding:0;cursor:pointer}.ntf-btn:hover{background:rgba(var(--tint),.3)}'+
   '.ntf-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}'+
-  '.ntf-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#e5283b;color:#fff;font:800 .68rem/18px var(--f-body);text-align:center;box-shadow:0 0 0 2px var(--bg,#fff)}.ntf-dot[hidden]{display:none}'+
+  '.ntf-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#000;color:#fff;font:800 .68rem/18px var(--f-body);text-align:center;box-shadow:0 0 0 2px #fff}.ntf-dot[hidden]{display:none}'+
   '.ntf-panel{position:absolute;right:-48px;top:calc(100% + 10px);width:min(380px,calc(100vw - 24px));max-height:min(70vh,520px);display:flex;flex-direction:column;border-radius:16px;background:var(--s-surface,rgba(10,14,14,.97));color:var(--s-ink,#fff);box-shadow:0 18px 50px rgba(30,50,120,.25);z-index:60;overflow:hidden}.ntf-panel[hidden]{display:none}'+
   '.ntf-h{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-bottom:1px solid var(--line,rgba(127,127,127,.2))}.ntf-h b{font:800 1rem var(--f-display)}.ntf-all{border:0;background:none;color:rgb(var(--acc));font:700 .8rem var(--f-body);cursor:pointer;padding:.2rem}.ntf-all:disabled{opacity:.4;cursor:default}'+
   '.ntf-list{overflow:auto;padding:.3rem}.ntf-it{display:grid;grid-template-columns:36px 1fr;gap:.7rem;padding:.7rem .7rem;border-radius:12px;text-decoration:none;color:inherit;position:relative}a.ntf-it:hover{background:var(--s-soft,rgba(127,127,127,.12))}'+
@@ -121,6 +121,9 @@
   '.rf-ic{width:72px;height:72px;fill:none;stroke:rgb(var(--acc));stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}'+
   '.rf-go{margin-top:.6rem;width:min(360px,100%);padding:1.15rem 1.5rem;border:0;border-radius:16px;background:rgb(var(--acc));color:#fff;font:800 1.3rem var(--f-body);cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.25);transition:transform .15s}.rf-go:hover{transform:translateY(-2px)}.rf-go:disabled{opacity:.6;cursor:wait;transform:none}'+
   '.ntf-it.warn .ntf-ic{background:rgba(163,24,42,.16);color:#d12a42}.ntf-it.warn b{color:#d12a42}'+
+  '.ntf-modal{width:min(440px,100%);text-align:center;display:grid;justify-items:center;gap:.7rem;padding:2rem 1.6rem}.ntf-modal h2{margin:0;font-size:1.35rem}.ntf-modal p{margin:0;line-height:1.6;opacity:.85}.ntf-modal time{font:600 .75rem var(--f-body);opacity:.55}.ntf-modal .ntf-ic{width:54px;height:54px}.ntf-modal .ntf-ic svg{width:26px;height:26px}.ntf-modal.warn h2{color:#d12a42}.ntf-modal.warn .ntf-ic{background:rgba(163,24,42,.16);color:#d12a42}'+
+  '.ntf-mb{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:.6rem}.ntf-go,.ntf-x{padding:.7rem 1.4rem;border-radius:12px;font:700 .95rem var(--f-body);cursor:pointer;text-decoration:none;border:0}.ntf-go{background:rgb(var(--acc));color:#fff}.ntf-x{background:rgba(127,127,127,.2);color:inherit}'+
+  'button.ntf-it{width:100%;border:0;background:none;text-align:left;font:inherit;cursor:pointer}button.ntf-it:hover{background:var(--s-soft,rgba(127,127,127,.12))}'+
   '.un-box{position:relative;border-radius:2px}.un-box.wide{width:min(640px,100%);padding:2rem 1.8rem}.un-view{display:grid;gap:.8rem}.un-view[hidden]{display:none}.un-in,.un-st+*{border-radius:2px}.un-big textarea{min-height:240px;resize:vertical}.un-end{justify-content:flex-end}.un-box .btn{border-radius:2px}'+
   '.un-x{position:absolute;top:.5rem;right:.7rem;width:2rem;height:2rem;border:0;background:none;color:#fff;font:400 1.9rem/1 var(--f-body);cursor:pointer}'+
   '.un-done{justify-items:center;text-align:center;padding:1.4rem 0}.un-tick{width:84px;height:84px}.un-tick circle{fill:none;stroke:#2fd27a;stroke-width:3;stroke-dasharray:151;stroke-dashoffset:151;animation:untk .6s ease forwards}.un-tick path{fill:none;stroke:#2fd27a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:untk .4s .5s ease forwards}@keyframes untk{to{stroke-dashoffset:0}}.un-done h2{color:#2fd27a}'+
@@ -138,7 +141,7 @@
   }
 
   /* ---- notification bell: welcome notice, website updates, points news (all stored in Supabase) ---- */
-  var ICONS={bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  var ICONS={bell:'<path d="M4 5.5h16v10H12l-4.5 3.5V15.5H4z"/><path d="M8 9.5h8M8 12.5h5"/>',
     welcome:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     update:'<path d="M4 10v4l3 .5L13 19V5L7 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6"/>',
     warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>'};
@@ -154,9 +157,22 @@
       dot.hidden=!data.unread;dot.textContent=data.unread>9?'9+':data.unread;all.disabled=!data.unread;
       btn.setAttribute('aria-label','Notifications'+(data.unread?' ('+data.unread+' new)':''));
       list.innerHTML=data.items.length?data.items.map(function(i){
-        var ok=/^(https:\/\/[^\s"<>]+|[a-z0-9._\/#?=&-]+)$/i.test(i.link||''),tag=ok?'a':'div',ic=ICONS[i.kind]||ICONS.bell;
-        return '<'+tag+' class="ntf-it'+(i.read?'':' new')+(i.kind==='warn'?' warn':'')+'"'+(ok?' href="'+esc(i.link)+'"'+(/^https:/i.test(i.link)?' target="_blank" rel="noopener"':''):'')+'><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic+'</svg></span><span><b>'+esc(i.title)+'</b>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(ago(i.created_at))+'</time></span></'+tag+'>'}).join(''):'<p class="ntf-empty">You are all caught up.</p>';
+        var ic=ICONS[i.kind]||ICONS.bell;
+        return '<button type="button" class="ntf-it'+(i.read?'':' new')+(i.kind==='warn'?' warn':'')+'" data-i="'+i.id+'"><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic+'</svg></span><span><b>'+esc(i.title)+'</b>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(ago(i.created_at))+'</time></span></button>'
+      }).join(''):'<p class="ntf-empty">You are all caught up.</p>';
     }
+    function openItem(id){
+      var i=(data&&data.items||[]).filter(function(x){return String(x.id)===String(id)})[0];if(!i)return;
+      var ok=/^(https:\/\/[^\s"<>]+|[a-z0-9._\/#?=&-]+)$/i.test(i.link||''),ext=/^https:/i.test(i.link||'');
+      close();
+      var d=overlay('<div class="un-box ntf-modal'+(i.kind==='warn'?' warn':'')+'" role="dialog" aria-modal="true" aria-labelledby="nm-h"><span class="ntf-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[i.kind]||ICONS.bell)+'</svg></span><h2 id="nm-h">'+esc(i.title)+'</h2>'+(i.body?'<p>'+esc(i.body)+'</p>':'')+'<time>'+esc(fmt(i.created_at))+'</time>'+
+        '<div class="ntf-mb">'+(ok?'<a class="ntf-go" href="'+esc(i.link)+'"'+(ext?' target="_blank" rel="noopener"':'')+'>Open page</a>':'')+'<button type="button" class="ntf-x">Close</button></div></div>');
+      var x=d.querySelector('.ntf-x');x.focus();
+      function shut(){d.remove();document.removeEventListener('keydown',esc2)}
+      function esc2(e){if(e.key==='Escape')shut()}
+      x.addEventListener('click',shut);d.addEventListener('click',function(e){if(e.target===d)shut()});document.addEventListener('keydown',esc2);
+    }
+    list.addEventListener('click',function(e){var b=e.target.closest('.ntf-it');if(b)openItem(b.dataset.i)});
     function load(){token().then(function(t){return t&&api('/rest/v1/rpc/notifications_list',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&r.items){data=r;paint()}else if(!data){list.innerHTML='<p class="ntf-empty">Nothing here yet.</p>'}}).catch(function(){if(!data)list.innerHTML='<p class="ntf-empty">Notifications could not load. Try again later.</p>'})}
     function markRead(){if(!data||!data.unread)return;token().then(function(t){return t&&api('/rest/v1/rpc/notifications_mark_read',{method:'POST',token:t,body:{}})}).then(function(){
       data.unread=0;dot.hidden=true;all.disabled=true;btn.setAttribute('aria-label','Notifications')},function(){})}

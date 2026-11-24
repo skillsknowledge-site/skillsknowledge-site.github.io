@@ -316,6 +316,11 @@ h1{font-size:clamp(2.3rem,min(5vw,8.4vh),4.4rem);line-height:1.05;font-weight:80
 .contact-side p{color:var(--muted);font-size:.9rem}
 @media (max-width:900px){.contact-card{grid-template-columns:minmax(0,1fr)}}
 footer{border-top:1px solid var(--line);padding-block:.8rem .9rem}
+footer .foot-big{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2rem 2.5rem;align-items:start;padding-block:2.2rem 1rem;font-family:var(--f-body);font-size:.92rem}
+.foot-logo{font:800 1.5rem var(--f-display);color:var(--fg)}.foot-brand p{margin:.5rem 0 1rem;color:var(--dim);max-width:34ch;line-height:1.55}
+.foot-col{display:flex;flex-direction:column;gap:.55rem}.foot-col h3{margin:0 0 .4rem;font:700 .74rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}.foot-col a{color:var(--fg);text-decoration:none;opacity:.85;width:max-content}.foot-col a:hover{opacity:1;text-decoration:underline}
+.foot-bottom{grid-column:1/-1;padding-top:1.2rem;border-top:1px solid var(--line);font:400 .76rem var(--f-mono);color:var(--dim)}
+@media (max-width:760px){footer .foot-big{grid-template-columns:1fr 1fr}.foot-brand{grid-column:1/-1}}
 .foot .follow a{width:34px;height:34px}
 .foot .follow svg{width:17px;height:17px}
 .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.9rem 2rem;font:400 .76rem var(--f-mono);color:var(--dim)}

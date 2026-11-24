@@ -43,6 +43,9 @@
       .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j&&j.message||'failed');return j})})
       .then(done,function(x){go.disabled=false;go.textContent='Place order';err('Could not place the order. '+(x&&x.message||'')+' Please try again.')});
   });
+  window.addEventListener('sk-rates',function(){try{plans();sum()}catch(e){}});
+  /* only logged-in people can buy */
+  if(!token()){var g=document.createElement('section');g.className='co-gate card';g.innerHTML='<h2>Please log in to buy</h2><p>You need an account to place an order, so we can keep your order and points safe.</p><a class="btn btn-solid" href="login.html">Log in or create an account</a>';var gr=document.querySelector('.co-grid');if(gr){gr.hidden=true;gr.parentNode.insertBefore(g,gr)}var cs=$('#co-steps');if(cs)cs.hidden=true;return}
   function loadPts(){var t=token();if(!t||!(C.url&&C.anon))return;
     fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/points_status',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'})
       .then(function(r){return r.ok?r.json():null}).then(function(s){if(!s||!s.balance)return;P.bal=s.balance;P.rate=s.usd_per_point*s.usd_to_pkr;$('#pt-bal').textContent=s.balance+' point'+(s.balance>1?'s':'')+' ('+pkr(Math.floor(s.balance*P.rate))+')';$('#co-pts').hidden=false;$('#pt-use').addEventListener('change',sum)}).catch(function(){})}
