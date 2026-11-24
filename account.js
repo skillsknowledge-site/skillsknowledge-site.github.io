@@ -341,7 +341,7 @@
       '<div class="ac-two"><label>Website<input id="p-web" type="text" maxlength="120" placeholder="https://" value="'+esc(u.website)+'" autocomplete="url"'+(u.ready?'':' disabled')+'></label>'+
       '<label>Location<input id="p-loc" type="text" maxlength="60" value="'+esc(u.location)+'" autocomplete="address-level2"'+(u.ready?'':' disabled')+'></label></div>'+
       '<div class="ac-two"><label>Email<input type="email" value="'+esc(u.email)+'" disabled></label>'+
-      '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+(u.ready?'':' disabled')+'><small>Optional. You can log in with it.</small></label></div>'+
+      '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+(u.ready?'':' disabled')+'><small>Needed to use Points (we check it once). You can also log in with it.</small></label></div>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Save profile</button></div></form></section>'+
     '<section class="card"><h2>Preferences</h2>'+
       '<div class="ac-theme" role="radiogroup" aria-label="Colour theme"><b>Appearance</b><div>'+[['light','Light'],['dark','Dark'],['system','System']].map(function(o){return '<label><input type="radio" name="s-theme" value="'+o[0]+'"'+((p.theme||'light')===o[0]?' checked':'')+'><span>'+o[1]+'</span></label>'}).join('')+'</div><small>Dark and light mode. System follows your device.</small></div>'+

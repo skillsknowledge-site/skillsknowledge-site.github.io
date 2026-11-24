@@ -19,7 +19,7 @@
   function render(){
     clearInterval(tick);
     var usd=(S.balance*S.usd_per_point),pkr=Math.floor(S.balance*S.usd_per_point*S.usd_to_pkr);
-    var top='<div class="pt-bal card"><div><span>Your points</span><b>'+S.balance+'</b></div><p>'+(S.balance?'This takes about <b>'+usd.toFixed(1)+' USD</b> (PKR '+pkr.toLocaleString('en-US')+') off your next order at checkout.':'You have no usable points right now.')+'</p><small>1 point = 0.1 USD. 10 points = 1 USD.</small></div>';
+    var top='<div class="pt-bal card"><div><span>Your points</span><b>'+S.balance+'</b><em class="pt-level">Level '+(S.level||0)+'</em></div><p>'+(S.balance?'This takes about <b>'+(window.SKM&&SKM.code()!=='USD'&&SKM.code()!=='PKR'?SKM.fmt(S.balance*S.usd_per_point*S.usd_to_pkr)+' / ':'')+usd.toFixed(1)+' USD</b> ('+(window.SKM?SKM.fmt(pkr):'PKR '+pkr.toLocaleString('en-US'))+') off your next order at checkout.':'You have no usable points right now.')+'</p><small>1 point = 0.1 USD. 10 points = 1 USD.</small></div>';
     var L=S.limit,lv='';
     if(S.blocked){
       var bk=S.blocked,msg,dimmed=top+'<section class="card pt-way"><h2><span>1</span> Share your reference code</h2><p>Points are not available on this account right now.</p></section>';
@@ -37,6 +37,11 @@
         g.disabled=true;aps.textContent='Sending…';aps.className='pt-apst';
         call('/rest/v1/rpc/submit_appeal2',{p_kind:'points',p_identifier:'',p_message:m},tok).then(function(r){apf.innerHTML=r==='wait'?'<p class="pt-apst bad">You already sent an appeal. Please wait 24 hours before sending another one.</p>':'<p class="pt-apst ok">Appeal sent. We will reply within 2 to 3 days.</p>'},function(){g.disabled=false;aps.textContent='Could not send. Please try again.';aps.className='pt-apst bad'})};
       return}
+    if(S.verify){
+      var V=S.verify;
+      shell(top+'<section class="card pt-lock"><h2>Verify your account</h2><p>To use Points, your account must have a confirmed email and a checked phone number.</p>'+
+        '<ul class="pt-chk"><li class="'+(V.email?'ok':'')+'"><b>Email</b> '+(V.email?'confirmed':'not confirmed yet. Confirm it from the link or code we sent, or send an appeal for an unverified email.')+'</li>'+
+        '<li class="'+(V.phone?'wait':'')+'"><b>Phone number</b> '+(V.phone?'saved. We will check it soon. Points open as soon as it is verified.':'not added. <a href="account">Add your phone number in your profile</a>.')+'</li></ul></section>');return}
     if(!S.unlocked){
       shell(top+'<section class="card pt-lock"><h2>Points open soon</h2><p>To keep the system fair, points open a short time after you create your account. Please come back when the time below is over.</p><div class="pt-clock" id="pt-lock">'+left(S.secs_left*1000)+'</div></section>');
       var end=Date.now()+S.secs_left*1000;tick=setInterval(function(){var l=end-Date.now();if(l<=0){load();return}document.getElementById('pt-lock').textContent=left(l)},1000);return}
@@ -55,10 +60,10 @@
       '<h3>Step 2: How the code works</h3>'+
       '<ul class="pt-rules"><li>One code can be used by <b>3 people</b> only (1 code = 3 people = 3 points = 0.3 USD).</li>'+
       '<li>A code lasts <b>24 hours</b>, counted from the moment you activate it. When the time is over you can generate a new code, and it follows the same rules.</li>'+
-      '<li>Each point you earn can be used for <b>7 days</b>. After that it expires, so please use your points before then.</li>'+
+      '<li>Each point you earn can be used for <b>'+(S.life_days||7)+' days</b>. After that it expires, so please use your points before then.</li>'+
       '<li>Points are added only after the new member presses <b>Approve Reference</b>. Everything is counted and stored securely on our server, and nobody can change it by hand.</li></ul></section>';
     var lots=S.lots.length?'<section class="card"><h2>Your usable points</h2><ul class="pt-list">'+S.lots.map(function(l){return '<li><span>'+l.left_pts+' point'+(l.left_pts>1?'s':'')+'</span><em>use before '+day(l.expires_at)+'</em></li>'}).join('')+'</ul></section>':'';
-    var way2='<section class="card pt-way soon"><h2><span>2</span> Another way to earn</h2><p>A second way to earn points is coming soon. We will announce it here.</p></section>';
+    var way2='<section class="card pt-way soon"><h2><span>2</span> Another way to earn</h2><p>Every paid order gives you points: <b>'+S.per_k+' points for each 1,000 PKR</b> (under 1,000 PKR = '+S.per_k+' points, 2,000 PKR = '+(S.per_k*2)+', 3,000 PKR = '+(S.per_k*3)+', and so on). The points arrive after we confirm your payment. Higher levels, reached with more orders, keep your points alive for longer.</p></section>';
     shell(top+'<p class="ac-msg bad" id="pt-msg" role="alert" hidden></p>'+way1+way2+lots);
     var cp=document.getElementById('pt-link');
     if(cp){document.getElementById('pt-link').onclick=function(){var b=document.getElementById('pt-link');copy(new URL('login.html?ref='+encodeURIComponent(c.code),location.href).href,b,'Copy link')};

@@ -16,10 +16,12 @@
   var ACCOUNT={jazzcash:'JazzCash: 03XX XXXXXXX (SkillsKnowledge)',easypaisa:'Easypaisa: 03XX XXXXXXX (SkillsKnowledge)',bank:'Bank: XXXX | IBAN PK00 XXXX 0000 0000 0000 0000'};
   var q=new URLSearchParams(location.search),key=ITEMS[q.get('item')]?q.get('item'):'video',it=ITEMS[key];
   var plan=it.plans[0],method=null;
-  function pkr(n){return 'PKR '+n.toLocaleString('en-US')}
+  function pkr(n){return window.SKM?SKM.fmt(n):'PKR '+n.toLocaleString('en-US')}
   var P={bal:0,rate:28,use:0,disc:0};
   function calc(){var on=$('#pt-use')&&$('#pt-use').checked;var max=Math.floor(plan.p/P.rate);P.use=on?Math.min(P.bal,max):0;P.disc=Math.floor(P.use*P.rate)}
-  function sum(){calc();$('#s-item').textContent=it.name;$('#s-plan').textContent=plan.n;$('#s-amt').textContent=pkr(plan.p);$('#s-tot').textContent=pkr(Math.max(plan.p-P.disc,0));$('#s-dl').hidden=!P.use;$('#s-disc').textContent='- '+pkr(P.disc);if($('#pt-txt'))$('#pt-txt').textContent=P.use?'Using '+P.use+' point'+(P.use>1?'s':''):'Use my points';var m=METHODS.filter(function(x){return x.id===method})[0];$('#s-method').textContent=m?m.n:'Not chosen'}
+  function cur(){var s=$('#co-cur');if(!s||!window.SKM)return;if(!s.options.length){SKM.list().forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o)});s.addEventListener('change',function(){SKM.set(s.value);plans();sum()})}
+    s.value=SKM.code();var n=$('#s-pkr');if(n){var tot=Math.max(plan.p-P.disc,0);n.hidden=SKM.code()==='PKR';n.textContent='Payment is taken in PKR. Your total in PKR is PKR '+tot.toLocaleString('en-US')+'. Other currencies are shown only as a guide.'}}
+  function sum(){calc();cur();$('#s-item').textContent=it.name;$('#s-plan').textContent=plan.n;$('#s-amt').textContent=pkr(plan.p);$('#s-tot').textContent=pkr(Math.max(plan.p-P.disc,0));$('#s-dl').hidden=!P.use;$('#s-disc').textContent='- '+pkr(P.disc);if($('#pt-txt'))$('#pt-txt').textContent=P.use?'Using '+P.use+' point'+(P.use>1?'s':''):'Use my points';var m=METHODS.filter(function(x){return x.id===method})[0];$('#s-method').textContent=m?m.n:'Not chosen'}
   function plans(){$('#co-plans').innerHTML=it.plans.map(function(p){return '<label class="co-opt"><input type="radio" name="plan" value="'+p.id+'"'+(p===plan?' checked':'')+'><span><b>'+p.n+'</b><i>'+pkr(p.p)+'</i></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
   function methods(){$('#co-methods').innerHTML=METHODS.map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
