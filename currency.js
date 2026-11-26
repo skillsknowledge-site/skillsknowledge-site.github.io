@@ -14,12 +14,13 @@
     try{return new Intl.NumberFormat('en-US',{style:'currency',currency:code,maximumFractionDigits:code==='PKR'||code==='INR'||code==='BDT'?0:2}).format(v).replace(/^PKR\s?/,'PKR ')}catch(e){return 'PKR '+Math.round(pkr)}}
   function apply(r){var ok=false;Object.keys(RATES).forEach(function(k){if(r&&r[k]>0){RATES[k]=r[k];ok=true}});return ok}
   try{var st=JSON.parse(localStorage.getItem('sk_rates')||'null');if(st&&st.r)apply(st.r)}catch(e){}
-  (function live(){var st=null;try{st=JSON.parse(localStorage.getItem('sk_rates')||'null')}catch(e){}
+  function live(){var st=null;try{st=JSON.parse(localStorage.getItem('sk_rates')||'null')}catch(e){}
     if(st&&Date.now()-st.t<6*3600*1000)return;
     if(!window.fetch)return;
     fetch('https://open.er-api.com/v6/latest/USD').then(function(r){return r.ok?r.json():null}).then(function(j){
       if(j&&j.rates&&apply(j.rates)){try{localStorage.setItem('sk_rates',JSON.stringify({t:Date.now(),r:j.rates}))}catch(e){}
-        window.dispatchEvent(new Event('sk-rates'))}}).catch(function(){})})();
+        window.dispatchEvent(new Event('sk-rates'))}}).catch(function(){})}
+  live();setInterval(live,3600*1000);
   window.SKM={fmt:function(n,c){return fmt(n,c)},code:function(){return cur},list:function(){return Object.keys(RATES)},
     set:function(c){if(!RATES[c])return;cur=c;try{localStorage.setItem('sk_cur',c)}catch(e){}}};
 })();
