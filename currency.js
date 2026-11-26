@@ -21,6 +21,9 @@
       if(j&&j.rates&&apply(j.rates)){try{localStorage.setItem('sk_rates',JSON.stringify({t:Date.now(),r:j.rates}))}catch(e){}
         window.dispatchEvent(new Event('sk-rates'))}}).catch(function(){})}
   live();setInterval(live,3600*1000);
-  window.SKM={fmt:function(n,c){return fmt(n,c)},code:function(){return cur},list:function(){return Object.keys(RATES)},
+  // are we paying from Pakistan? time zone by default, and the visitor can change it
+  function pk(){try{var o=localStorage.getItem('sk_pk');if(o==='1')return true;if(o==='0')return false}catch(e){}
+    var z='';try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}return z==='Asia/Karachi'}
+  window.SKM={pk:pk,setPk:function(v){try{localStorage.setItem('sk_pk',v?'1':'0')}catch(e){}},fmt:function(n,c){return fmt(n,c)},code:function(){return cur},list:function(){return Object.keys(RATES)},
     set:function(c){if(!RATES[c])return;cur=c;try{localStorage.setItem('sk_cur',c)}catch(e){}}};
 })();

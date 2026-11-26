@@ -7,7 +7,7 @@
     code:{name:'Coding',plans:[{id:'landing',n:'Landing page',p:15000},{id:'site',n:'Multi-page website',p:40000},{id:'app',n:'Web app',p:90000}]}
   };
   var METHODS=[
-    {id:'intl',n:'International payment',d:'Card, bank transfer or wallet from any country. We send you a secure payment link.',f:[]},
+    {id:'card',n:'Card or Google Pay',d:'Pay on the payment company\'s secure page. Your card is charged automatically.',f:[]},
     {id:'jazzcash',n:'JazzCash',d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
     {id:'easypaisa',n:'Easypaisa',d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
     {id:'bank',n:'Bank transfer',d:'Transfer to the bank account, then enter the reference',f:['Transfer reference']},
@@ -24,9 +24,14 @@
   function sum(){calc();cur();$('#s-item').textContent=it.name;$('#s-plan').textContent=plan.n;$('#s-amt').textContent=pkr(plan.p);$('#s-tot').textContent=pkr(Math.max(plan.p-P.disc,0));$('#s-dl').hidden=!P.use;$('#s-disc').textContent='- '+pkr(P.disc);if($('#pt-txt'))$('#pt-txt').textContent=P.use?'Using '+P.use+' point'+(P.use>1?'s':''):'Use my points';var m=METHODS.filter(function(x){return x.id===method})[0];$('#s-method').textContent=m?m.n:'Not chosen'}
   function plans(){$('#co-plans').innerHTML=it.plans.map(function(p){return '<label class="co-opt"><input type="radio" name="plan" value="'+p.id+'"'+(p===plan?' checked':'')+'><span><b>'+p.n+'</b><i>'+pkr(p.p)+'</i></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
-  function methods(){$('#co-methods').innerHTML=METHODS.map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
+  function list(){var pk=!window.SKM||SKM.pk();return METHODS.filter(function(m){return pk||m.id==='card'})}
+  function renderMethods(){method=null;$('#co-pay').innerHTML='';$('#co-methods').innerHTML=list().map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=method]'),function(r){r.addEventListener('change',function(){method=r.value;var m=METHODS.filter(function(x){return x.id===method})[0];
-      $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='intl'?'<p class="co-acc">After you place the order we send a secure payment link to your notifications (the message icon at the top of the site). You pay on the payment provider\'s own page, so no card details are ever typed on this website.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
+      $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='card'?'<p class="co-acc">After you press the button you are taken to the payment company\'s own secure page to enter your card or use Google Pay. Card details are never typed on this website and we never see them.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
+  function methods(){renderMethods();var pk=!window.SKM||SKM.pk(),box=$('#co-methods'),a=document.createElement('button');a.type='button';a.className='co-cty';
+    a.textContent=pk?'Paying from another country? Click here.':'Paying from Pakistan? Click here for local methods.';
+    a.addEventListener('click',function(){if(window.SKM)SKM.setPk(!pk);methods()});box.appendChild(a);
+    if(!pk){var r=document.querySelector('input[name=method]');if(r){r.checked=true;r.dispatchEvent(new Event('change'))}}}
   function err(t){var e=$('#co-err');e.textContent=t;e.hidden=!t}
   function token(){try{var s=JSON.parse(localStorage.getItem('sk_sess')||'null');return s&&s.access||''}catch(e){return ''}}
   $('#co-form').addEventListener('submit',function(e){e.preventDefault();err('');
@@ -37,11 +42,16 @@
     if((method==='jazzcash'||method==='easypaisa'||method==='bank')&&ref.trim().length<4){err('Enter the transaction ID or reference after you pay.');return}
     var go=$('#co-go');go.disabled=true;go.textContent='Placing order…';
     var body={p_item:it.name,p_plan:plan.n,p_amount:plan.p,p_name:n,p_email:em,p_phone:ph,p_note:note,p_method:method,p_reference:ref.trim(),p_points:P.use};
-    var done=function(res){var id=res&&typeof res==='object'?res.id:res,dsc=res&&res.discount||0;$('.co-grid').hidden=true;$('#co-steps').hidden=true;$('#co-done').hidden=false;$('#co-done-t').textContent='Order'+(id?' #'+id:'')+' for '+it.name+' ('+plan.n+', '+pkr(plan.p-dsc)+(dsc?' after '+pkr(dsc)+' points discount':'')+') is saved. Your payment will be checked within 2-3 days and a confirmation will be sent to '+em+'.'};
+    var pay=function(res){var id=res&&typeof res==='object'?res.id:res;
+      if(method!=='card'||!id){done(res);return}
+      go.textContent='Opening the secure payment page…';
+      fetch(C.url.replace(/\/+$/,'')+'/functions/v1/sk-pay-create',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({order_id:id,currency:(!window.SKM||SKM.pk())?'PKR':'USD'})})
+        .then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.url){location.href=j.url}else{res.noPay=true;done(res)}},function(){res.noPay=true;done(res)})};
+    var done=function(res){var id=res&&typeof res==='object'?res.id:res,dsc=res&&res.discount||0;$('.co-grid').hidden=true;$('#co-steps').hidden=true;$('#co-done').hidden=false;$('#co-done-t').textContent='Order'+(id?' #'+id:'')+' for '+it.name+' ('+plan.n+', '+pkr(plan.p-dsc)+(dsc?' after '+pkr(dsc)+' points discount':'')+') is saved.'+(res&&res.noPay?' Online card payment is not available right now, so we will contact you with another way to pay. ':'')+' Your payment will be checked within 2-3 days and a confirmation will be sent to '+em+'.'};
     if(!(C.url&&C.anon)){done('');return}
     fetch(C.url.replace(/\/+$/,'')+'/rest/v1/rpc/create_order',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+(token()||C.anon),'Content-Type':'application/json'},body:JSON.stringify(body)})
       .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j&&j.message||'failed');return j})})
-      .then(done,function(x){go.disabled=false;go.textContent='Place order';err('Could not place the order. '+(x&&x.message||'')+' Please try again.')});
+      .then(pay,function(x){go.disabled=false;go.textContent='Place order';err('Could not place the order. '+(x&&x.message||'')+' Please try again.')});
   });
   window.addEventListener('sk-rates',function(){try{plans();sum()}catch(e){}});
   /* only logged-in people can buy */
