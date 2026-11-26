@@ -8,9 +8,9 @@
   };
   var METHODS=[
     {id:'card',n:'Google Pay or card',d:'Opens the payment company\'s secure page. Your card is charged automatically.',f:[]},
-    {id:'sadapay',n:'SadaPay',d:'',mark:['S','#16a085'],f:['Transaction ID']},
-    {id:'jazzcash',n:'JazzCash',mark:['J','#d4202c'],d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
-    {id:'easypaisa',n:'Easypaisa',mark:['E','#2e9e4f'],d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
+    {id:'sadapay',n:'SadaPay',d:'',mark:['S','#16a085'],logo:'logo-sadapay.png',f:['Transaction ID']},
+    {id:'jazzcash',n:'JazzCash',mark:['J','#d4202c'],logo:'logo-jazzcash.png',d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
+    {id:'easypaisa',n:'Easypaisa',mark:['E','#2e9e4f'],logo:'logo-easypaisa.png',d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
     {id:'bank',n:'Bank transfer',d:'Transfer to the bank account, then enter the reference',f:['Transfer reference']},
     {id:'cod',n:'Pay after delivery',d:'Pay when the first draft is approved',f:[]}
   ];
@@ -26,13 +26,17 @@
   function plans(){$('#co-plans').innerHTML=it.plans.map(function(p){return '<label class="co-opt"><input type="radio" name="plan" value="'+p.id+'"'+(p===plan?' checked':'')+'><span><b>'+p.n+'</b><i>'+pkr(p.p)+'</i></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
   function list(){var pk=!window.SKM||SKM.pk();return METHODS.filter(function(m){return pk||m.id==='card'})}
-  function tile(m,cls){return '<label class="co-opt '+cls+'"><input type="radio" name="method" value="'+m.id+'"><span>'+(m.mark?'<i class="co-mark" style="background:'+m.mark[1]+'">'+m.mark[0]+'</i>':'')+'<b>'+m.n+'</b>'+(cls==='co-w'?'':'<em>'+m.d+'</em>')+'</span></label>'}
+  /* a tile shows the brand's logo picture. If the picture file is missing, the name is shown instead */
+  function tile(m,cls){var logo=cls==='co-w'&&m.logo?'<img class="co-logo" src="'+m.logo+'" alt="'+m.n+'" data-n="'+m.n+'" data-mk="'+(m.mark?m.mark[0]+'|'+m.mark[1]:'')+'">':'';
+    if(cls==='co-c')logo='<span class="co-logos"><img class="co-logo" src="logo-gpay.png" alt="Google Pay" data-n="Google Pay"><img class="co-logo" src="logo-visa.png" alt="Visa" data-n="Visa"><img class="co-logo" src="logo-mastercard.png" alt="Mastercard" data-n="Mastercard"></span>';
+    return '<label class="co-opt '+cls+'"><input type="radio" name="method" value="'+m.id+'"><span>'+logo+(logo&&cls==='co-w'?'':'<b>'+m.n+'</b>')+(cls==='co-w'||cls==='co-c'?'':'<em>'+m.d+'</em>')+'</span></label>'}
+  function logoFallback(){[].forEach.call(document.querySelectorAll('#co-methods img.co-logo'),function(i){i.addEventListener('error',function(){var s=document.createElement('b');s.textContent=i.dataset.n;i.replaceWith(s)})})}
   function get(id){return METHODS.filter(function(m){return m.id===id})[0]}
   function renderMethods(){method=null;$('#co-pay').innerHTML='';var pk=!window.SKM||SKM.pk(),h='';
     if(pk)h+='<p class="co-lbl">Pay with a wallet</p><div class="co-wallets">'+['jazzcash','easypaisa','sadapay'].map(function(i){return tile(get(i),'co-w')}).join('')+'</div><p class="co-lbl">Or pay with a card</p>';
     h+=tile(get('card'),'co-c')+'<div class="co-three" aria-label="What you will enter"><span>1 Card number</span><span>2 Expiry date</span><span>3 Security code (CVC)</span></div>';
     if(pk)h+='<details class="co-more"><summary>More ways to pay</summary><div class="co-methods">'+['bank','cod'].map(function(i){return tile(get(i),'')}).join('')+'</div></details>';
-    $('#co-methods').innerHTML=h;
+    $('#co-methods').innerHTML=h;logoFallback();
     [].forEach.call(document.querySelectorAll('input[name=method]'),function(r){r.addEventListener('change',function(){method=r.value;var m=METHODS.filter(function(x){return x.id===method})[0];
       $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='card'?'<p class="co-acc">After you press the button you are taken to the payment company\'s own secure page to enter your card or use Google Pay. Card details are never typed on this website and we never see them.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
   function methods(){renderMethods();var pk=!window.SKM||SKM.pk(),box=$('#co-methods'),a=document.createElement('button');a.type='button';a.className='co-cty';
