@@ -7,7 +7,7 @@
     code:{name:'Coding',plans:[{id:'landing',n:'Landing page',p:15000},{id:'site',n:'Multi-page website',p:40000},{id:'app',n:'Web app',p:90000}]}
   };
   var METHODS=[
-    {id:'card',n:'Card',d:'Visa or Mastercard through a secure payment provider',f:[]},
+    {id:'intl',n:'International payment',d:'Card, bank transfer or wallet from any country. We send you a secure payment link.',f:[]},
     {id:'jazzcash',n:'JazzCash',d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
     {id:'easypaisa',n:'Easypaisa',d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
     {id:'bank',n:'Bank transfer',d:'Transfer to the bank account, then enter the reference',f:['Transfer reference']},
@@ -26,7 +26,7 @@
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
   function methods(){$('#co-methods').innerHTML=METHODS.map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=method]'),function(r){r.addEventListener('change',function(){method=r.value;var m=METHODS.filter(function(x){return x.id===method})[0];
-      $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='card'?'<p class="co-acc">You will be sent to the provider\'s secure page to enter card details after you place the order.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
+      $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='intl'?'<p class="co-acc">After you place the order we send a secure payment link to your notifications (the message icon at the top of the site). You pay on the payment provider\'s own page, so no card details are ever typed on this website.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
   function err(t){var e=$('#co-err');e.textContent=t;e.hidden=!t}
   function token(){try{var s=JSON.parse(localStorage.getItem('sk_sess')||'null');return s&&s.access||''}catch(e){return ''}}
   $('#co-form').addEventListener('submit',function(e){e.preventDefault();err('');
