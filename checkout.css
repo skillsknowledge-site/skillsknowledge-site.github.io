@@ -51,3 +51,16 @@
 .co-w span{min-height:72px;align-content:center}
 .co-opt span.co-logos{display:flex;gap:1rem;align-items:center;justify-content:flex-start;flex-wrap:wrap;padding:0;border:0;background:none}.co-logos .co-logo{height:26px}.co-logos b{font-size:.9rem!important;color:var(--muted)}
 .co-c .co-logos+em{display:none}
+
+/* every choice button is white with a small shadow at the bottom right */
+.co-opt>span{background:#fff!important;box-shadow:2px 2px 3px rgba(0,0,0,.22);color:#141c38}
+.co-opt input:checked+span{border-color:rgb(var(--acc))}
+.co-opt b,.co-opt em,.co-opt i{color:#141c38}.co-opt em,.co-opt i{opacity:.7}
+.co-pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.co-pair .co-c span{min-height:64px;align-content:center}
+.co-more summary{display:inline-block;padding:.5rem .9rem;border-radius:10px;background:#fff;box-shadow:2px 2px 3px rgba(0,0,0,.22);color:#141c38}
+.co-w .co-logo{height:46px}.co-w .co-logo[alt=SadaPay]{height:26px}
+.co-c .co-logo[alt="Google Pay"]{height:28px}.co-logos .co-logo{height:30px}
+
+.co-cardic{width:44px;height:30px;fill:none;stroke:#141c38;stroke-width:2.2;stroke-linecap:round;display:block}
+.co-logo{height:36px}.co-w .co-logo{max-height:42px}
+.co-w img[alt=JazzCash]{max-height:56px;height:56px;border-radius:8px}
