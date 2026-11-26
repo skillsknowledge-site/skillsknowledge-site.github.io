@@ -7,13 +7,14 @@
     code:{name:'Coding',plans:[{id:'landing',n:'Landing page',p:15000},{id:'site',n:'Multi-page website',p:40000},{id:'app',n:'Web app',p:90000}]}
   };
   var METHODS=[
-    {id:'card',n:'Card or Google Pay',d:'Pay on the payment company\'s secure page. Your card is charged automatically.',f:[]},
-    {id:'jazzcash',n:'JazzCash',d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
-    {id:'easypaisa',n:'Easypaisa',d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
+    {id:'card',n:'Google Pay or card',d:'Opens the payment company\'s secure page. Your card is charged automatically.',f:[]},
+    {id:'sadapay',n:'SadaPay',d:'',mark:['S','#16a085'],f:['Transaction ID']},
+    {id:'jazzcash',n:'JazzCash',mark:['J','#d4202c'],d:'Send to the JazzCash account, then enter the transaction ID',f:['Transaction ID']},
+    {id:'easypaisa',n:'Easypaisa',mark:['E','#2e9e4f'],d:'Send to the Easypaisa account, then enter the transaction ID',f:['Transaction ID']},
     {id:'bank',n:'Bank transfer',d:'Transfer to the bank account, then enter the reference',f:['Transfer reference']},
     {id:'cod',n:'Pay after delivery',d:'Pay when the first draft is approved',f:[]}
   ];
-  var ACCOUNT={jazzcash:'JazzCash: 03XX XXXXXXX (SkillsKnowledge)',easypaisa:'Easypaisa: 03XX XXXXXXX (SkillsKnowledge)',bank:'Bank: XXXX | IBAN PK00 XXXX 0000 0000 0000 0000'};
+  var ACCOUNT={sadapay:'SadaPay: 03XX XXXXXXX (SkillsKnowledge)',jazzcash:'JazzCash: 03XX XXXXXXX (SkillsKnowledge)',easypaisa:'Easypaisa: 03XX XXXXXXX (SkillsKnowledge)',bank:'Bank: XXXX | IBAN PK00 XXXX 0000 0000 0000 0000'};
   var q=new URLSearchParams(location.search),key=ITEMS[q.get('item')]?q.get('item'):'video',it=ITEMS[key];
   var plan=it.plans[0],method=null;
   function pkr(n){return window.SKM?SKM.fmt(n):'PKR '+n.toLocaleString('en-US')}
@@ -25,7 +26,13 @@
   function plans(){$('#co-plans').innerHTML=it.plans.map(function(p){return '<label class="co-opt"><input type="radio" name="plan" value="'+p.id+'"'+(p===plan?' checked':'')+'><span><b>'+p.n+'</b><i>'+pkr(p.p)+'</i></span></label>'}).join('');
     [].forEach.call(document.querySelectorAll('input[name=plan]'),function(r){r.addEventListener('change',function(){plan=it.plans.filter(function(p){return p.id===r.value})[0];sum()})})}
   function list(){var pk=!window.SKM||SKM.pk();return METHODS.filter(function(m){return pk||m.id==='card'})}
-  function renderMethods(){method=null;$('#co-pay').innerHTML='';$('#co-methods').innerHTML=list().map(function(m){return '<label class="co-opt"><input type="radio" name="method" value="'+m.id+'"><span><b>'+m.n+'</b><em>'+m.d+'</em></span></label>'}).join('');
+  function tile(m,cls){return '<label class="co-opt '+cls+'"><input type="radio" name="method" value="'+m.id+'"><span>'+(m.mark?'<i class="co-mark" style="background:'+m.mark[1]+'">'+m.mark[0]+'</i>':'')+'<b>'+m.n+'</b>'+(cls==='co-w'?'':'<em>'+m.d+'</em>')+'</span></label>'}
+  function get(id){return METHODS.filter(function(m){return m.id===id})[0]}
+  function renderMethods(){method=null;$('#co-pay').innerHTML='';var pk=!window.SKM||SKM.pk(),h='';
+    if(pk)h+='<p class="co-lbl">Pay with a wallet</p><div class="co-wallets">'+['jazzcash','easypaisa','sadapay'].map(function(i){return tile(get(i),'co-w')}).join('')+'</div><p class="co-lbl">Or pay with a card</p>';
+    h+=tile(get('card'),'co-c')+'<div class="co-three" aria-label="What you will enter"><span>1 Card number</span><span>2 Expiry date</span><span>3 Security code (CVC)</span></div>';
+    if(pk)h+='<details class="co-more"><summary>More ways to pay</summary><div class="co-methods">'+['bank','cod'].map(function(i){return tile(get(i),'')}).join('')+'</div></details>';
+    $('#co-methods').innerHTML=h;
     [].forEach.call(document.querySelectorAll('input[name=method]'),function(r){r.addEventListener('change',function(){method=r.value;var m=METHODS.filter(function(x){return x.id===method})[0];
       $('#co-pay').innerHTML=(ACCOUNT[method]?'<p class="co-acc">'+ACCOUNT[method]+'</p>':'')+(method==='card'?'<p class="co-acc">After you press the button you are taken to the payment company\'s own secure page to enter your card or use Google Pay. Card details are never typed on this website and we never see them.</p>':'')+m.f.map(function(f){return '<label>'+f+'<input id="co-ref" maxlength="80" autocomplete="off"></label>'}).join('');sum()})})}
   function methods(){renderMethods();var pk=!window.SKM||SKM.pk(),box=$('#co-methods'),a=document.createElement('button');a.type='button';a.className='co-cty';
@@ -39,7 +46,7 @@
     if(!n){err('Please enter your name.');return}
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){err('Please enter a valid email.');return}
     if(!method){err('Please choose a payment method.');return}
-    if((method==='jazzcash'||method==='easypaisa'||method==='bank')&&ref.trim().length<4){err('Enter the transaction ID or reference after you pay.');return}
+    if((method==='jazzcash'||method==='easypaisa'||method==='sadapay'||method==='bank')&&ref.trim().length<4){err('Enter the transaction ID or reference after you pay.');return}
     var go=$('#co-go');go.disabled=true;go.textContent='Placing order…';
     var body={p_item:it.name,p_plan:plan.n,p_amount:plan.p,p_name:n,p_email:em,p_phone:ph,p_note:note,p_method:method,p_reference:ref.trim(),p_points:P.use};
     var pay=function(res){var id=res&&typeof res==='object'?res.id:res;
