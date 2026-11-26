@@ -32,7 +32,7 @@
     if(m.logo&&cls==='co-w')logo='<img class="co-logo" src="'+m.logo+'" alt="'+m.n+'" data-n="'+m.n+'">';
     if(cls==='co-c')logo=(m.id==='gpay'?'<img class="co-logo" src="logo-gpay.png" alt="Google Pay" data-n="Google Pay">':'<svg class="co-cardic" viewBox="0 0 48 32" aria-hidden="true"><rect x="2" y="3" width="44" height="26" rx="4"/><path d="M2 11h44"/><path d="M8 22h12"/></svg>');
     var text=(cls==='co-w'||cls==='co-c')?'':'<em>'+m.d+'</em>';
-    return '<label class="co-opt '+cls+'"><input type="radio" name="method" value="'+m.id+'"><span>'+logo+((logo&&cls==='co-w')||m.id==='gpay'?'':'<b>'+m.n+'</b>')+text+'</span></label>'}
+    return '<label class="co-opt '+cls+(cls==='co-w'?' co-'+m.id:'')+'"><input type="radio" name="method" value="'+m.id+'"><span>'+logo+((logo&&cls==='co-w')||m.id==='gpay'?'':'<b>'+m.n+'</b>')+text+'</span></label>'}
   function logoFallback(){[].forEach.call(document.querySelectorAll('#co-methods img.co-logo'),function(i){i.addEventListener('error',function(){var s=document.createElement('b');s.textContent=i.dataset.n;i.replaceWith(s)})})}
   function get(id){return METHODS.filter(function(m){return m.id===id})[0]}
   function renderMethods(){method=null;$('#co-pay').innerHTML='';var pk=!window.SKM||SKM.pk(),h='';

@@ -62,5 +62,11 @@
 .co-c .co-logo[alt="Google Pay"]{height:28px}.co-logos .co-logo{height:30px}
 
 .co-cardic{width:44px;height:30px;fill:none;stroke:#141c38;stroke-width:2.2;stroke-linecap:round;display:block}
-.co-logo{height:36px}.co-w .co-logo{max-height:42px}
-.co-w img[alt=JazzCash]{max-height:56px;height:56px;border-radius:8px}
+.co-logo{height:36px}.co-w .co-logo{max-height:84px}
+
+
+/* the wallet buttons are big, so the logo picture is clear */
+.co-w span{min-height:120px;padding:.5rem!important}.co-w .co-logo{height:88px;max-height:none;width:auto;max-width:100%}
+.co-jazzcash>span{padding:0!important;overflow:hidden;background:#141816!important}
+.co-jazzcash .co-logo{height:120px;width:100%;max-width:none;object-fit:cover}
+@media (max-width:560px){.co-w span{min-height:96px}.co-w .co-logo{height:70px}.co-jazzcash .co-logo{height:96px}}
