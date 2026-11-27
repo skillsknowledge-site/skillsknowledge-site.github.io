@@ -32,7 +32,7 @@
 .co-pts{border:1px solid var(--line,#e3e3e3);border-radius:12px;padding:10px 12px;margin:10px 0}
 .co-ptuse{display:flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer;margin-top:6px}
 
-.co-sum select{padding:.35rem .6rem;border-radius:8px;border:0;background:rgba(127,127,127,.16);color:inherit;font:600 .85rem var(--f-body)}.co-pkrnote{margin:.4rem 0 0;font-size:.8rem;color:var(--muted)}
+
 
 .co-gate{max-width:520px;margin:3rem auto;padding:2rem;text-align:center;display:grid;gap:1rem;justify-items:center}.co-gate h2{margin:0}.co-gate p{margin:0;opacity:.8}
 
@@ -69,3 +69,7 @@
 .co-w span{height:74px;min-height:0;padding:2px!important;display:flex!important;align-items:center;justify-content:center}
 .co-w .co-logo{height:100%;width:100%;max-height:none;max-width:none;object-fit:contain}
 .co-jazzcash>span{background:#141816!important}
+
+/* buttons and their pictures are not selectable, so they never turn blue when text is selected */
+.co-opt,.co-opt *,.co-three,.co-three *,.co-more summary,.co-cty{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.co-logo{pointer-events:none;-webkit-user-drag:none}

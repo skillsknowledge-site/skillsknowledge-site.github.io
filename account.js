@@ -43,7 +43,7 @@
     var m=u.user_metadata||{};pr=pr||{};
     return {id:u.id,email:u.email||'',username:pr.username||'',
       name:pr.display_name||m.display_name||m.full_name||m.name||(u.email||'').split('@')[0]||'Member',
-      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked&&(!pr.blocked_until||new Date(pr.blocked_until).getTime()>Date.now()),reason:pr.block_reason||'',code:pr.block_code||'',website:pr.website||'',location:pr.location||'',
+      photo:m.custom_avatar||'',bio:pr.bio||'',phone:pr.phone||'',phoneOk:!!pr.phone_verified,phoneAsked:pr.phone_verify_asked||'',unchanged:pr.username_changed_at||'',role:pr.role||'member',blocked:!!pr.blocked&&(!pr.blocked_until||new Date(pr.blocked_until).getTime()>Date.now()),reason:pr.block_reason||'',code:pr.block_code||'',website:pr.website||'',location:pr.location||'',
       provider:(u.app_metadata&&u.app_metadata.provider)||'google',pwAt:m.pw_changed_at||'',hasPw:!!m.pw_changed_at||((u.app_metadata&&u.app_metadata.provider)||'google')==='email',created:u.created_at,unlockAt:pr.points_unlock_at||(u.created_at?new Date(new Date(u.created_at).getTime()+3600000).toISOString():''),until:pr.blocked_until||'',last:u.last_sign_in_at,prefs:m.prefs||{},ready:ready};
   }
   function getProfile(t,id){
@@ -340,6 +340,54 @@
   /* ---- profile and settings page ---- */
   function lockedUntil(u){if(u.owner||!u.unchanged)return null;var t=new Date(u.unchanged).getTime()+10*86400000;return t>Date.now()?new Date(t):null}
   function fmt(d){try{return new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}catch(e){return ''}}
+  /* ---- phone number: country picker, status and the verification request ---- */
+  function phoneSplit(v){
+    var L=window.SKM?SKM.countries():[],d0=window.SKM?SKM.country():'';v=(v||'').replace(/[^0-9+]/g,'');
+    if(v.charAt(0)==='+'){var d=v.slice(1),best=null;
+      L.forEach(function(c){if(d.indexOf(c.dial)===0&&(!best||c.dial.length>best.dial.length))best=c});
+      if(best){var iso=best.iso;L.forEach(function(c){if(c.iso===d0&&c.dial===best.dial)iso=c.iso});return {iso:iso,num:d.slice(best.dial.length)}}
+      return {iso:'',num:d}}
+    return {iso:d0,num:v.replace(/^0+/,'')}}
+  function dialOf(iso){var r='';(window.SKM?SKM.countries():[]).forEach(function(c){if(c.iso===iso)r=c.dial});return r}
+  function phoneField(u){
+    var L=window.SKM?SKM.countries():[],sp=phoneSplit(u.phone),dis=u.ready?'':' disabled';
+    var st=!u.phone?'':u.phoneOk?'<small class="ph-st ok">Verified</small>':u.phoneAsked?'<small class="ph-st">Unverified · verification requested</small>':'<small class="ph-st">Unverified</small>';
+    var info='';
+    if(u.phone&&!u.phoneOk)info='<span class="ph-ib"><button type="button" class="ph-i" id="ph-i" aria-label="About phone verification" aria-expanded="false">i</button><span class="ph-tip" id="ph-tip" role="tooltip">'+(u.phoneAsked?'<b>Request sent</b><span>We will check your number soon.</span>':'<b>Verify your number</b><span>To use Points.</span><button type="button" class="ph-black ph-sm" id="ph-open">Verify</button>')+'</span></span>';
+    if(!L.length)return '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+dis+'></label>';
+    return '<div class="ph-field">'+st+'<span class="ph-lbl">Phone</span><div class="ph-row"><select id="p-cc" aria-label="Country"'+dis+'><option value="">Select country</option>'+L.map(function(c){return '<option value="'+c.iso+'"'+(c.iso===sp.iso?' selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select>'+
+      '<span class="ph-in"><b id="p-dial">+'+esc(dialOf(sp.iso))+'</b><input id="p-tel" type="tel" inputmode="tel" maxlength="15" placeholder="300 0000000" value="'+esc(sp.num)+'" autocomplete="tel-national"'+dis+'></span>'+info+'</div><small>Needed to use Points. You can also log in with it.</small></div>'}
+  function phoneValue(){ /* the full number from the two boxes, or false when it is not valid */
+    var cc=$('#p-cc'),t=$('#p-tel');if(!t)return false;
+    if(!cc){var v=t.value.replace(/[^0-9+]/g,'');return !v||/^\+?[0-9]{7,15}$/.test(v)?v:false}
+    var n=t.value.replace(/[^0-9]/g,'').replace(/^0+/,'');if(!n)return '';
+    if(!cc.value)return false;var f='+'+dialOf(cc.value)+n;return /^\+[0-9]{7,15}$/.test(f)?f:false}
+  function phoneUi(u,done,msg){
+    var cc=$('#p-cc');if(!cc)return;
+    cc.addEventListener('change',function(){$('#p-dial').textContent='+'+dialOf(cc.value)});
+    var i=$('#ph-i'),tip=$('#ph-tip');
+    if(i)i.addEventListener('click',function(e){e.stopPropagation();var o=!tip.classList.contains('open');tip.classList.toggle('open',o);i.setAttribute('aria-expanded',o?'true':'false')});
+    document.addEventListener('click',function(e){if(tip&&!tip.contains(e.target)&&e.target!==i){tip.classList.remove('open');if(i)i.setAttribute('aria-expanded','false')}});
+    var go=$('#ph-open');if(!go)return;
+    go.addEventListener('click',function(){
+      var d=overlay('<div class="un-box ph-modal" role="dialog" aria-modal="true" aria-labelledby="ph-h"><h2 id="ph-h">Verify your phone number</h2><p class="ph-num">'+esc(u.phone)+'</p>'+
+        '<p>Verified numbers can use the Points feature. Our team checks each number by hand, so we only check the numbers of people who ask.</p>'+
+        '<ul class="ph-ul"><li>Share your reference code and earn points.</li><li>Use your points as a discount at checkout.</li><li>Your number is only used to check your account. Other people never see it.</li></ul>'+
+        '<p class="ph-res" id="ph-res" hidden></p><div class="ph-btns"><button type="button" class="ph-black" id="ph-send">Send verification request</button><button type="button" class="ph-x" id="ph-no">Not now</button></div></div>');
+      d.classList.add('ph-back');
+      function shut(){d.classList.add('out');setTimeout(function(){d.remove()},220);document.removeEventListener('keydown',k)}
+      function k(e){if(e.key==='Escape')shut()}
+      document.addEventListener('keydown',k);d.addEventListener('click',function(e){if(e.target===d)shut()});$('#ph-no').addEventListener('click',shut);
+      var send=$('#ph-send');send.focus();
+      send.addEventListener('click',function(){
+        if(send.textContent==='Close'){shut();return}
+        send.disabled=true;var r=$('#ph-res');
+        token().then(function(t){return t&&api('/rest/v1/rpc/request_phone_verify',{method:'POST',token:t,body:{}})}).then(function(){
+          u.phoneAsked=new Date().toISOString();r.hidden=false;r.className='ph-res ok';r.textContent='Request sent. We will check your number and send you a notification when it is verified.';
+          send.textContent='Close';send.disabled=false;$('#ph-no').hidden=true;
+          var st=document.querySelector('.ph-st');if(st)st.textContent='Unverified · verification requested';
+          var tp=$('#ph-tip');if(tp)tp.innerHTML='<b>Request sent</b><span>We will check your number soon.</span>'},
+          function(){r.hidden=false;r.className='ph-res bad';r.textContent='Could not send the request. Please try again.';send.disabled=false})})})}
   function page(u){
     var root=$('#acct');if(!root)return;
     if(u.owner===undefined&&u.ready){u.owner=false;token().then(function(t){return t&&api('/rest/v1/rpc/admin_whoami',{method:'POST',token:t,body:{}})}).then(function(me){if(me&&me.is_owner){u.owner=true;page(u)}}).catch(function(){})}
@@ -357,7 +405,7 @@
       '<div class="ac-two"><label>Website<input id="p-web" type="text" maxlength="120" placeholder="https://" value="'+esc(u.website)+'" autocomplete="url"'+(u.ready?'':' disabled')+'></label>'+
       '<label>Location<input id="p-loc" type="text" maxlength="60" value="'+esc(u.location)+'" autocomplete="address-level2"'+(u.ready?'':' disabled')+'></label></div>'+
       '<div class="ac-two"><label>Email<input type="email" value="'+esc(u.email)+'" disabled></label>'+
-      '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+(u.ready?'':' disabled')+'><small>Needed to use Points (we check it once). You can also log in with it.</small></label></div>'+
+      phoneField(u)+'</div>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="submit">Save profile</button></div></form></section>'+
     '<section class="card"><h2>Preferences</h2>'+
       '<div class="ac-theme" role="radiogroup" aria-label="Colour theme"><b>Appearance</b><div>'+[['light','Light'],['dark','Dark'],['system','System']].map(function(o){return '<label><input type="radio" name="s-theme" value="'+o[0]+'"'+((p.theme||'light')===o[0]?' checked':'')+'><span>'+o[1]+'</span></label>'}).join('')+'</div><small>Dark and light mode. System follows your device.</small></div>'+
@@ -366,7 +414,7 @@
       '<label class="ac-sw"><input type="checkbox" id="s-news"'+(p.updates?' checked':'')+'><i></i><span><b>Email updates</b><small>Occasional news about new work. Off by default.</small></span></label></section>'+
     '<section class="card"><h2>Account</h2><dl class="ac-dl"><dt>Signed in with</dt><dd>'+esc(u.provider==='google'?'Google':u.provider)+'</dd><dt>Member since</dt><dd>'+esc(fmt(u.created))+'</dd><dt>Last sign-in</dt><dd>'+esc(fmt(u.last))+'</dd></dl>'+
       '<div class="ac-row"><button class="btn btn-solid btn-sm" type="button" id="a-out">Log out</button><button class="btn btn-ghost btn-sm" type="button" id="a-all">Log out everywhere</button></div></section>'+
-    '<section class="card" id="pts-card"><h2>Points</h2><p class="ac-note" id="pts-n">Earn points by sharing your reference code. Every point takes 0.1 USD off your next order.</p>'+
+    '<section class="card" id="pts-card"><h2>Points</h2><p class="ac-note" id="pts-n">Earn points by sharing your reference code. Every point takes '+(window.SKM?SKM.usd(0.1):'a little')+' off your next order.</p>'+
       '<div class="ac-row">'+(ptsLink(u).indexOf('pts-off')>-1?'<span class="ac-note">Points are not open yet.</span>':'<a class="btn btn-solid btn-sm" href="points">Open points</a>')+'</div></section>'+
     '<section class="card"><h2>Password</h2>'+
       (u.hasPw?
@@ -399,9 +447,10 @@
       if(u.ready){
         var nm=un.value.trim().toLowerCase();if(!nm&&u.username){msg('A username cannot be removed.',true);return}if(nm&&nm!==u.username){var er=checkName(nm);if(er){msg(er,true);return}patch.username=nm}
         var w=$('#p-web').value.trim();if(w&&!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(w)){msg('Website must start with http:// or https://',true);return}
-        var tel=$('#p-tel').value.replace(/[^0-9+]/g,'');if(tel&&!/^\+?[0-9]{7,15}$/.test(tel)){msg('Enter a valid phone number, for example +923001234567.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
+        var tel=phoneValue();if(tel===false){msg('Choose your country and enter a valid phone number.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
       }
       saveProfile(patch).then(function(x){done(x,'Profile saved.')},function(er){msg(er.message,true)})});
+    phoneUi(u,done,msg);
     var avb=$('#av-btn'),avm=$('#av-menu');
     avb.addEventListener('click',function(e){e.stopPropagation();var o=avm.hidden;avm.hidden=!o;avb.setAttribute('aria-expanded',o?'true':'false')});
     document.addEventListener('click',function(e){if(!avm.hidden&&!avm.contains(e.target)){avm.hidden=true;avb.setAttribute('aria-expanded','false')}});
@@ -421,7 +470,7 @@
     $('#f-pw').addEventListener('submit',function(e){e.preventDefault();var a=$('#n-pw1').value,b=$('#n-pw2').value;
       if(a.length<8){msg('Use at least 8 characters.',true);return}if(a!==b){msg('The two passwords do not match.',true);return}
       setPassword(a).then(function(){u.pwAt=new Date().toISOString();u.hasPw=true;page(u);msg('Password saved.')},function(er){msg(er.message,true)})});
-    if($('#pts-card')&&ptsLink(u).indexOf('pts-off')<0)token().then(function(t){return t&&api('/rest/v1/rpc/points_status',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&$('#pts-n'))$('#pts-n').innerHTML='You have <b>'+r.balance+'</b> usable point'+(r.balance===1?'':'s')+'. Every point takes 0.1 USD off your next order.'}).catch(function(){});
+    if($('#pts-card')&&ptsLink(u).indexOf('pts-off')<0)token().then(function(t){return t&&api('/rest/v1/rpc/points_status',{method:'POST',token:t,body:{}})}).then(function(r){if(r&&$('#pts-n'))$('#pts-n').innerHTML='You have <b>'+r.balance+'</b> usable point'+(r.balance===1?'':'s')+'. Every point takes '+(window.SKM?SKM.usd(0.1):'a little')+' off your next order.'}).catch(function(){});
     $('#a-out').addEventListener('click',function(){signOut(false)});
     $('#a-all').addEventListener('click',function(){signOut(true)});
     $('#a-dl').addEventListener('click',function(){
