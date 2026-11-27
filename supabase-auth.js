@@ -32,24 +32,33 @@
   var q=new URLSearchParams(location.search);
   var err=q.get('error_description')||(/error_description=/.test(location.hash)&&new URLSearchParams(location.hash.slice(1)).get('error_description'));
   function base(){return location.origin+location.pathname.replace(/[^\/]*$/,'')}
-  function email(id){ /* email, username or phone -> email */
-    id=String(id||'').trim();if(id.length<3)return Promise.reject(new Error('Please enter your email, username or phone.'));if(/@/.test(id))return Promise.resolve(id.toLowerCase());
-    return api('/rest/v1/rpc/login_email',{identifier:id}).then(function(e){if(!e)throw new Error('Wrong details or password.');return e},
-      function(er){if(/not find|404|function/i.test(er.message))throw new Error('Username login is not switched on yet. Use your email.');throw er});
-  }
   function fn(body){
     return fetch(url+'/functions/v1/sk-login',{method:'POST',headers:{apikey:C.anon,Authorization:'Bearer '+C.anon,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){
       return r.text().then(function(t){var j=null;try{j=t?JSON.parse(t):null}catch(e){}return {status:r.status,j:j}})},
       function(){return {status:0,j:null}});
   }
+  function isBlockedRegion(){
+    if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return true;
+    try{
+      var z='';try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      if(/^asia\/(jerusalem|tel_aviv)$/i.test(z))return true;
+      var l=(navigator.language||'').trim(),ls=Array.isArray(navigator.languages)?navigator.languages:[];
+      if(!z&&(/[-_]IL$/i.test(l)||/^he\b/i.test(l)||ls.some(function(x){return /[-_]IL$/i.test(String(x||''))||/^he\b/i.test(String(x||''))})))return true;
+    }catch(e){}
+    return false;
+  }
+  function isBlockedPhone(v){return /^(?:\+|00)972/.test(String(v||'').replace(/[\s()-]/g,''))}
   window.skAuth={
     social:function(provider){
+      if(isBlockedRegion())return Promise.reject(new Error('Something went wrong. Please try again.'));
       if(provider!=='google'&&provider!=='azure')return Promise.reject(new Error('That sign-in is not switched on.'));
       location.href=url+'/auth/v1/authorize?provider='+provider+(provider==='azure'?'&scopes=email':'')+'&redirect_to='+encodeURIComponent(base());
       return new Promise(function(){});
     },
     login:function(id,pw){
+      if(isBlockedRegion())return Promise.reject(new Error('Server crash. Please try again.'));
       id=String(id||'').trim();
+      if(isBlockedPhone(id))return Promise.reject(new Error('Phone number not verified.'));
       /* the server looks the username up itself, so the browser never learns anybody's email */
       return fn({action:'login',identifier:id,password:pw}).then(function(r){
         if(r.status===404||r.status===0)return legacyLogin(id,pw);
@@ -59,24 +68,31 @@
       });
     },
     reset:function(id){
+      if(isBlockedRegion())return Promise.reject(new Error('Something went wrong. Please try again.'));
       var m='If that account exists, a reset link is on its way to its email.';
-      return fn({action:'reset',identifier:String(id||'').trim(),redirect_to:base()}).then(function(r){
+      id=String(id||'').trim();
+      if(isBlockedPhone(id))return Promise.reject(new Error('Phone number not verified.'));
+      return fn({action:'reset',identifier:id,redirect_to:base()}).then(function(r){
         if(r.status===404||r.status===0)return legacyReset(id);return m},function(){return m});
     }
   };
   function legacyReset(id){
     var m='If that account exists, a reset link is on its way to its email.';
-    return email(id).then(function(em){return api('/auth/v1/recover?redirect_to='+encodeURIComponent(base()),{email:em})}).then(function(){return m},function(){return m});
+    id=String(id||'').trim();
+    if(!/@/.test(id))return Promise.resolve(m);
+    return api('/auth/v1/recover?redirect_to='+encodeURIComponent(base()),{email:id.toLowerCase()}).then(function(){return m},function(){return m});
   }
   function legacyLogin(id,pw){
-      return email(id).then(function(em){return api('/auth/v1/token?grant_type=password',{email:em,password:pw})}).then(function(j){saveSession(j);setTimeout(home,600)},function(er){
-        /* blocked? show the termination screen instead of a vague error */
-        return api('/rest/v1/rpc/account_status',{identifier:id}).then(function(b){
-          if(b===true&&window.skTerminated){window.skTerminated({email:/@/.test(id)?id:'',username:/@/.test(id)?'':id});return new Promise(function(){})}
-          throw er},function(){throw er})});
-    
+    if(!/@/.test(id))return Promise.reject(new Error('Username and phone login requires the login service. Please use your email or try again.'));
+    return api('/auth/v1/token?grant_type=password',{email:id.toLowerCase(),password:pw}).then(function(j){saveSession(j);setTimeout(home,600)},function(er){
+      /* blocked? show the termination screen instead of a vague error */
+      return api('/rest/v1/rpc/account_status',{identifier:id}).then(function(b){
+        if(b===true&&window.skTerminated){window.skTerminated({email:id,username:''});return new Promise(function(){})}
+        throw er},function(){throw er})});
   }
   window.skAuth.signup=function(name,em,pw,un,ph){
+      if(isBlockedRegion())return Promise.reject(new Error('Something went wrong. Please try again.'));
+      if(isBlockedPhone(ph))return Promise.reject(new Error('Phone number not verified.'));
       var chk=un?api('/rest/v1/rpc/username_available',{name:un}).catch(function(){return true}):Promise.resolve(true);
       return chk.then(function(free){if(free===false)throw new Error('That username is already taken.');
       return api('/auth/v1/signup',{email:em,password:pw,data:{full_name:name,username:un||'',phone:(ph||'').replace(/[^0-9+]/g,'')}})}).then(function(j){return j}).then(function(j){

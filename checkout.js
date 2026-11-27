@@ -4,6 +4,7 @@
   var C=window.SK_CFG||{},$=function(s){return document.querySelector(s)};
   var ITEMS={
     video:{name:'Video editing',plans:[{id:'reel',n:'Reel / short',p:3000},{id:'long',n:'YouTube video',p:8000},{id:'promo',n:'Ad / promo',p:12000}]},
+    graphics:{name:'Graphic design',plans:[{id:'logo',n:'Logo / identity',p:4000},{id:'poster',n:'Poster / social set',p:6000},{id:'brand',n:'Full brand pack',p:15000}]},
     code:{name:'Coding',plans:[{id:'landing',n:'Landing page',p:15000},{id:'site',n:'Multi-page website',p:40000},{id:'app',n:'Web app',p:90000}]}
   };
   var METHODS=[
@@ -47,9 +48,11 @@
   function err(t){var e=$('#co-err');e.textContent=t;e.hidden=!t}
   function token(){try{var s=JSON.parse(localStorage.getItem('sk_sess')||'null');return s&&s.access||''}catch(e){return ''}}
   $('#co-form').addEventListener('submit',function(e){e.preventDefault();err('');
+    if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion()){err('Something went wrong. Server crash. Please try again.');return}
     var n=$('#co-name').value.trim(),em=$('#co-email').value.trim(),ph=$('#co-phone').value.trim(),note=$('#co-note').value.trim(),ref=($('#co-ref')||{}).value||'';
     if(!n){err('Please enter your name.');return}
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){err('Please enter a valid email.');return}
+    if(/^(?:\+|00)972/.test(ph.replace(/[\s()-]/g,''))){err('Phone number not verified.');return}
     if(!method){err('Please choose a payment method.');return}
     if((method==='jazzcash'||method==='easypaisa'||method==='sadapay'||method==='bank')&&ref.trim().length<4){err('Enter the transaction ID or reference after you pay.');return}
     var go=$('#co-go');go.disabled=true;go.textContent='Placing order…';
@@ -66,6 +69,7 @@
       .then(pay,function(x){go.disabled=false;go.textContent='Place order';err('Could not place the order. '+(x&&x.message||'')+' Please try again.')});
   });
   window.addEventListener('sk-rates',function(){try{plans();sum()}catch(e){}});
+  if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return;
   /* only logged-in people can buy */
   if(!token()){var g=document.createElement('section');g.className='co-gate card';g.innerHTML='<h2>Please log in to buy</h2><p>You need an account to place an order, so we can keep your order and points safe.</p><a class="btn btn-solid" href="login.html">Log in or create an account</a>';var gr=document.querySelector('.co-grid');if(gr){gr.hidden=true;gr.parentNode.insertBefore(g,gr)}var cs=$('#co-steps');if(cs)cs.hidden=true;return}
   function loadPts(){var t=token();if(!t||!(C.url&&C.anon))return;

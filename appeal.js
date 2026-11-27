@@ -6,8 +6,10 @@
   function say(t,bad){var e=$('#ap-st');e.textContent=t;e.className='ap-st'+(bad?' bad':'')}
   function sess(){try{return JSON.parse(localStorage.getItem('sk_sess')||'null')}catch(e){return null}}
   f.addEventListener('submit',function(e){e.preventDefault();
+    if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion()){say('Something went wrong. Please try again.',1);return}
     var C=window.SK_CFG||{},id=$('#ap-id').value.trim(),m=$('#ap-msg').value.trim(),k=$('#ap-kind').value;
     if(!id){say('Enter the email, username or phone of the account.',1);return}
+    if(/^(?:\+|00)972/.test(id.replace(/[\s()-]/g,''))){say('Phone number not verified.',1);return}
     if(m.length<5){say('Please explain what happened.',1);return}
     if(!(C.url&&C.anon)){say('Sending is not set up yet.',1);return}
     var b=$('#ap-go'),s=sess(),tok=s&&s.exp>Date.now()?s.access:C.anon;b.disabled=true;say('Sending…');

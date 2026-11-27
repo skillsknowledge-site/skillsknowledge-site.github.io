@@ -316,6 +316,7 @@
     oerr=h.get('error_description')||q.get('error_description')||'';ocode=h.get('error_code')||q.get('error_code')||'';
     if(oerr||ocode){try{history.replaceState(null,'',location.pathname)}catch(e){}}})();
   function boot(){
+    if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion()){clear();return}
     if(oerr||ocode){
       if(/banned|blocked/i.test(oerr+' '+ocode)){terminated(null);return}
       if(!/\/login(\.html)?$/i.test(location.pathname)){location.replace((web?'login':'login.html')+'?error_description='+encodeURIComponent(oerr||'Sign-in failed. Please try again.'));return}
@@ -343,28 +344,115 @@
   /* ---- phone number: country picker, status and the verification request ---- */
   function phoneSplit(v){
     var L=window.SKM?SKM.countries():[],d0=window.SKM?SKM.country():'';v=(v||'').replace(/[^0-9+]/g,'');
+    if(/^(?:\+|00)972/.test(v))return {iso:'',num:''};
     if(v.charAt(0)==='+'){var d=v.slice(1),best=null;
       L.forEach(function(c){if(d.indexOf(c.dial)===0&&(!best||c.dial.length>best.dial.length))best=c});
       if(best){var iso=best.iso;L.forEach(function(c){if(c.iso===d0&&c.dial===best.dial)iso=c.iso});return {iso:iso,num:d.slice(best.dial.length)}}
       return {iso:'',num:d}}
     return {iso:d0,num:v.replace(/^0+/,'')}}
   function dialOf(iso){var r='';(window.SKM?SKM.countries():[]).forEach(function(c){if(c.iso===iso)r=c.dial});return r}
+  function flagHtml(iso,name){
+    var lo=(iso||'').toLowerCase(),safe=esc(iso||'');
+    if(!lo)return '<span class="ph-f-emp" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a13 13 0 0 0 0 18M12 3a13 13 0 0 1 0 18"/></svg></span>';
+    return '<img class="ph-f-img" src="https://flagcdn.com/w40/'+lo+'.png" srcset="https://flagcdn.com/w80/'+lo+'.png 2x" alt="'+esc(name||iso)+'" loading="lazy" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.hidden=false"><span class="ph-f-txt" hidden>'+safe+'</span>';
+  }
   function phoneField(u){
     var L=window.SKM?SKM.countries():[],sp=phoneSplit(u.phone),dis=u.ready?'':' disabled';
+    var curObj=L.filter(function(c){return c.iso===sp.iso})[0]||null;
     var st=!u.phone?'':u.phoneOk?'<small class="ph-st ok">Verified</small>':'<small class="ph-st">Unverified</small>';
     var info='';
     if(u.phone&&!u.phoneOk)info='<span class="ph-ib"><button type="button" class="ph-i" id="ph-i" aria-label="About phone verification" aria-expanded="false">i</button><span class="ph-tip" id="ph-tip" role="tooltip">'+(u.phoneAsked?'<b>Verification requested</b><span>We check numbers by hand. You will get a notification here when yours is verified.</span>':'<b>Verify your number</b><span>To use Points.</span><button type="button" class="ph-black ph-sm" id="ph-open">Verify</button>')+'</span></span>';
     if(!L.length)return '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+dis+'></label>';
-    return '<div class="ph-field"><div class="ph-top"><span class="ph-lbl">Phone</span>'+st+'</div><div class="ph-row"><select id="p-cc" aria-label="Country"'+dis+'><option value="">Select country</option>'+L.map(function(c){return '<option value="'+c.iso+'"'+(c.iso===sp.iso?' selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select>'+
-      '<span class="ph-in"><b id="p-dial">+'+esc(dialOf(sp.iso))+'</b><input id="p-tel" type="tel" inputmode="tel" maxlength="15" placeholder="300 0000000" value="'+esc(sp.num)+'" autocomplete="tel-national"'+dis+'></span>'+info+'</div><small>Needed to use Points. You can also log in with it.</small></div>'}
-  function phoneValue(){ /* the full number from the two boxes, or false when it is not valid */
+    var dialTxt=curObj?'+'+curObj.dial:'+Code';
+    return '<div class="ph-field"><div class="ph-top"><span class="ph-lbl">Phone</span>'+st+'</div><div class="ph-row">'+
+      '<div class="ph-combo" id="ph-combo">'+
+      '<input type="hidden" id="p-cc" value="'+esc(sp.iso)+'">'+
+      '<button type="button" class="ph-cc-btn" id="p-cc-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select country code"'+dis+'>'+
+        '<span class="ph-flag" id="p-flag">'+flagHtml(sp.iso,curObj&&curObj.name)+'</span>'+
+        '<b class="ph-dial" id="p-dial">'+esc(dialTxt)+'</b>'+
+        '<svg class="ph-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>'+
+      '</button>'+
+      '<span class="ph-sep" aria-hidden="true"></span>'+
+      '<input id="p-tel" type="tel" inputmode="tel" maxlength="20" placeholder="300 0000000" value="'+esc(sp.num)+'" autocomplete="tel-national"'+dis+'>'+
+      '<div class="ph-drop" id="ph-drop" role="dialog" aria-label="Choose country" hidden>'+
+        '<div class="ph-search-w"><input type="search" id="ph-search" placeholder="Search country or +code…" autocomplete="off" spellcheck="false"></div>'+
+        '<div class="ph-list" id="ph-list" role="listbox" aria-label="Countries">'+
+          L.map(function(c){return '<button type="button" class="ph-opt'+(c.iso===sp.iso?' on':'')+'" role="option" aria-selected="'+(c.iso===sp.iso?'true':'false')+'" data-iso="'+esc(c.iso)+'" data-dial="'+esc(c.dial)+'" data-name="'+esc(c.name)+'">'+
+            '<span class="ph-flag">'+flagHtml(c.iso,c.name)+'</span>'+
+            '<span class="ph-oname">'+esc(c.name)+'</span>'+
+            '<span class="ph-odial">+'+esc(c.dial)+'</span>'+
+          '</button>'}).join('')+
+        '</div>'+
+      '</div>'+
+      '</div>'+info+'</div><small>Needed to use Points. You can also log in with it.</small></div>'}
+  function phoneValue(){ /* the full number from the merged box, or false when it is not valid */
     var cc=$('#p-cc'),t=$('#p-tel');if(!t)return false;
-    if(!cc){var v=t.value.replace(/[^0-9+]/g,'');return !v||/^\+?[0-9]{7,15}$/.test(v)?v:false}
+    if(!cc){var v=t.value.replace(/[^0-9+]/g,'');if(/^(?:\+|00)?972/.test(v))return 'blocked_il';return !v||/^\+?[0-9]{7,15}$/.test(v)?v:false}
+    var raw=t.value.replace(/[^0-9+]/g,'');if(/^(?:\+|00)972/.test(raw))return 'blocked_il';
     var n=t.value.replace(/[^0-9]/g,'').replace(/^0+/,'');if(!n)return '';
-    if(!cc.value)return false;var f='+'+dialOf(cc.value)+n;return /^\+[0-9]{7,15}$/.test(f)?f:false}
+    if(cc.value==='IL')return 'blocked_il';
+    if(!cc.value)return false;var f='+'+dialOf(cc.value)+n;if(/^\+972/.test(f))return 'blocked_il';return /^\+[0-9]{7,15}$/.test(f)?f:false}
   function phoneUi(u,done,msg){
-    var cc=$('#p-cc');if(!cc)return;
-    cc.addEventListener('change',function(){$('#p-dial').textContent='+'+dialOf(cc.value)});
+    var cc=$('#p-cc'),btn=$('#p-cc-btn'),drop=$('#ph-drop'),search=$('#ph-search'),list=$('#ph-list'),tel=$('#p-tel'),combo=$('#ph-combo');
+    if(!cc)return;
+    function setCountry(iso){
+      var L=window.SKM?SKM.countries():[],obj=L.filter(function(c){return c.iso===iso})[0]||null;
+      cc.value=obj?obj.iso:'';
+      var fl=$('#p-flag'),dl=$('#p-dial');
+      if(fl)fl.innerHTML=flagHtml(cc.value,obj&&obj.name);
+      if(dl)dl.textContent=obj?'+'+obj.dial:'+Code';
+      if(list)[].forEach.call(list.querySelectorAll('.ph-opt'),function(o){
+        var on=o.dataset.iso===cc.value;o.classList.toggle('on',on);o.setAttribute('aria-selected',on?'true':'false');
+      });
+    }
+    if(btn&&drop&&list){
+      function openDrop(){
+        if(btn.disabled)return;
+        drop.hidden=false;btn.setAttribute('aria-expanded','true');
+        if(search){search.value='';filterList('');setTimeout(function(){search.focus()},20)}
+        var sel=list.querySelector('.ph-opt.on');if(sel)sel.scrollIntoView({block:'nearest'});
+      }
+      function closeDrop(refocus){
+        if(drop.hidden)return;
+        drop.hidden=true;btn.setAttribute('aria-expanded','false');
+        if(refocus)btn.focus();
+      }
+      function filterList(q){
+        q=(q||'').trim().toLowerCase().replace(/^\+/,'');
+        var shown=0;
+        [].forEach.call(list.querySelectorAll('.ph-opt'),function(o){
+          var ok=!q||o.dataset.name.toLowerCase().indexOf(q)>-1||o.dataset.iso.toLowerCase().indexOf(q)>-1||o.dataset.dial.indexOf(q)===0;
+          o.hidden=!ok;if(ok)shown++;
+        });
+        var em=list.querySelector('.ph-empty');
+        if(!shown&&!em){em=document.createElement('p');em.className='ph-empty';em.textContent='No matching country';list.appendChild(em)}
+        else if(em)em.hidden=shown>0;
+      }
+      btn.addEventListener('click',function(e){e.stopPropagation();if(drop.hidden)openDrop();else closeDrop(false)});
+      if(search){
+        search.addEventListener('input',function(){filterList(this.value)});
+        search.addEventListener('keydown',function(e){
+          if(e.key==='Escape'){e.preventDefault();closeDrop(true)}
+          else if(e.key==='Enter'){e.preventDefault();var first=list.querySelector('.ph-opt:not([hidden])');if(first){setCountry(first.dataset.iso);closeDrop(false);if(tel)tel.focus()}}
+        });
+      }
+      list.addEventListener('click',function(e){
+        var opt=e.target.closest('.ph-opt');if(!opt)return;
+        setCountry(opt.dataset.iso);closeDrop(false);if(tel)tel.focus();
+      });
+      document.addEventListener('click',function(e){if(combo&&!combo.contains(e.target))closeDrop(false)});
+      document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!drop.hidden)closeDrop(true)});
+    }
+    if(tel){
+      tel.addEventListener('input',function(){
+        var v=tel.value.replace(/[^0-9+]/g,'');
+        if(v.charAt(0)==='+'&&v.length>1&&!/^\+972/.test(v)){
+          var L=window.SKM?SKM.countries():[],d=v.slice(1),best=null;
+          L.forEach(function(c){if(d.indexOf(c.dial)===0&&(!best||c.dial.length>best.dial.length))best=c});
+          if(best){setCountry(best.iso);tel.value=d.slice(best.dial.length)}
+        }
+      });
+    }
     var i=$('#ph-i'),tip=$('#ph-tip');
     if(i)i.addEventListener('click',function(e){e.stopPropagation();var o=!tip.classList.contains('open');tip.classList.toggle('open',o);i.setAttribute('aria-expanded',o?'true':'false')});
     document.addEventListener('click',function(e){if(tip&&!tip.contains(e.target)&&e.target!==i){tip.classList.remove('open');if(i)i.setAttribute('aria-expanded','false')}});
@@ -446,7 +534,7 @@
       if(u.ready){
         var nm=un.value.trim().toLowerCase();if(!nm&&u.username){msg('A username cannot be removed.',true);return}if(nm&&nm!==u.username){var er=checkName(nm);if(er){msg(er,true);return}patch.username=nm}
         var w=$('#p-web').value.trim();if(w&&!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(w)){msg('Website must start with http:// or https://',true);return}
-        var tel=phoneValue();if(tel===false){msg('Choose your country and enter a valid phone number.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
+        var tel=phoneValue();if(tel==='blocked_il'){msg('Phone number not verified. Please try a different number.',true);return}if(tel===false){msg('Choose your country and enter a valid phone number.',true);return}patch.phone=tel;patch.bio=$('#p-bio').value.trim();patch.website=w;patch.location=$('#p-loc').value.trim();
       }
       saveProfile(patch).then(function(x){done(x,'Profile saved.')},function(er){msg(er.message,true)})});
     phoneUi(u,done,msg);

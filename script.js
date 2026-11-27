@@ -1,5 +1,110 @@
 (function(){
 'use strict';
+function isBlockedRegion(){
+  if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return true;
+  try{
+    if(document.body&&document.body.classList.contains('adm'))return false;
+    var z='';
+    try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+    if(/^asia\/(jerusalem|tel_aviv)$/i.test(z))return true;
+    var l=(navigator.language||'').trim();
+    var ls=Array.isArray(navigator.languages)?navigator.languages:[];
+    if(!z&&(/[-_]IL$/i.test(l)||/^he\b/i.test(l)||ls.some(function(x){return /[-_]IL$/i.test(String(x||''))||/^he\b/i.test(String(x||''))})))return true;
+  }catch(e){}
+  return false;
+}
+if(isBlockedRegion()){
+  try{localStorage.removeItem('sk_sess');localStorage.removeItem('sk_user');localStorage.removeItem('sk_welcome');localStorage.removeItem('sk_after');localStorage.removeItem('sk_ref');localStorage.removeItem('sk_rates');sessionStorage.removeItem('sk_recovery')}catch(e){}
+  document.documentElement.setAttribute('data-sk-blocked','1');
+  if(!document.getElementById('sk-region-lock')){
+    var lst=document.createElement('style');lst.id='sk-region-lock';
+    lst.textContent='html[data-sk-blocked="1"],html[data-sk-blocked="1"] body{overflow:hidden!important;background:#090b10!important}html[data-sk-blocked="1"] header,html[data-sk-blocked="1"] main,html[data-sk-blocked="1"] footer,html[data-sk-blocked="1"] .bgfx,html[data-sk-blocked="1"] .snow{display:none!important}';
+    document.head.appendChild(lst);
+  }
+  var st=document.createElement('style');
+  st.textContent=
+    '.sk-rblk{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:20px;background:rgba(6,8,12,.96);backdrop-filter:blur(10px);font-family:Inter,system-ui,-apple-system,sans-serif}'+
+    '.sk-rblk-box{width:min(460px,100%);padding:28px 24px;border-radius:16px;background:#131620;border:1px solid rgba(255,82,99,.45);color:#fff;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.7);display:grid;gap:12px;justify-items:center;animation:skPopIn .18s ease}'+
+    '.sk-rblk-box.shake{animation:skShake .28s ease}'+
+    '.sk-rblk-ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:rgba(255,82,99,.16);color:#ff5c6c}'+
+    '.sk-rblk-ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}'+
+    '.sk-rblk-box h2{margin:0;font-size:1.3rem;font-weight:800;color:#ff7b88}'+
+    '.sk-rblk-box p{margin:0;font-size:.95rem;line-height:1.55;color:#e5e7eb}'+
+    '.sk-rblk-err{padding:10px 14px;border-radius:10px;background:rgba(255,82,99,.12);border:1px solid rgba(255,82,99,.3);color:#ffb3bb;font-size:.84rem;font-weight:600;width:100%;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}'+
+    '.sk-rblk-btn{margin-top:6px;padding:11px 28px;border:0;border-radius:10px;background:#e11d48;color:#fff;font:700 .95rem Inter,system-ui,sans-serif;cursor:pointer}'+
+    '.sk-rblk-btn:hover{background:#be123c}'+
+    '@keyframes skPopIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}'+
+    '@keyframes skShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}';
+  document.head.appendChild(st);
+  var ERRS=[
+    {t:'Something went wrong',m:'Something went wrong. Please try again.',c:'ERR_UNEXPECTED_FAILURE (0x004F)'},
+    {t:'Phone number not verified',m:'Your phone number is not verified. Account access cannot continue until verification succeeds.',c:'ERR_PHONE_NOT_VERIFIED'},
+    {t:'Server crash',m:'500 Internal Server Error — The server crashed while processing your request.',c:'HTTP_500_INTERNAL_CRASH'},
+    {t:'Account terminated',m:'This account has been terminated. You can no longer log in or use this website.',c:'ERR_ACCOUNT_TERMINATED'},
+    {t:'Database connection failed',m:'Could not connect to the database server. Connection was reset.',c:'ERR_DB_CONNECTION_RESET'},
+    {t:'Session corrupted',m:'Your session has expired or could not be verified. Please try again.',c:'ERR_AUTH_SESSION_INVALID'},
+    {t:'Service unavailable',m:'The server is temporarily down due to a fatal runtime error.',c:'HTTP_503_FATAL_ERROR'}
+  ];
+  var tries=0,ov=null,repopT=0;
+  function escH(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function mountPopup(pulse){
+    var item=ERRS[tries%ERRS.length];
+    tries++;
+    if(ov&&ov.parentNode){ov.remove()}
+    ov=document.createElement('div');
+    ov.className='sk-rblk';
+    ov.setAttribute('role','alertdialog');
+    ov.setAttribute('aria-modal','true');
+    ov.setAttribute('aria-labelledby','sk-rblk-t');
+    ov.innerHTML=
+      '<div class="sk-rblk-box'+(pulse?' shake':'')+'">'+
+      '<div class="sk-rblk-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>'+
+      '<h2 id="sk-rblk-t">'+escH(item.t)+'</h2>'+
+      '<p>'+escH(item.m)+'</p>'+
+      '<div class="sk-rblk-err" role="alert">'+escH(item.c)+'</div>'+
+      '<button type="button" class="sk-rblk-btn">Try again</button>'+
+      '</div>';
+    document.body.appendChild(ov);
+    var btn=ov.querySelector('.sk-rblk-btn');
+    if(btn){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        ov.style.display='none';
+        clearTimeout(repopT);
+        repopT=setTimeout(function(){mountPopup(true)},150);
+      });
+      try{btn.focus()}catch(x){}
+    }
+    ov.addEventListener('click',function(e){
+      if(e.target===ov){
+        ov.style.display='none';
+        clearTimeout(repopT);
+        repopT=setTimeout(function(){mountPopup(true)},150);
+      }
+    });
+  }
+  function lockPage(){
+    if(!document.body)return;
+    [].forEach.call(document.querySelectorAll('header,main,footer,.bgfx,.snow,dialog'),function(el){el.remove()});
+    mountPopup(false);
+    setInterval(function(){mountPopup(true)},1000);
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){
+        e.preventDefault();
+        if(ov)ov.style.display='none';
+        clearTimeout(repopT);
+        repopT=setTimeout(function(){mountPopup(true)},150);
+      }
+    },true);
+    try{
+      new MutationObserver(function(){
+        if(!document.body.contains(ov)){mountPopup(true)}
+      }).observe(document.body,{childList:true});
+    }catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',lockPage);else lockPage();
+  return;
+}
 var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 var SCENES=[];
 var THEME={acc:[52,194,106],hi:[126,226,156],acc2:[150,255,90]};
@@ -271,8 +376,10 @@ var PAIRS={green:[[5,250,107]],purplePink:[[150,90,255]],pink:[[255,80,170]]};
       if(!plain){msg.textContent='Please write your comment.';return}
       if(!v){msg.textContent='Please write your email.';return}
       if(!okMail(v)){msg.textContent='Please enter a valid email address.';return}
+      var to=SK.setting('feedbackEmail','');
+      if(!to){msg.className='fmsg err';msg.textContent='Please use the feedback buttons on the page.';return}
       var fl2=cd._files();msg.className='fmsg';msg.textContent=fl2.length?'Opening your email app... please attach your '+fl2.length+' file'+(fl2.length>1?'s':'')+' there.':'Opening your email app...';
-      window.location.href='mailto:'+SK.setting('feedbackEmail','feedback@sk.site')+'?subject='+encodeURIComponent('Website feedback')+'&body='+encodeURIComponent(plain+(fl2.length?'\n\nAttachments: '+fl2.map(function(f){return f.name}).join(', '):'')+'\n\nFrom: '+v);
+      window.location.href='mailto:'+to+'?subject='+encodeURIComponent('Website feedback')+'&body='+encodeURIComponent(plain+(fl2.length?'\n\nAttachments: '+fl2.map(function(f){return f.name}).join(', '):'')+'\n\nFrom: '+v);
     });
   }
 })();
@@ -417,6 +524,7 @@ var yrEl=document.getElementById('yr');if(yrEl)yrEl.textContent=new Date().getFu
 
 /* ---------- thin scroll line inside the page (native scrollbar is hidden) ---------- */
 (function(){
+  if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return;
   var b=document.createElement('div');b.className='sbar';b.setAttribute('aria-hidden','true');document.body.appendChild(b);
   var raf=0,hide;
   function upd(){raf=0;var d=document.documentElement,max=d.scrollHeight-d.clientHeight;
@@ -430,6 +538,7 @@ var yrEl=document.getElementById('yr');if(yrEl)yrEl.textContent=new Date().getFu
 
 /* ---------- services: more than five skills become pages with Prev / Next ---------- */
 (function(){
+  if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return;
   var list=document.getElementById('svc-list');if(!list)return;
   var cards=[].slice.call(list.children),PER=5;if(cards.length<=PER)return;
   var pages=Math.ceil(cards.length/PER),pg=0,view=document.createElement('div'),track=document.createElement('div'),i,p;

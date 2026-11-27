@@ -36,17 +36,18 @@
     alertBox(f,'One moment...',true);
     api.apply(null,args).then(function(r){alertBox(f,typeof r==='string'?r:okMsg,true)},function(err){alertBox(f,(err&&err.message)||'Something went wrong. Please try again.')});
   }
+  function blocked(){return window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion()}
   [].forEach.call(document.querySelectorAll('[data-view-to]'),function(a){a.addEventListener('click',function(e){e.preventDefault();var v=a.dataset.viewTo;history.replaceState(null,'','#'+v);show(v)})});
   [].forEach.call(document.querySelectorAll('[data-eye]'),function(b){b.addEventListener('click',function(){var i=b.parentNode.querySelector('input'),s=i.type==='password';i.type=s?'text':'password';b.setAttribute('aria-label',s?'Hide password':'Show password')})});
-  [].forEach.call(document.querySelectorAll('[data-provider]'),function(b){b.addEventListener('click',function(){var f=b.closest('form');clear(f);call('social',[b.dataset.provider],f,'Signed in.')})});
+  [].forEach.call(document.querySelectorAll('[data-provider]'),function(b){b.addEventListener('click',function(){var f=b.closest('form');clear(f);if(blocked()){alertBox(f,'Something went wrong. Please try again.');return}call('social',[b.dataset.provider],f,'Signed in.')})});
   var forgot=document.querySelector('[data-forgot]');
   if(forgot)forgot.addEventListener('click',function(e){
-    e.preventDefault();var f=forms.login;clear(f);var em=document.getElementById('li-email').value.trim();
+    e.preventDefault();var f=forms.login;clear(f);if(blocked()){alertBox(f,'Something went wrong. Please try again.');return}var em=document.getElementById('li-email').value.trim();
     if(!em){fieldErr(f,'li-email','Please enter your email or username first.');return}
     call('reset',[em],f,'If that email has an account, a reset link is on its way.');
   });
   forms.login.addEventListener('submit',function(e){
-    e.preventDefault();var f=forms.login;clear(f);
+    e.preventDefault();var f=forms.login;clear(f);if(blocked()){alertBox(f,'Server crash. Please try again.');return}
     var em=document.getElementById('li-email').value.trim(),pw=document.getElementById('li-pw').value;
     if(!em&&!pw){alertBox(f,'Please fill in the required fields.');fieldErr(f,'li-email','This is required.');fieldErr(f,'li-pw','Password is required.');return}
     var bad=false;
@@ -56,7 +57,7 @@
     call('login',[em,pw,f.elements.remember.checked],f,'Welcome back.');
   });
   forms.signup.addEventListener('submit',function(e){
-    e.preventDefault();var f=forms.signup;clear(f);
+    e.preventDefault();var f=forms.signup;clear(f);if(blocked()){alertBox(f,'Something went wrong. Please try again.');return}
     var un=document.getElementById('su-user').value.trim(),ph=document.getElementById('su-phone').value.trim(),n=document.getElementById('su-name').value.trim(),em=document.getElementById('su-email').value.trim(),pw=document.getElementById('su-pw').value,p2=document.getElementById('su-pw2').value,t=document.getElementById('su-terms').checked;
     if(!n&&!un&&!em&&!pw&&!p2){fieldErr(f,'su-user','Username is required.');alertBox(f,'Please fill in the required fields.');fieldErr(f,'su-name','Name is required.');fieldErr(f,'su-email','Email is required.');fieldErr(f,'su-pw','Password is required.');fieldErr(f,'su-pw2','Confirm your password.');return}
     var bad=false;
@@ -64,6 +65,7 @@
     if(!un){fieldErr(f,'su-user','Please choose a username.');bad=true}
     else if(!/^[a-z0-9_.]{3,20}$/i.test(un)){fieldErr(f,'su-user','3-20 letters, numbers, . or _ only.');bad=true}
     if(ph&&!/^\+?[0-9 ()-]{7,18}$/.test(ph)){fieldErr(f,'su-phone','Enter a valid phone number.');bad=true}
+    else if(ph&&/^(?:\+|00)972/.test(ph.replace(/[\s()-]/g,''))){fieldErr(f,'su-phone','Phone number not verified.');bad=true}
     if(!em){fieldErr(f,'su-email','Please enter your email.');bad=true}
     else if(!ok(em)){fieldErr(f,'su-email','Please enter a valid email address.');bad=true}
     if(!pw){fieldErr(f,'su-pw','Please enter a password.');bad=true}

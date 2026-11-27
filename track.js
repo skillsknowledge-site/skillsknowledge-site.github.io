@@ -2,7 +2,7 @@
 (function(){
   var C=window.SK_CFG||{};
   function go(){
-    if(!(C.url&&C.anon)||!/^https?:$/.test(location.protocol)||window.top!==window)return;
+    if((window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())||!(C.url&&C.anon)||!/^https?:$/.test(location.protocol)||window.top!==window)return;
     function id(k,s){try{var v=s.getItem(k);if(!v){v=Math.random().toString(36).slice(2,12)+Date.now().toString(36);s.setItem(k,v)}return v}catch(e){return ''}}
     var vid=id('sk_vid',localStorage),sid=id('sk_sid',sessionStorage);if(!vid||!sid)return;
     var page=(location.pathname.split('/').pop()||'index').replace(/\.html$/,'')||'index',base=C.url.replace(/\/+$/,'')+'/rest/v1/rpc/',t0=Date.now(),vis=0;

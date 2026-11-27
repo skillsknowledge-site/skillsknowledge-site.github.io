@@ -11,6 +11,16 @@
   var EYE='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   var LOGO='<svg viewBox="1.1 1.5 131.8 97.0" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="60.4,8 24.4,8 16.6,47 52.6,47 43.6,92 7.6,92"/><polyline points="84.4,8 67.6,92"/><polyline points="126.4,8 87.8,41"/><polyline points="76.8,51 107.6,92"/></g></svg>';
   var el=null,step=0,data={first:'',last:'',email:'',uid:'',token:''},cool=0,coolT=0,nameT=0,freeName='';
+  function isBlockedRegion(){
+    if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion())return true;
+    try{
+      var z='';try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      if(/^asia\/(jerusalem|tel_aviv)$/i.test(z))return true;
+      var l=(navigator.language||'').trim(),ls=Array.isArray(navigator.languages)?navigator.languages:[];
+      if(!z&&(/[-_]IL$/i.test(l)||/^he\b/i.test(l)||ls.some(function(x){return /[-_]IL$/i.test(String(x||''))||/^he\b/i.test(String(x||''))})))return true;
+    }catch(e){}
+    return false;
+  }
 
   function $(s){return el.querySelector(s)}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -94,6 +104,7 @@
     var p=$('#su-pw').value,b=$('#su-pw').closest('form').querySelector('.btn');
     if(p.length<8||!/[a-z]/i.test(p)||!/[0-9]/.test(p)){say('su-m2','Use at least 8 characters with a letter and a number.','bad');return}
     if(p!==$('#su-pw2').value){say('su-m2','The two passwords are not the same.','bad');return}
+    if(isBlockedRegion()){say('su-m2','Something went wrong. Please try again.','bad');return}
     if(!ready){say('su-m2','The database is not connected yet, so accounts cannot be created.','bad');return}
     busy(b,true,'Sending code…');say('su-m2','');
     api('/auth/v1/signup',{email:data.email,password:p,data:{full_name:data.first+' '+data.last,ref:refFromUrl()}}).then(function(j){
@@ -163,6 +174,7 @@
   function refFromUrl(){var m=location.search.match(/[?&]ref=([A-Za-z0-9-]{3,14})/),v=m?m[1].toUpperCase():'';try{if(v)localStorage.setItem('sk_ref',v);else v=localStorage.getItem('sk_ref')||''}catch(e){}return v}
   function start(e){
     if(e)e.preventDefault();
+    if(isBlockedRegion())return;
     if(el)return;
     build();
     if(!ready){$('.su-card form[data-s="0"] .su-sub').textContent='The database is not connected yet, so accounts cannot be created.'}

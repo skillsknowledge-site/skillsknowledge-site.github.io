@@ -80,5 +80,5 @@
   function fallback(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()}
   function load(){token().then(function(t){tok=t;if(!t){location.replace('login.html');return}
     return call('/rest/v1/rpc/points_status',{},t).then(function(r){S=r;render()})}).catch(function(){shell('<p class="ac-msg bad">Points could not be loaded. Please refresh the page. If this keeps happening, the points database may not be set up yet.</p>')})}
-  if(!(C.url&&C.anon)){shell('<p class="ac-msg bad">The database is not connected yet.</p>')}else if(!sess()){location.replace('login.html')}else load();
+  if(window.SK&&typeof SK.blockedRegion==='function'&&SK.blockedRegion()){shell('<p class="ac-msg bad">Something went wrong. Server failed to load points. Please try again.</p>')}else if(!(C.url&&C.anon)){shell('<p class="ac-msg bad">The database is not connected yet.</p>')}else if(!sess()){location.replace('login.html')}else load();
 })();
