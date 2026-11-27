@@ -351,11 +351,11 @@
   function dialOf(iso){var r='';(window.SKM?SKM.countries():[]).forEach(function(c){if(c.iso===iso)r=c.dial});return r}
   function phoneField(u){
     var L=window.SKM?SKM.countries():[],sp=phoneSplit(u.phone),dis=u.ready?'':' disabled';
-    var st=!u.phone?'':u.phoneOk?'<small class="ph-st ok">Verified</small>':u.phoneAsked?'<small class="ph-st">Unverified · verification requested</small>':'<small class="ph-st">Unverified</small>';
+    var st=!u.phone?'':u.phoneOk?'<small class="ph-st ok">Verified</small>':'<small class="ph-st">Unverified</small>';
     var info='';
-    if(u.phone&&!u.phoneOk)info='<span class="ph-ib"><button type="button" class="ph-i" id="ph-i" aria-label="About phone verification" aria-expanded="false">i</button><span class="ph-tip" id="ph-tip" role="tooltip">'+(u.phoneAsked?'<b>Request sent</b><span>We will check your number soon.</span>':'<b>Verify your number</b><span>To use Points.</span><button type="button" class="ph-black ph-sm" id="ph-open">Verify</button>')+'</span></span>';
+    if(u.phone&&!u.phoneOk)info='<span class="ph-ib"><button type="button" class="ph-i" id="ph-i" aria-label="About phone verification" aria-expanded="false">i</button><span class="ph-tip" id="ph-tip" role="tooltip">'+(u.phoneAsked?'<b>Verification requested</b><span>We check numbers by hand. You will get a notification here when yours is verified.</span>':'<b>Verify your number</b><span>To use Points.</span><button type="button" class="ph-black ph-sm" id="ph-open">Verify</button>')+'</span></span>';
     if(!L.length)return '<label>Phone<input id="p-tel" type="tel" maxlength="20" placeholder="+92 300 0000000" value="'+esc(u.phone)+'" autocomplete="tel"'+dis+'></label>';
-    return '<div class="ph-field">'+st+'<span class="ph-lbl">Phone</span><div class="ph-row"><select id="p-cc" aria-label="Country"'+dis+'><option value="">Select country</option>'+L.map(function(c){return '<option value="'+c.iso+'"'+(c.iso===sp.iso?' selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select>'+
+    return '<div class="ph-field"><div class="ph-top"><span class="ph-lbl">Phone</span>'+st+'</div><div class="ph-row"><select id="p-cc" aria-label="Country"'+dis+'><option value="">Select country</option>'+L.map(function(c){return '<option value="'+c.iso+'"'+(c.iso===sp.iso?' selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select>'+
       '<span class="ph-in"><b id="p-dial">+'+esc(dialOf(sp.iso))+'</b><input id="p-tel" type="tel" inputmode="tel" maxlength="15" placeholder="300 0000000" value="'+esc(sp.num)+'" autocomplete="tel-national"'+dis+'></span>'+info+'</div><small>Needed to use Points. You can also log in with it.</small></div>'}
   function phoneValue(){ /* the full number from the two boxes, or false when it is not valid */
     var cc=$('#p-cc'),t=$('#p-tel');if(!t)return false;
@@ -370,10 +370,10 @@
     document.addEventListener('click',function(e){if(tip&&!tip.contains(e.target)&&e.target!==i){tip.classList.remove('open');if(i)i.setAttribute('aria-expanded','false')}});
     var go=$('#ph-open');if(!go)return;
     go.addEventListener('click',function(){
-      var d=overlay('<div class="un-box ph-modal" role="dialog" aria-modal="true" aria-labelledby="ph-h"><h2 id="ph-h">Verify your phone number</h2><p class="ph-num">'+esc(u.phone)+'</p>'+
-        '<p>Verified numbers can use the Points feature. Our team checks each number by hand, so we only check the numbers of people who ask.</p>'+
+      var d=overlay('<div class="un-box ph-modal" role="dialog" aria-modal="true" aria-labelledby="ph-h"><span class="ph-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2.5h10a1.5 1.5 0 0 1 1.5 1.5v16a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 20V4A1.5 1.5 0 0 1 7 2.5z"/><path d="M10.5 18.5h3"/></svg></span><h2 id="ph-h">Verify your phone number</h2><p class="ph-num">'+esc(u.phone)+'</p>'+
+        '<p class="ph-lead">Verified numbers can use the Points feature. Our team checks each number by hand, so we only check the numbers of people who ask.</p>'+
         '<ul class="ph-ul"><li>Share your reference code and earn points.</li><li>Use your points as a discount at checkout.</li><li>Your number is only used to check your account. Other people never see it.</li></ul>'+
-        '<p class="ph-res" id="ph-res" hidden></p><div class="ph-btns"><button type="button" class="ph-black" id="ph-send">Send verification request</button><button type="button" class="ph-x" id="ph-no">Not now</button></div></div>');
+        '<p class="ph-res" id="ph-res" hidden></p><button type="button" class="ph-black ph-big" id="ph-send">Send verification request</button><button type="button" class="ph-x" id="ph-no">Not now</button></div>');
       d.classList.add('ph-back');
       function shut(){d.classList.add('out');setTimeout(function(){d.remove()},220);document.removeEventListener('keydown',k)}
       function k(e){if(e.key==='Escape')shut()}
@@ -385,8 +385,7 @@
         token().then(function(t){return t&&api('/rest/v1/rpc/request_phone_verify',{method:'POST',token:t,body:{}})}).then(function(){
           u.phoneAsked=new Date().toISOString();r.hidden=false;r.className='ph-res ok';r.textContent='Request sent. We will check your number and send you a notification when it is verified.';
           send.textContent='Close';send.disabled=false;$('#ph-no').hidden=true;
-          var st=document.querySelector('.ph-st');if(st)st.textContent='Unverified · verification requested';
-          var tp=$('#ph-tip');if(tp)tp.innerHTML='<b>Request sent</b><span>We will check your number soon.</span>'},
+                    var tp=$('#ph-tip');if(tp)tp.innerHTML='<b>Verification requested</b><span>We check numbers by hand. You will get a notification here when yours is verified.</span>'},
           function(){r.hidden=false;r.className='ph-res bad';r.textContent='Could not send the request. Please try again.';send.disabled=false})})})}
   function page(u){
     var root=$('#acct');if(!root)return;
